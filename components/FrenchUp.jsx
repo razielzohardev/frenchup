@@ -22,124 +22,822 @@ const ROUNDS = [
   { id: "exp", he: "דיבור", fr: "Expression", color: "#8B5CF6", icon: "💬" },
 ];
 
-/* -------------------- EXERCISE BANKS -------------------- */
+/* -------------------- EXERCISE BANKS (station-indexed 2D arrays) -------------------- */
+/* Structure: BANK_XX.skill[stationIndex] = array of question objects               */
+
 const BANK_A1 = {
+  /* stations: être/avoir · Articles · Pluriel · Négation · Adjectifs · Questions */
   gra: [
-    { instruction_he:"השלם בצורת הפועל הנכונה (être)", prompt_fr:"Je ____ (être) étudiant.", trans_he:"אני סטודנט.", accepted:["suis"], solution_fr:"Je suis étudiant.", explanation_he:"הפועל être בגוף ראשון יחיד: je suis.", tip_he:"être: je suis, tu es, il/elle est, nous sommes, vous êtes, ils sont." },
-    { instruction_he:"השלם בצורת הפועל הנכונה (avoir)", prompt_fr:"Elle ____ (avoir) un chat.", trans_he:"יש לה חתול.", accepted:["a"], solution_fr:"Elle a un chat.", explanation_he:"avoir בגוף שלישי יחיד: il/elle a.", tip_he:"avoir: j'ai, tu as, il/elle a, nous avons, vous avez, ils ont." },
-    { instruction_he:"השלם בסיומת הנכונה לרבים", prompt_fr:"Les ____ (chat) sont mignons.", trans_he:"החתולים חמודים.", accepted:["chats"], solution_fr:"Les chats sont mignons.", explanation_he:"רוב שמות העצם מקבלים -s ברבים.", tip_he:"chien→chiens, livre→livres, ami→amis." },
-    { instruction_he:"הוסף שלילה נכונה (ne...pas)", prompt_fr:"Je ____ mange ____ de viande.", trans_he:"אני לא אוכל בשר.", accepted:["ne...pas","ne / pas"], solution_fr:"Je ne mange pas de viande.", explanation_he:"שלילה: ne + פועל + pas. אחרי שלילה: de במקום du/de la/des.", tip_he:"ne...pas עוטף את הפועל: je ne mange pas." },
-    { instruction_he:"השלם בסיומת הנקבה של שם התואר", prompt_fr:"Marie est une étudiante ____. (intelligent→?)", trans_he:"מארי היא סטודנטית חכמה.", accepted:["intelligente"], solution_fr:"Marie est une étudiante intelligente.", explanation_he:"intelligent (זכר) → intelligente (נקבה): מוסיפים -e.", tip_he:"grand→grande, petit→petite, content→contente." },
-    { instruction_he:"השלם במאמר הנכון (le / la / les)", prompt_fr:"____ soleil brille aujourd'hui.", trans_he:"השמש זורחת היום.", accepted:["Le"], solution_fr:"Le soleil brille aujourd'hui.", explanation_he:"soleil הוא זכר → le soleil.", tip_he:"le = זכר יחיד · la = נקבה יחיד · les = רבים." },
+    [ /* 0 — être/avoir */
+      { instruction_he:"השלם בצורת être הנכונה", prompt_fr:"Je ____ (être) étudiant.", trans_he:"אני סטודנט.", accepted:["suis"], solution_fr:"Je suis étudiant.", explanation_he:"être בגוף ראשון יחיד: je suis.", tip_he:"être: je suis · tu es · il/elle est · nous sommes · vous êtes · ils sont." },
+      { instruction_he:"השלם בצורת avoir הנכונה", prompt_fr:"Elle ____ (avoir) un chat.", trans_he:"יש לה חתול.", accepted:["a"], solution_fr:"Elle a un chat.", explanation_he:"avoir בגוף שלישי יחיד: il/elle a.", tip_he:"avoir: j'ai · tu as · il/elle a · nous avons · vous avez · ils ont." },
+      { instruction_he:"être או avoir?", prompt_fr:"Nous ____ (être) contents.", trans_he:"אנחנו שמחים.", accepted:["sommes"], solution_fr:"Nous sommes contents.", explanation_he:"être בגוף ראשון רבים: nous sommes.", tip_he:"nous sommes (être) · nous avons (avoir) — שניהם נחוצים!" },
+    ],
+    [ /* 1 — Articles (le/la/les/un/une/du) */
+      { instruction_he:"השלם במאמר הנכון (le / la)", prompt_fr:"____ soleil brille aujourd'hui.", trans_he:"השמש זורחת היום.", accepted:["Le"], solution_fr:"Le soleil brille aujourd'hui.", explanation_he:"soleil הוא זכר → le soleil.", tip_he:"le = זכר יחיד · la = נקבה יחיד · les = רבים." },
+      { instruction_he:"השלם במאמר הנכון (un / une)", prompt_fr:"C'est ____ livre intéressant.", trans_he:"זה ספר מעניין.", accepted:["un"], solution_fr:"C'est un livre intéressant.", explanation_he:"livre הוא זכר → un. una = נקבה.", tip_he:"un garçon · une fille · un livre · une table." },
+      { instruction_he:"השלם במאמר כמות (du / de la)", prompt_fr:"Je mange ____ fromage.", trans_he:"אני אוכל גבינה.", accepted:["du"], solution_fr:"Je mange du fromage.", explanation_he:"fromage זכר + כמות לא מוגדרת = du (=de+le).", tip_he:"du (זכר) · de la (נקבה) · de l' (תנועה) · des (רבים)." },
+    ],
+    [ /* 2 — Pluriel */
+      { instruction_he:"השלם בצורת הרבים", prompt_fr:"Les ____ (chat) sont mignons.", trans_he:"החתולים חמודים.", accepted:["chats"], solution_fr:"Les chats sont mignons.", explanation_he:"רוב שמות העצם מקבלים -s ברבים.", tip_he:"chien→chiens · livre→livres · ami→amis." },
+      { instruction_he:"רבים בסיומת -aux", prompt_fr:"Les ____ (journal) sont sur la table.", trans_he:"העיתונים על השולחן.", accepted:["journaux"], solution_fr:"Les journaux sont sur la table.", explanation_he:"שמות ב-al הופכים לרבים ב-aux: journal→journaux.", tip_he:"journal→journaux · animal→animaux · cheval→chevaux." },
+      { instruction_he:"שנה לרבים", prompt_fr:"____ garçon ____ grand → ____ garçons ____.", trans_he:"הבנים גדולים.", accepted:["Les / sont","Les garçons sont grands"], solution_fr:"Les garçons sont grands.", explanation_he:"le→les, est→sont, grand→grands (הסכמת תואר).", tip_he:"שמות תואר מתאימים למין ומספר: grand/grands." },
+    ],
+    [ /* 3 — Négation */
+      { instruction_he:"הוסף שלילה (ne...pas)", prompt_fr:"Je ____ mange ____ de viande.", trans_he:"אני לא אוכל בשר.", accepted:["ne / pas","ne...pas"], solution_fr:"Je ne mange pas de viande.", explanation_he:"ne + פועל + pas. אחרי שלילה: de במקום du/de la.", tip_he:"ne...pas עוטף את הפועל." },
+      { instruction_he:"שלילת תדירות (ne...jamais)", prompt_fr:"Il ____ fume ____.", trans_he:"הוא לא מעשן אף פעם.", accepted:["ne / jamais","ne...jamais"], solution_fr:"Il ne fume jamais.", explanation_he:"ne...jamais = לעולם לא. ne לפני הפועל, jamais אחריו.", tip_he:"jamais = אף פעם · toujours = תמיד · souvent = לעיתים." },
+      { instruction_he:"שלילה (ne...plus)", prompt_fr:"Je ____ habite ____ à Lyon.", trans_he:"אני כבר לא גר ב-ליון.", accepted:["ne / plus","ne...plus","n' / plus"], solution_fr:"Je n'habite plus à Lyon.", explanation_he:"ne...plus = כבר לא. ne לפני הפועל, plus אחריו.", tip_he:"ne...plus (כבר לא) · ne...rien (כלום) · ne...personne (אף אחד)." },
+    ],
+    [ /* 4 — Adjectifs */
+      { instruction_he:"צורת הנקבה של התואר", prompt_fr:"Marie est une étudiante ____. (intelligent→?)", trans_he:"מארי היא סטודנטית חכמה.", accepted:["intelligente"], solution_fr:"Marie est une étudiante intelligente.", explanation_he:"intelligent→intelligente: מוסיפים -e.", tip_he:"grand→grande · petit→petite · content→contente." },
+      { instruction_he:"תואר נקבה בסיומת מיוחדת", prompt_fr:"Ma voisine est très ____. (gentil→?)", trans_he:"השכנה שלי מאוד נחמדה.", accepted:["gentille"], solution_fr:"Ma voisine est très gentille.", explanation_he:"gentil→gentille: מכפילים -l ומוסיפים -e.", tip_he:"gentil→gentille · nul→nulle · cruel→cruelle." },
+      { instruction_he:"תואר זכר רבים", prompt_fr:"Les enfants sont ____. (content→?)", trans_he:"הילדים שמחים.", accepted:["contents"], solution_fr:"Les enfants sont contents.", explanation_he:"זכר רבים: content→contents. מוסיפים -s.", tip_he:"content/contente/contents/contentes." },
+    ],
+    [ /* 5 — Questions */
+      { instruction_he:"צור שאלה עם est-ce que", prompt_fr:"____ tu parles français ?", trans_he:"האם אתה מדבר צרפתית?", accepted:["Est-ce que","est-ce que"], solution_fr:"Est-ce que tu parles français ?", explanation_he:"est-ce que + נושא + פועל = שאלה ניטרלית.", tip_he:"Est-ce que tu...? · Tu...? (אינטונציה) · Parles-tu...? (רשמי)." },
+      { instruction_he:"כינוי שאלה: מה", prompt_fr:"____ tu fais le week-end ?", trans_he:"מה אתה עושה בסוף השבוע?", accepted:["Qu'est-ce que","Que"], solution_fr:"Qu'est-ce que tu fais le week-end ?", explanation_he:"Qu'est-ce que = מה (שאלת מושא). Qu'est-ce que tu fais? = מה אתה עושה?", tip_he:"Qu'est-ce que (מה) · Qui (מי) · Où (איפה) · Quand (מתי)." },
+      { instruction_he:"כינוי שאלה: איפה", prompt_fr:"____ habites-tu ? — À Paris.", trans_he:"איפה אתה גר? — בפריז.", accepted:["Où","où"], solution_fr:"Où habites-tu ?", explanation_he:"Où = איפה. בשאלה רשמית: Où + פועל + נושא (היפוך).", tip_he:"Où (איפה) · Quand (מתי) · Comment (איך) · Pourquoi (למה)." },
+    ],
   ],
+  /* stations: Salutations · Famille · Couleurs · Chiffres · Jours · Objets */
   voc: [
-    { instruction_he:"תרגם לצרפתית: «שלום / בוקר טוב»", prompt_fr:"____ ! Comment allez-vous ?", trans_he:"שלום! מה שלומכם?", accepted:["Bonjour","bonjour"], solution_fr:"Bonjour", explanation_he:"Bonjour = שלום/בוקר טוב (רשמי). Salut = היי (לא רשמי).", tip_he:"Bonjour (ביום) · Bonsoir (ערב) · Salut (לא רשמי)." },
-    { instruction_he:"תרגם לצרפתית: «תודה רבה»", prompt_fr:"____ beaucoup !", trans_he:"תודה רבה!", accepted:["Merci","merci"], solution_fr:"Merci beaucoup !", explanation_he:"Merci = תודה. Merci beaucoup = תודה רבה.", tip_he:"De rien = אין על מה · Avec plaisir = בשמחה." },
-    { instruction_he:"תרגם לצרפתית: «אמא»", prompt_fr:"Ma ____ s'appelle Sophie.", trans_he:"אמא שלי נקראת סופי.", accepted:["mère","maman"], solution_fr:"Ma mère / maman", explanation_he:"mère = אמא (רשמי) · maman = אמא (חיבה).", tip_he:"père = אבא · mère = אמא · frère = אח · sœur = אחות." },
-    { instruction_he:"תרגם לצרפתית: «כחול»", prompt_fr:"Le ciel est ____.", trans_he:"השמיים כחולים.", accepted:["bleu","bleue"], solution_fr:"bleu", explanation_he:"bleu = כחול. rouge = אדום, vert = ירוק, blanc = לבן, noir = שחור.", tip_he:"צבעים: rouge, bleu, vert, jaune, blanc, noir, gris, orange." },
-    { instruction_he:"תרגם לצרפתית: «יום שני»", prompt_fr:"Aujourd'hui c'est ____.", trans_he:"היום יום שני.", accepted:["lundi"], solution_fr:"lundi", explanation_he:"ימי השבוע: lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche.", tip_he:"ימי השבוע מתחילים ב-lundi (שני)." },
-    { instruction_he:"תרגם לצרפתית: «אני אוהב»", prompt_fr:"J'____ le chocolat.", trans_he:"אני אוהב שוקולד.", accepted:["aime"], solution_fr:"J'aime", explanation_he:"aimer = לאהוב. J'aime + מאמר: J'aime le chocolat.", tip_he:"J'aime · Je n'aime pas · J'adore (מאוד אוהב)." },
+    [ /* 0 — Salutations */
+      { instruction_he:"תרגם: «שלום/בוקר טוב»", prompt_fr:"____ ! Comment allez-vous ?", trans_he:"שלום! מה שלומכם?", accepted:["Bonjour","bonjour"], solution_fr:"Bonjour", explanation_he:"Bonjour = שלום/בוקר טוב (רשמי). Salut = היי (לא רשמי).", tip_he:"Bonjour (ביום) · Bonsoir (ערב) · Salut (לא רשמי)." },
+      { instruction_he:"תרגם: «תודה רבה»", prompt_fr:"____ beaucoup !", trans_he:"תודה רבה!", accepted:["Merci","merci"], solution_fr:"Merci beaucoup !", explanation_he:"Merci = תודה. Merci beaucoup = תודה רבה.", tip_he:"De rien = אין על מה · Avec plaisir = בשמחה." },
+      { instruction_he:"תרגם: «להתראות»", prompt_fr:"____ ! À demain.", trans_he:"להתראות! להתראות מחר.", accepted:["Au revoir","au revoir"], solution_fr:"Au revoir !", explanation_he:"Au revoir = להתראות. À bientôt = להתראות בקרוב.", tip_he:"Au revoir · À bientôt · À demain · À tout à l'heure." },
+    ],
+    [ /* 1 — Famille */
+      { instruction_he:"תרגם: «אמא שלי»", prompt_fr:"Ma ____ s'appelle Sophie.", trans_he:"אמא שלי נקראת סופי.", accepted:["mère","maman"], solution_fr:"Ma mère", explanation_he:"mère = אמא (רשמי) · maman = אמא (חיבה).", tip_he:"père = אבא · mère = אמא · frère = אח · sœur = אחות." },
+      { instruction_he:"תרגם: «אבא שלי»", prompt_fr:"____ s'appelle Pierre.", trans_he:"אבא שלי נקרא פייר.", accepted:["Mon père","mon père"], solution_fr:"Mon père", explanation_he:"père = אבא. mon = שלי (זכר). mon père = אבא שלי.", tip_he:"mon père · ma mère · mon frère · ma sœur · mes parents." },
+      { instruction_he:"תרגם: «שני אחים»", prompt_fr:"J'ai deux ____.", trans_he:"יש לי שני אחים.", accepted:["frères"], solution_fr:"J'ai deux frères.", explanation_he:"frère = אח, frères = אחים (רבים + מאמר des נעלם עם chiffre).", tip_he:"frère = אח · sœur = אחות · cousin(e) = דוד/ה · oncle = דוד." },
+    ],
+    [ /* 2 — Couleurs */
+      { instruction_he:"תרגם: «כחול»", prompt_fr:"Le ciel est ____.", trans_he:"השמיים כחולים.", accepted:["bleu","bleue"], solution_fr:"bleu", explanation_he:"bleu = כחול. צבעים בד\"כ לא משתנים עם מאמרים.", tip_he:"rouge · bleu · vert · jaune · blanc · noir · gris · orange." },
+      { instruction_he:"תרגם: «אדום»", prompt_fr:"La rose est ____.", trans_he:"הוורד אדום.", accepted:["rouge"], solution_fr:"rouge", explanation_he:"rouge = אדום. rouge לא משתנה לנקבה.", tip_he:"rouge (אדום) · bleu (כחול) · vert (ירוק) · jaune (צהוב)." },
+      { instruction_he:"תרגם: «שחור ולבן»", prompt_fr:"Le chat est ____ et ____.", trans_he:"החתול שחור ולבן.", accepted:["noir et blanc","noir / blanc"], solution_fr:"noir et blanc", explanation_he:"noir = שחור · blanc = לבן. שניהם לא משתנים עם le chat.", tip_he:"noir/noire · blanc/blanche (נקבה שונה!) · gris/grise." },
+    ],
+    [ /* 3 — Chiffres */
+      { instruction_he:"תרגם: «חמש»", prompt_fr:"J'ai ____ ans.", trans_he:"אני בן/בת חמש.", accepted:["cinq"], solution_fr:"cinq", explanation_he:"cinq = 5. un·deux·trois·quatre·cinq.", tip_he:"1-10: un·deux·trois·quatre·cinq·six·sept·huit·neuf·dix." },
+      { instruction_he:"תרגם: «שניים עשר»", prompt_fr:"Il y a ____ mois dans l'année.", trans_he:"יש שנים-עשר חודשים בשנה.", accepted:["douze"], solution_fr:"douze", explanation_he:"douze = 12. onze(11)·douze(12)·treize(13).", tip_he:"11-15: onze·douze·treize·quatorze·quinze." },
+      { instruction_he:"תרגם: «שלושים»", prompt_fr:"Il a ____ ans.", trans_he:"הוא בן שלושים.", accepted:["trente"], solution_fr:"trente", explanation_he:"trente = 30. vingt(20)·trente(30)·quarante(40).", tip_he:"dizaines: vingt·trente·quarante·cinquante·soixante." },
+    ],
+    [ /* 4 — Jours */
+      { instruction_he:"תרגם: «יום שני»", prompt_fr:"Aujourd'hui c'est ____.", trans_he:"היום יום שני.", accepted:["lundi"], solution_fr:"lundi", explanation_he:"ימי השבוע: lundi·mardi·mercredi·jeudi·vendredi·samedi·dimanche.", tip_he:"ימי השבוע מתחילים ב-lundi (שני)." },
+      { instruction_he:"תרגם: «יום שישי בערב»", prompt_fr:"On se retrouve ____ soir.", trans_he:"נתראה ביום שישי בערב.", accepted:["vendredi"], solution_fr:"vendredi soir", explanation_he:"vendredi = שישי, soir = ערב. ימי שבוע ללא מאמר בד\"כ.", tip_he:"lundi·mardi·mercredi·jeudi·vendredi·samedi·dimanche." },
+      { instruction_he:"תרגם: «בסוף השבוע»", prompt_fr:"Je me repose ____.", trans_he:"אני נח בסוף השבוע.", accepted:["le week-end","le weekend"], solution_fr:"le week-end", explanation_he:"le week-end = בסוף השבוע (samedi + dimanche).", tip_he:"le week-end · samedi soir · dimanche matin." },
+    ],
+    [ /* 5 — Objets */
+      { instruction_he:"תרגם: «ספרים»", prompt_fr:"J'aime lire des ____.", trans_he:"אני אוהב לקרוא ספרים.", accepted:["livres"], solution_fr:"livres", explanation_he:"livre = ספר (זכר). des livres = ספרים.", tip_he:"un livre · un stylo · une table · une chaise · une fenêtre." },
+      { instruction_he:"תרגם: «עיפרון»", prompt_fr:"Tu as un ____ ?", trans_he:"יש לך עיפרון?", accepted:["crayon","stylo"], solution_fr:"un crayon / un stylo", explanation_he:"crayon = עיפרון · stylo = עט. שניהם זכר.", tip_he:"un crayon · un stylo · une gomme (מחק) · une règle (סרגל)." },
+      { instruction_he:"תרגם: «שולחן»", prompt_fr:"Mets ton sac sur la ____.", trans_he:"שים את התיק על השולחן.", accepted:["table"], solution_fr:"table", explanation_he:"table = שולחן (נקבה). sur la table = על השולחן.", tip_he:"une table · une chaise · un bureau · une fenêtre · une porte." },
+    ],
   ],
+  /* stations: Au café · À l'école · La famille · Au magasin · Dans la rue · À la maison */
   com: [
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"— Bonjour ! Vous voulez quelque chose ?\n— Oui, un café, s'il vous plaît.\n— Voilà. C'est deux euros.", trans_he:"— שלום! אתה רוצה משהו?\n— כן, קפה, בבקשה.\n— הנה. זה שני יורו.", question_fr:"Combien coûte le café ?", q_he:"כמה עולה הקפה?", options:["Un euro","Deux euros","Trois euros"], correct:1, explanation_he:"« C'est deux euros » = זה עולה שני יורו." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Je m'appelle Lucas. J'ai dix-huit ans. Je suis français. J'habite à Paris avec ma famille.", trans_he:"שמי לוקאס. אני בן 18. אני צרפתי. אני גר בפריז עם משפחתי.", question_fr:"Où habite Lucas ?", q_he:"איפה לוקאס גר?", options:["À Lyon","À Paris","À Marseille"], correct:1, explanation_he:"« J'habite à Paris » = אני גר בפריז." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Le lundi, Marie va à l'école. Le mercredi, elle fait du sport. Le samedi, elle regarde des films.", trans_he:"ביום שני מארי הולכת לבית ספר. ביום רביעי היא עושה ספורט. בשבת היא צופה בסרטים.", question_fr:"Quand est-ce que Marie fait du sport ?", q_he:"מתי מארי עושה ספורט?", options:["Le lundi","Le mercredi","Le samedi"], correct:1, explanation_he:"« Le mercredi, elle fait du sport » = ביום רביעי היא עושה ספורט." },
+    [ /* 0 — Au café */
+      { instruction_he:"קרא וענה", prompt_fr:"— Bonjour ! Vous voulez quelque chose ?\n— Oui, un café, s'il vous plaît.\n— Voilà. C'est deux euros.", trans_he:"— שלום! אתה רוצה משהו?\n— כן, קפה, בבקשה.\n— הנה. זה שני יורו.", question_fr:"Combien coûte le café ?", q_he:"כמה עולה הקפה?", options:["Un euro","Deux euros","Trois euros"], correct:1, explanation_he:"« C'est deux euros » = זה עולה שני יורו." },
+      { instruction_he:"קרא וענה", prompt_fr:"— Bonjour, je voudrais un croissant et un jus d'orange.\n— Pour manger ici ou à emporter ?\n— À emporter, merci.", trans_he:"— שלום, הייתי רוצה קרואסון ומיץ תפוזים.\n— לאכול כאן או לקחת?\n— לקחת, תודה.", question_fr:"Qu'est-ce que la personne commande ?", q_he:"מה האדם מזמין?", options:["Un café et un gâteau","Un croissant et un jus d'orange","Un sandwich et un thé"], correct:1, explanation_he:"« un croissant et un jus d'orange »." },
+      { instruction_he:"קרא וענה", prompt_fr:"— L'addition, s'il vous plaît.\n— C'est sept euros cinquante.\n— Je paye par carte ?\n— Oui, bien sûr.", trans_he:"— החשבון, בבקשה.\n— זה שבעה וחצי יורו.\n— אני משלם בכרטיס?\n— כן, כמובן.", question_fr:"Comment la personne veut-elle payer ?", q_he:"איך הלקוח רוצה לשלם?", options:["En espèces","Par carte","Par chèque"], correct:1, explanation_he:"« Je paye par carte » = אני משלם בכרטיס." },
+    ],
+    [ /* 1 — À l'école */
+      { instruction_he:"קרא וענה", prompt_fr:"Le lundi, Marie va à l'école. Le mercredi, elle fait du sport. Le samedi, elle regarde des films.", trans_he:"ביום שני מארי הולכת לבית ספר. ביום רביעי היא עושה ספורט. בשבת היא צופה בסרטים.", question_fr:"Quand est-ce que Marie fait du sport ?", q_he:"מתי מארי עושה ספורט?", options:["Le lundi","Le mercredi","Le samedi"], correct:1, explanation_he:"« Le mercredi, elle fait du sport »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Il y a vingt-cinq élèves dans ma classe. Notre professeur s'appelle Madame Leblanc. Les cours commencent à huit heures.", trans_he:"יש עשרים וחמישה תלמידים בכיתה שלי. המורה שלנו נקראת מדאם לבלאן. השיעורים מתחילים בשמונה.", question_fr:"À quelle heure commencent les cours ?", q_he:"מתי מתחילים השיעורים?", options:["À sept heures","À huit heures","À neuf heures"], correct:1, explanation_he:"« Les cours commencent à huit heures »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Lucas aime l'école mais il n'aime pas les mathématiques. Sa matière préférée est le dessin.", trans_he:"לוקאס אוהב את בית הספר אבל לא אוהב מתמטיקה. המקצוע האהוב עליו הוא ציור.", question_fr:"Quelle est la matière préférée de Lucas ?", q_he:"מהו המקצוע האהוב על לוקאס?", options:["Les mathématiques","Le dessin","Le français"], correct:1, explanation_he:"« Sa matière préférée est le dessin »." },
+    ],
+    [ /* 2 — La famille */
+      { instruction_he:"קרא וענה", prompt_fr:"Je m'appelle Lucas. J'ai dix-huit ans. Je suis français. J'habite à Paris avec ma famille.", trans_he:"שמי לוקאס. אני בן 18. אני צרפתי. אני גר בפריז עם משפחתי.", question_fr:"Où habite Lucas ?", q_he:"איפה לוקאס גר?", options:["À Lyon","À Paris","À Marseille"], correct:1, explanation_he:"« J'habite à Paris »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Dans ma famille, il y a quatre personnes : mon père, ma mère, ma petite sœur et moi. Ma sœur a six ans.", trans_he:"במשפחה שלי יש ארבעה אנשים: אבא, אמא, אחותי הקטנה ואני. לאחותי שש שנים.", question_fr:"Combien de personnes y a-t-il dans la famille ?", q_he:"כמה אנשים יש במשפחה?", options:["Trois","Quatre","Cinq"], correct:1, explanation_he:"« il y a quatre personnes »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Ma grand-mère s'appelle Hélène. Elle a soixante-dix ans. Elle habite à Lyon avec mon grand-père.", trans_he:"סבתא שלי נקראת הלן. היא בת שבעים. היא גרה ב-ליון עם סבא שלי.", question_fr:"Où habite la grand-mère ?", q_he:"איפה גרה הסבתא?", options:["À Paris","À Lyon","À Bordeaux"], correct:1, explanation_he:"« Elle habite à Lyon »." },
+    ],
+    [ /* 3 — Au magasin */
+      { instruction_he:"קרא וענה", prompt_fr:"— Je cherche une veste. Quelle est votre taille ?\n— Du 38, s'il vous plaît.\n— Voici une veste bleue en taille 38.", trans_he:"— אני מחפש מעיל. מה המידה שלכם?\n— 38.\n— הנה מעיל כחול במידה 38.", question_fr:"Quelle taille cherche le client ?", q_he:"איזו מידה מחפש הלקוח?", options:["Taille 36","Taille 38","Taille 40"], correct:1, explanation_he:"« Du 38, s'il vous plaît »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Les soldes commencent demain. Tout est à moins 30%. Le magasin est ouvert de 9h à 20h.", trans_he:"המכירות מתחילות מחר. הכל ב-30% הנחה. החנות פתוחה מ-9 עד 20.", question_fr:"Quel est le pourcentage de réduction ?", q_he:"כמה אחוז הנחה?", options:["20%","30%","50%"], correct:1, explanation_he:"« moins 30% » = 30% הנחה." },
+      { instruction_he:"קרא וענה", prompt_fr:"— Est-ce que vous avez ce pantalon en rouge ?\n— Désolé, seulement en bleu et en noir.\n— Je vais prendre le bleu alors.", trans_he:"— יש לכם את המכנסיים האלה באדום?\n— מצטערים, רק בכחול ובשחור.\n— אז אני לוקח את הכחול.", question_fr:"Quelle couleur choisit la cliente ?", q_he:"איזה צבע הלקוח בוחר?", options:["Rouge","Bleu","Noir"], correct:1, explanation_he:"« Je vais prendre le bleu »." },
+    ],
+    [ /* 4 — Dans la rue */
+      { instruction_he:"קרא וענה", prompt_fr:"— Excusez-moi, où est la gare ?\n— Allez tout droit, puis tournez à gauche. C'est à cinq minutes.", trans_he:"— סליחה, איפה התחנה?\n— לכו ישר, ואז פנו שמאלה. זה חמש דקות.", question_fr:"Quelle direction faut-il prendre ?", q_he:"לאיזה כיוון ללכת?", options:["À droite","Tout droit puis à gauche","Tout droit puis à droite"], correct:1, explanation_he:"« tout droit, puis à gauche »." },
+      { instruction_he:"קרא וענה", prompt_fr:"La pharmacie est en face de la boulangerie. La poste est à côté de la pharmacie.", trans_he:"בית המרקחת ממול לאפייה. הדואר נמצא לצד בית המרקחת.", question_fr:"Où est la poste ?", q_he:"איפה הדואר?", options:["En face de la boulangerie","À côté de la pharmacie","Derrière la boulangerie"], correct:1, explanation_he:"« La poste est à côté de la pharmacie »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Je cherche le musée. Il se trouve dans la rue principale, entre le café et la banque.", trans_he:"אני מחפש את המוזיאון. הוא נמצא ברחוב הראשי, בין בית הקפה לבנק.", question_fr:"Où se trouve le musée ?", q_he:"איפה המוזיאון?", options:["À côté de la gare","Entre le café et la banque","En face de la poste"], correct:1, explanation_he:"« entre le café et la banque »." },
+    ],
+    [ /* 5 — À la maison */
+      { instruction_he:"קרא וענה", prompt_fr:"Dans mon appartement il y a un salon, une cuisine, deux chambres et une salle de bains.", trans_he:"בדירה שלי יש סלון, מטבח, שני חדרי שינה ואמבטיה.", question_fr:"Combien de chambres y a-t-il ?", q_he:"כמה חדרי שינה יש?", options:["Une chambre","Deux chambres","Trois chambres"], correct:1, explanation_he:"« deux chambres » = שני חדרי שינה." },
+      { instruction_he:"קרא וענה", prompt_fr:"Le soir, toute la famille mange ensemble à la cuisine. Papa cuisine souvent des pâtes. Maman préfère les salades.", trans_he:"בערב כל המשפחה אוכלת יחד במטבח. אבא מבשל לעתים קרובות פסטה. אמא מעדיפה סלטים.", question_fr:"Où mange la famille le soir ?", q_he:"איפה המשפחה אוכלת בערב?", options:["Dans le salon","À la cuisine","Dans le jardin"], correct:1, explanation_he:"« toute la famille mange ensemble à la cuisine »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Le dimanche matin, je reste à la maison. Je lis un livre ou je regarde la télé. L'après-midi, je fais le ménage.", trans_he:"בבוקר יום ראשון, אני נשאר בבית. אני קורא ספר או צופה בטלוויזיה. אחר הצהריים, אני עושה ניקיון.", question_fr:"Que fait-il le dimanche matin ?", q_he:"מה הוא עושה ביום ראשון בבוקר?", options:["Il fait du sport","Il reste à la maison","Il sort avec des amis"], correct:1, explanation_he:"« je reste à la maison. Je lis un livre ou je regarde la télé »." },
+    ],
   ],
+  /* stations: Se présenter · Ma famille · J'aime… · Ma journée · Mon école · Mon pays */
   exp: [
-    { instruction_he:"הצג את עצמך בשלוש שורות (תשובה חופשית)", prompt_fr:"Présentez-vous : votre prénom, votre âge et votre ville.", trans_he:"הצג את עצמך: שמך, גילך ועירך.", model_fr:"Je m'appelle David. J'ai vingt ans. J'habite à Tel Aviv.", keys_fr:["Je m'appelle","J'ai ... ans","J'habite à"], tip_he:"Je m'appelle (שמי) · J'ai ... ans (אני בן/בת) · J'habite à (אני גר/ה ב-)." },
-    { instruction_he:"תאר את המשפחה שלך (תשובה חופשית)", prompt_fr:"Décris ta famille.", trans_he:"תאר את המשפחה שלך.", model_fr:"Dans ma famille, il y a mon père, ma mère et ma sœur. Mon père s'appelle Ilan et ma mère s'appelle Miriam.", keys_fr:["dans ma famille","il y a","mon père","ma mère","il/elle s'appelle"], tip_he:"il y a = יש · mon père = אבא · ma mère = אמא · mon frère = אחי · ma sœur = אחותי." },
-    { instruction_he:"מה אתה אוהב לעשות? (תשובה חופשית)", prompt_fr:"Qu'est-ce que tu aimes faire ? Donne deux exemples.", trans_he:"מה אתה אוהב לעשות? תן שני דוגמאות.", model_fr:"J'aime écouter de la musique et jouer au football. Je n'aime pas faire la cuisine.", keys_fr:["J'aime","Je n'aime pas","et","aussi"], tip_he:"J'aime + infinitif: J'aime jouer, écouter, regarder, lire." },
+    [ /* 0 — Se présenter */
+      { instruction_he:"הצג את עצמך", prompt_fr:"Présentez-vous : prénom, âge et ville.", trans_he:"הצג את עצמך: שמך, גילך ועירך.", model_fr:"Je m'appelle David. J'ai vingt ans. J'habite à Tel Aviv.", keys_fr:["Je m'appelle","J'ai ... ans","J'habite à"], tip_he:"Je m'appelle · J'ai ... ans · J'habite à." },
+      { instruction_he:"ספר מה אתה לומד/עובד", prompt_fr:"Qu'est-ce que tu fais dans la vie ?", trans_he:"מה אתה עושה בחיים?", model_fr:"Je suis étudiant en informatique à l'université. J'étudie depuis deux ans.", keys_fr:["Je suis","étudiant","je travaille","depuis"], tip_he:"Je suis étudiant(e) · Je travaille comme... · Je fais des études de..." },
+      { instruction_he:"ספר על שפות שאתה מדבר", prompt_fr:"Quelles langues parles-tu ?", trans_he:"אילו שפות אתה מדבר?", model_fr:"Je parle hébreu et anglais. En ce moment, j'apprends le français.", keys_fr:["Je parle","j'apprends","aussi","un peu de"], tip_he:"Je parle français · J'apprends l'espagnol · Je parle un peu de..." },
+    ],
+    [ /* 1 — Ma famille */
+      { instruction_he:"תאר את המשפחה שלך", prompt_fr:"Décris ta famille.", trans_he:"תאר את המשפחה שלך.", model_fr:"Dans ma famille, il y a mon père, ma mère et ma sœur. Mon père s'appelle Ilan.", keys_fr:["dans ma famille","il y a","mon père","ma mère","s'appelle"], tip_he:"il y a = יש · mon père = אבא · ma mère = אמא · mon frère = אחי." },
+      { instruction_he:"ספר על אחד מבני משפחתך", prompt_fr:"Décris un membre de ta famille.", trans_he:"תאר אחד מבני משפחתך.", model_fr:"Mon frère s'appelle Noah. Il a vingt-cinq ans. Il est grand et brun. Il habite à Haïfa.", keys_fr:["il s'appelle","il a ... ans","il est","il habite"], tip_he:"il s'appelle · il a ... ans · il est + adj · il habite." },
+      { instruction_he:"ספר על הסבים שלך", prompt_fr:"Parle de tes grands-parents.", trans_he:"ספר על הסבים שלך.", model_fr:"Mes grands-parents habitent à Jérusalem. Ma grand-mère fait de très bons gâteaux.", keys_fr:["mes grands-parents","ma grand-mère","mon grand-père","il/elle aime"], tip_he:"mon grand-père = סבא · ma grand-mère = סבתא · mes grands-parents = הסבים." },
+    ],
+    [ /* 2 — J'aime… */
+      { instruction_he:"מה אתה אוהב לעשות?", prompt_fr:"Qu'est-ce que tu aimes faire ? Donne deux exemples.", trans_he:"מה אתה אוהב לעשות?", model_fr:"J'aime écouter de la musique et jouer au football. Je n'aime pas faire la cuisine.", keys_fr:["J'aime","Je n'aime pas","et"], tip_he:"J'aime + infinitif: jouer, écouter, regarder, lire." },
+      { instruction_he:"ספר על תחביב אהוב", prompt_fr:"Parle d'un hobby que tu aimes. Pourquoi ?", trans_he:"ספר על תחביב שאתה אוהב ולמה.", model_fr:"J'aime beaucoup lire. Je lis des romans et des bandes dessinées. C'est relaxant.", keys_fr:["j'aime beaucoup","je lis","c'est","parce que"], tip_he:"J'aime + infinitif · C'est + adj · parce que (כי)." },
+      { instruction_he:"ספר על מוזיקה או סרט", prompt_fr:"Quel film ou quelle chanson tu aimes ?", trans_he:"איזה סרט או שיר אתה אוהב?", model_fr:"J'aime beaucoup la musique reggae. C'est très relaxant. J'écoute quand je suis stressé.", keys_fr:["j'aime","c'est","j'écoute","quand"], tip_he:"J'aime la musique de... · C'est + adj · J'écoute / Je regarde." },
+    ],
+    [ /* 3 — Ma journée */
+      { instruction_he:"תאר את הבוקר שלך", prompt_fr:"Décris ton matin.", trans_he:"תאר את הבוקר שלך.", model_fr:"Je me réveille à sept heures. Je prends une douche et je mange un petit-déjeuner. Ensuite je vais au travail.", keys_fr:["je me réveille","je prends","ensuite","je vais"], tip_he:"Je me réveille · Je me lève · Je prends une douche · Ensuite." },
+      { instruction_he:"תאר את הערב שלך", prompt_fr:"Qu'est-ce que tu fais le soir normalement ?", trans_he:"מה אתה עושה בדרך כלל בערב?", model_fr:"Le soir, je rentre à la maison vers dix-neuf heures. Je mange avec ma famille. Après, je regarde la télé.", keys_fr:["le soir","je rentre","vers","je mange","après"], tip_he:"le soir (בערב) · après (אחרי כן) · normalement (בדרך כלל)." },
+      { instruction_he:"תאר יום שגרתי שלך", prompt_fr:"Décris une journée typique.", trans_he:"תאר יום שגרתי שלך.", model_fr:"D'habitude, je me lève à sept heures. Je mange du pain avec du café. Je vais au bureau à huit heures et demie.", keys_fr:["d'habitude","je me lève","je mange","je vais"], tip_he:"d'habitude · d'abord · ensuite · enfin." },
+    ],
+    [ /* 4 — Mon école */
+      { instruction_he:"ספר על בית הספר שלך", prompt_fr:"Parle de ton école ou de tes études.", trans_he:"ספר על בית הספר שלך.", model_fr:"Je suis au lycée. Il y a environ huit cents élèves. Mon cours préféré est la biologie.", keys_fr:["je suis au","il y a","mon cours préféré"], tip_he:"une école · un lycée · une université · un cours (שיעור)." },
+      { instruction_he:"ספר על המורה האהוב עליך", prompt_fr:"Décris ton professeur préféré.", trans_he:"תאר את המורה האהוב עליך.", model_fr:"Mon professeur préféré s'appelle Monsieur Cohen. Il enseigne les mathématiques. Il est patient.", keys_fr:["il s'appelle","il enseigne","il est"], tip_he:"il/elle enseigne (מלמד/ת) · il/elle est sympa/patient(e)." },
+      { instruction_he:"ספר על חברים בבית הספר", prompt_fr:"Parle de tes amis à l'école.", trans_he:"ספר על החברים שלך בבית הספר.", model_fr:"J'ai beaucoup d'amis à l'école. Mon meilleur ami s'appelle Roni. On mange ensemble à la cantine.", keys_fr:["j'ai","mon meilleur ami","on mange","ensemble"], tip_he:"mon meilleur ami = החבר הטוב ביותר · on = nous." },
+    ],
+    [ /* 5 — Mon pays */
+      { instruction_he:"ספר על המדינה שלך", prompt_fr:"Parle de ton pays.", trans_he:"ספר על המדינה שלך.", model_fr:"Je viens d'Israël. C'est un petit pays au Moyen-Orient. Il y a environ neuf millions d'habitants.", keys_fr:["je viens de","c'est un pays","il y a ... habitants"], tip_he:"Je viens de · c'est un pays · la capitale est." },
+      { instruction_he:"ספר על עיר בארצך", prompt_fr:"Décris une ville de ton pays.", trans_he:"תאר עיר אחת בארצך.", model_fr:"Tel Aviv est une grande ville moderne au bord de la mer. Il y a beaucoup de restaurants et de plages.", keys_fr:["c'est une ville","au bord de","il y a","très"], tip_he:"c'est une ville + adj · grande/petite/moderne/historique." },
+      { instruction_he:"ספר על האוכל של ארצך", prompt_fr:"Décris un plat typique de ton pays.", trans_he:"תאר מנה טיפוסית ממדינתך.", model_fr:"En Israël, on mange beaucoup de houmous et de falafel. C'est bon et pas cher.", keys_fr:["on mange","c'est","souvent","typique"], tip_he:"on mange = אנחנו אוכלים · c'est bon = זה טעים." },
+    ],
   ],
 };
 
 const BANK_A2 = {
+  /* stations: Passé composé · Avoir/Être · Futur proche · Adjectifs · Possessifs · Imparfait */
   gra: [
-    { instruction_he:"השלם בpassé composé (עם avoir)", prompt_fr:"Hier, j'____ (manger) une pizza.", trans_he:"אתמול אכלתי פיצה.", accepted:["ai mangé"], solution_fr:"Hier, j'ai mangé une pizza.", explanation_he:"passé composé עם avoir: j'ai + participe passé. manger → mangé.", tip_he:"manger→mangé · finir→fini · prendre→pris · faire→fait." },
-    { instruction_he:"השלם בpassé composé (עם être)", prompt_fr:"Elle ____ (aller) au cinéma samedi.", trans_he:"היא הלכה לקולנוע בשבת.", accepted:["est allée","est allé"], solution_fr:"Elle est allée au cinéma samedi.", explanation_he:"aller לוקח être. ה-participe מתאים: elle → allée (נקבה).", tip_he:"פעלי תנועה לוקחים être: aller, venir, partir, arriver, sortir, entrer." },
-    { instruction_he:"השלם בfutur proche", prompt_fr:"Ce soir, nous ____ (regarder) un film.", trans_he:"הלילה נצפה בסרט.", accepted:["allons regarder"], solution_fr:"Ce soir, nous allons regarder un film.", explanation_he:"futur proche = aller (מוטה) + infinitif.", tip_he:"je vais · tu vas · il/elle va · nous allons · vous allez · ils vont + infinitif." },
-    { instruction_he:"השלם בסיומת התואר הנכונה (accord)", prompt_fr:"Ma voisine est très ____. (gentil→?)", trans_he:"השכנה שלי מאוד נחמדה.", accepted:["gentille"], solution_fr:"Ma voisine est très gentille.", explanation_he:"gentil (זכר) → gentille (נקבה): מכפילים -l ומוסיפים -e.", tip_he:"gentil→gentille · nul→nulle · pareil→pareille." },
-    { instruction_he:"השלם בתואר הקניין הנכון", prompt_fr:"C'est le sac de Marie. C'est ____ sac.", trans_he:"זה התיק של מארי. זה התיק שלה.", accepted:["son"], solution_fr:"C'est son sac.", explanation_he:"son/sa/ses נקבע לפי המושא, לא הבעלים. sac הוא זכר → son.", tip_he:"son sac (זכר) · sa chambre (נקבה) · ses affaires (רבים)." },
-    { instruction_he:"השלם בimparfait להרגל בעבר", prompt_fr:"Quand j'étais petit, j'____ (aimer) jouer dehors.", trans_he:"כשהייתי קטן אהבתי לשחק בחוץ.", accepted:["aimais"], solution_fr:"Quand j'étais petit, j'aimais jouer dehors.", explanation_he:"imparfait מביע הרגל בעבר. aimer → j'aimais.", tip_he:"imparfait = שורש nous בהווה + -ais/-ait/-ions/-aient." },
+    [ /* 0 — Passé composé (avec avoir) */
+      { instruction_he:"passé composé עם avoir", prompt_fr:"Hier, j'____ (manger) une pizza.", trans_he:"אתמול אכלתי פיצה.", accepted:["ai mangé"], solution_fr:"Hier, j'ai mangé une pizza.", explanation_he:"passé composé עם avoir: j'ai + participe passé. manger→mangé.", tip_he:"manger→mangé · finir→fini · prendre→pris · faire→fait." },
+      { instruction_he:"passé composé: participe passé", prompt_fr:"Nous ____ (finir) l'exercice.", trans_he:"סיימנו את התרגיל.", accepted:["avons fini"], solution_fr:"Nous avons fini l'exercice.", explanation_he:"nous avons + participe passé. finir→fini.", tip_he:"travailler→travaillé · écouter→écouté · choisir→choisi." },
+      { instruction_he:"passé composé: négation", prompt_fr:"Je ____ (ne pas manger) de petit-déjeuner ce matin.", trans_he:"לא אכלתי ארוחת בוקר הבוקר.", accepted:["n'ai pas mangé","ne ai pas mangé"], solution_fr:"Je n'ai pas mangé de petit-déjeuner ce matin.", explanation_he:"שלילה בpassé composé: ne/n' + auxiliaire + pas + participe.", tip_he:"Je n'ai pas mangé (לא אכלתי) · Je ne suis pas allé(e) (לא הלכתי)." },
+    ],
+    [ /* 1 — Avoir/Être (choix de l'auxiliaire) */
+      { instruction_he:"passé composé עם être", prompt_fr:"Elle ____ (aller) au cinéma samedi.", trans_he:"היא הלכה לקולנוע בשבת.", accepted:["est allée","est allé"], solution_fr:"Elle est allée au cinéma samedi.", explanation_he:"aller לוקח être. participe מתאים: elle→allée.", tip_he:"פעלי תנועה+être: aller, venir, partir, arriver, sortir, entrer." },
+      { instruction_he:"être או avoir?", prompt_fr:"Ils ____ (arriver) tard hier soir.", trans_he:"הם הגיעו מאוחר אמש.", accepted:["sont arrivés"], solution_fr:"Ils sont arrivés tard hier soir.", explanation_he:"arriver לוקח être. ils→arrivés (זכר רבים).", tip_he:"ADVENT verbs use être: Arriver, Naître, Descendre, Venir, Entrer, Naître, Tomber..." },
+      { instruction_he:"participe passé עם être — הסכמה", prompt_fr:"Marie ____ (partir) à midi.", trans_he:"מארי עזבה בצהריים.", accepted:["est partie"], solution_fr:"Marie est partie à midi.", explanation_he:"partir עם être. Marie נקבה → partie.", tip_he:"il est parti · elle est partie · ils sont partis · elles sont parties." },
+    ],
+    [ /* 2 — Futur proche */
+      { instruction_he:"futur proche", prompt_fr:"Ce soir, nous ____ (regarder) un film.", trans_he:"הלילה נצפה בסרט.", accepted:["allons regarder"], solution_fr:"Ce soir, nous allons regarder un film.", explanation_he:"futur proche = aller (מוטה) + infinitif.", tip_he:"je vais · tu vas · il va · nous allons · vous allez · ils vont + infinitif." },
+      { instruction_he:"futur proche: שלילה", prompt_fr:"Je ____ (ne pas sortir) ce soir.", trans_he:"אני לא עומד לצאת הלילה.", accepted:["ne vais pas sortir","vais pas sortir"], solution_fr:"Je ne vais pas sortir ce soir.", explanation_he:"שלילה: ne + vais + pas + infinitif.", tip_he:"Je ne vais pas travailler · Tu ne vas pas venir?" },
+      { instruction_he:"futur proche: שאלה", prompt_fr:"Qu'est-ce que vous ____ (faire) ce week-end ?", trans_he:"מה אתם הולכים לעשות בסוף השבוע?", accepted:["allez faire"], solution_fr:"Qu'est-ce que vous allez faire ce week-end ?", explanation_he:"vous allez faire = אתם הולכים לעשות.", tip_he:"futur proche מביע עתיד קרוב או כוונה." },
+    ],
+    [ /* 3 — Adjectifs (accord et placement) */
+      { instruction_he:"הסכמת תואר נקבה", prompt_fr:"Ma voisine est très ____. (gentil→?)", trans_he:"השכנה שלי מאוד נחמדה.", accepted:["gentille"], solution_fr:"Ma voisine est très gentille.", explanation_he:"gentil→gentille: מכפילים -l ומוסיפים -e.", tip_he:"gentil→gentille · nul→nulle · pareil→pareille." },
+      { instruction_he:"תואר לפני שם עצם (BAGS)", prompt_fr:"C'est un ____ livre. (bon→?)", trans_he:"זה ספר טוב.", accepted:["bon"], solution_fr:"C'est un bon livre.", explanation_he:"bon (טוב) = תואר BAGS שבא לפני שם העצם: un bon livre.", tip_he:"BAGS: Beauty/Age/Goodness/Size — תמיד לפני: beau, vieux, bon, grand, petit." },
+      { instruction_he:"תואר אחרי שם עצם (צבע/צורה)", prompt_fr:"Elle porte une robe ____. (rouge)", trans_he:"היא לובשת שמלה אדומה.", accepted:["rouge"], solution_fr:"Elle porte une robe rouge.", explanation_he:"צבעים, צורות, לאומים — תמיד אחרי שם העצם.", tip_he:"une voiture rouge · un homme grand · une fille française." },
+    ],
+    [ /* 4 — Possessifs */
+      { instruction_he:"תואר קניין: son / sa", prompt_fr:"C'est le sac de Marie. C'est ____ sac.", trans_he:"זה התיק של מארי. זה התיק שלה.", accepted:["son"], solution_fr:"C'est son sac.", explanation_he:"son/sa/ses נקבע לפי המושא, לא הבעלים. sac זכר → son.", tip_he:"son sac (זכר) · sa chambre (נקבה) · ses affaires (רבים)." },
+      { instruction_he:"תואר קניין: mon / ma", prompt_fr:"C'est ____ mère. (של אבא)", trans_he:"זו אמא שלו.", accepted:["sa"], solution_fr:"C'est sa mère.", explanation_he:"sa מתייחס ל-mère (נקבה). הבעלים = אבא (זכר), אבל sa נקבע לפי mère!", tip_he:"mon (m) · ma (f) · mes (pl) · ton (m) · ta (f) · son (m) · sa (f)." },
+      { instruction_he:"תואר קניין: notre / votre / leur", prompt_fr:"C'est ____ maison. (של הם)", trans_he:"זה הבית שלהם.", accepted:["leur"], solution_fr:"C'est leur maison.", explanation_he:"leur = שלהם/שלהן (לא מוטה). leur maison = הבית שלהם.", tip_he:"notre (שלנו) · votre (שלכם) · leur (שלהם)." },
+    ],
+    [ /* 5 — Imparfait */
+      { instruction_he:"imparfait: הרגל בעבר", prompt_fr:"Quand j'étais petit, j'____ (aimer) jouer dehors.", trans_he:"כשהייתי קטן אהבתי לשחק בחוץ.", accepted:["aimais"], solution_fr:"Quand j'étais petit, j'aimais jouer dehors.", explanation_he:"imparfait מביע הרגל בעבר.", tip_he:"imparfait = שורש nous + -ais/-ait/-ions/-iez/-aient." },
+      { instruction_he:"imparfait: תיאור בעבר", prompt_fr:"Le ciel ____ (être) bleu et il ____ (faire) beau.", trans_he:"השמיים היו כחולים והיה יפה.", accepted:["était / faisait","était...faisait"], solution_fr:"Le ciel était bleu et il faisait beau.", explanation_he:"imparfait לתיאור מצב/מזג אוויר בעבר.", tip_he:"il faisait (היה) · il neigeait (ירד שלג) · il pleuvait (ירד גשם)." },
+      { instruction_he:"imparfait: nous", prompt_fr:"Avant, nous ____ (habiter) à Lyon.", trans_he:"לפני כן גרנו בליון.", accepted:["habitions"], solution_fr:"Avant, nous habitions à Lyon.", explanation_he:"imparfait: nous habitions (שורש habiter + -ions).", tip_he:"nous habitions · vous habitiez · ils habitaient." },
+    ],
   ],
+  /* stations: Alimentation · Transport · Santé · Vêtements · Sport · Météo */
   voc: [
-    { instruction_he:"תרגם לצרפתית: «יש לי כסף»", prompt_fr:"J'____ de l'argent.", trans_he:"יש לי כסף.", accepted:["ai"], solution_fr:"J'ai de l'argent.", explanation_he:"avoir = לקיים, להחזיק. j'ai de l'argent = יש לי כסף.", tip_he:"J'ai faim = אני רעב · J'ai soif = אני צמא · J'ai chaud = חם לי." },
-    { instruction_he:"תרגם לצרפתית: «לעשות קניות»", prompt_fr:"J'aime faire ____ le week-end.", trans_he:"אני אוהב לעשות קניות בסוף השבוע.", accepted:["du shopping","les courses","les magasins"], solution_fr:"faire du shopping / les courses", explanation_he:"faire du shopping = לעשות קניות. faire les courses = לקנות מצרכים.", tip_he:"faire du sport · faire du vélo · faire de la natation · faire les courses." },
-    { instruction_he:"תרגם לצרפתית: «מה השעה?»", prompt_fr:"____ est-il ?", trans_he:"מה השעה?", accepted:["Quelle heure","quelle heure"], solution_fr:"Quelle heure est-il ?", explanation_he:"Quelle heure est-il ? = מה השעה? תשובה: Il est trois heures.", tip_he:"Il est midi (12:00) · Il est minuit (00:00) · et demie = וחצי." },
-    { instruction_he:"תרגם לצרפתית: «ראש כואב לי»", prompt_fr:"J'ai ____ à la tête.", trans_he:"ראש כואב לי.", accepted:["mal"], solution_fr:"J'ai mal à la tête.", explanation_he:"avoir mal à = לכאוב. J'ai mal à la tête (ראש), au ventre (בטן).", tip_he:"J'ai mal à la gorge (גרון) · J'ai de la fièvre (חום)." },
-    { instruction_he:"תרגם לצרפתית: «ישר, ואחר כך שמאל»", prompt_fr:"Allez tout ____, puis à ____.", trans_he:"לכו ישר, ואז שמאלה.", accepted:["droit...gauche","droit / gauche"], solution_fr:"tout droit, puis à gauche", explanation_he:"tout droit = ישר · à gauche = שמאלה · à droite = ימינה.", tip_he:"tournez à gauche/droite · continuez tout droit · prenez la deuxième rue." },
-    { instruction_he:"תרגם לצרפתית: «מהר מאוד»", prompt_fr:"Il parle ____.", trans_he:"הוא מדבר מהר מאוד.", accepted:["très vite","trop vite"], solution_fr:"très vite", explanation_he:"vite = מהר. très vite = מהר מאוד. lentement = לאט.", tip_he:"vite (מהר) · lentement (לאט) · bien (טוב) · souvent (לעתים קרובות)." },
+    [ /* 0 — Alimentation */
+      { instruction_he:"תרגם: «לחם»", prompt_fr:"Je mange du ____ tous les matins.", trans_he:"אני אוכל לחם כל בוקר.", accepted:["pain"], solution_fr:"pain", explanation_he:"pain = לחם (זכר). une baguette = באגט.", tip_he:"le pain · le fromage · la viande · le poisson · les légumes." },
+      { instruction_he:"תרגם: «אני רעב»", prompt_fr:"J'ai ____.", trans_he:"אני רעב.", accepted:["faim"], solution_fr:"J'ai faim.", explanation_he:"avoir faim = להיות רעב. avoir soif = להיות צמא.", tip_he:"J'ai faim (רעב) · J'ai soif (צמא) · J'ai chaud (חם) · J'ai froid (קר)." },
+      { instruction_he:"תרגם: «לבשל»", prompt_fr:"J'aime ____ le week-end.", trans_he:"אני אוהב לבשל בסוף השבוע.", accepted:["cuisiner","faire la cuisine"], solution_fr:"cuisiner", explanation_he:"cuisiner = לבשל (יומיומי). faire la cuisine = לבשל (רשמי יותר).", tip_he:"cuisiner · préparer le repas · faire la cuisine." },
+    ],
+    [ /* 1 — Transport */
+      { instruction_he:"תרגם: «ברכבת תחתית»", prompt_fr:"Je vais au travail ____ métro.", trans_he:"אני הולך לעבודה ברכבת תחתית.", accepted:["en","par le"], solution_fr:"en métro", explanation_he:"en + אמצעי תחבורה: en métro, en bus, en voiture.", tip_he:"en métro · en bus · en voiture · à pied (ברגל) · à vélo (באופניים)." },
+      { instruction_he:"תרגם: «כרטיס הלוך ושוב»", prompt_fr:"Je voudrais un billet ____ Paris.", trans_he:"הייתי רוצה כרטיס הלוך ושוב לפריז.", accepted:["aller-retour","aller retour"], solution_fr:"aller-retour", explanation_he:"aller-retour = הלוך ושוב. aller simple = כרטיס חד-כיווני.", tip_he:"un billet (כרטיס) · aller simple (חד-כיווני) · aller-retour (הלוך-ושוב)." },
+      { instruction_he:"תרגם: «מחכה לאוטובוס»", prompt_fr:"J'____ l'autobus.", trans_he:"אני מחכה לאוטובוס.", accepted:["attends"], solution_fr:"J'attends l'autobus.", explanation_he:"attendre = לחכות. J'attends = אני מחכה (présent).", tip_he:"attendre le bus · prendre le métro · manquer le train." },
+    ],
+    [ /* 2 — Santé */
+      { instruction_he:"תרגם: «ראש כואב לי»", prompt_fr:"J'ai ____ à la tête.", trans_he:"ראש כואב לי.", accepted:["mal"], solution_fr:"J'ai mal à la tête.", explanation_he:"avoir mal à = לכאוב. J'ai mal à la tête/au ventre.", tip_he:"J'ai mal à la gorge (גרון) · J'ai de la fièvre (חום) · Je me sens mal (לא טוב לי)." },
+      { instruction_he:"תרגם: «אני חולה»", prompt_fr:"Je suis ____.", trans_he:"אני חולה.", accepted:["malade"], solution_fr:"Je suis malade.", explanation_he:"malade = חולה. aller mieux = להרגיש טוב יותר.", tip_he:"Je suis malade · Je me sens mieux (טוב יותר) · Je vais mal (לא בסדר)." },
+      { instruction_he:"תרגם: «קח תרופה»", prompt_fr:"Tu dois prendre un ____.", trans_he:"אתה חייב לקחת תרופה.", accepted:["médicament"], solution_fr:"médicament", explanation_he:"médicament = תרופה. une ordonnance = מרשם. une pharmacie = בית מרקחת.", tip_he:"un médicament · une ordonnance · chez le médecin (אצל הרופא)." },
+    ],
+    [ /* 3 — Vêtements */
+      { instruction_he:"תרגם: «אני לובש חולצה»", prompt_fr:"Je porte une ____.", trans_he:"אני לובש חולצה.", accepted:["chemise","chemise / t-shirt"], solution_fr:"une chemise / un t-shirt", explanation_he:"chemise = חולצה (מוצלבת) · t-shirt = חולצת טי · pull = סוודר.", tip_he:"une chemise · un jean · une veste · un manteau · des chaussures." },
+      { instruction_he:"תרגם: «לעשות קניות»", prompt_fr:"J'aime faire ____ le week-end.", trans_he:"אני אוהב לעשות קניות בסוף השבוע.", accepted:["du shopping","les courses"], solution_fr:"faire du shopping", explanation_he:"faire du shopping = לעשות קניות. faire les courses = לקנות מצרכים.", tip_he:"faire du shopping · les soldes (מכירות) · une boutique (חנות בגדים)." },
+      { instruction_he:"תרגם: «המידה שלי»", prompt_fr:"Quelle est votre ____ ?", trans_he:"מה המידה שלכם?", accepted:["taille"], solution_fr:"taille", explanation_he:"la taille = המידה. Quelle taille faites-vous? = מה המידה שלך?", tip_he:"la taille (מידה) · la pointure (מידת נעל) · ça me va (זה מתאים לי)." },
+    ],
+    [ /* 4 — Sport */
+      { instruction_he:"תרגם: «לשחק כדורגל»", prompt_fr:"J'aime ____ au football.", trans_he:"אני אוהב לשחק כדורגל.", accepted:["jouer"], solution_fr:"jouer au football", explanation_he:"jouer à + ספורט עם כדור: jouer au foot, au tennis, au basket.", tip_he:"jouer au foot · faire du vélo · nager · courir · faire de la natation." },
+      { instruction_he:"תרגם: «אני עושה ספורט»", prompt_fr:"Je fais du ____ trois fois par semaine.", trans_he:"אני עושה ספורט שלוש פעמים בשבוע.", accepted:["sport"], solution_fr:"sport", explanation_he:"faire du sport = לעשות ספורט. fois = פעמים. par semaine = בשבוע.", tip_he:"faire du sport · faire de la gym · faire du yoga · faire de la course." },
+      { instruction_he:"תרגם: «אני עייף אחרי האימון»", prompt_fr:"Je suis très ____ après l'entraînement.", trans_he:"אני מאוד עייף אחרי האימון.", accepted:["fatigué","fatigué(e)","fatiguée"], solution_fr:"fatigué(e)", explanation_he:"fatigué = עייף. l'entraînement = האימון. après = אחרי.", tip_he:"fatigué (עייף) · épuisé (מותש) · en forme (בכושר)." },
+    ],
+    [ /* 5 — Météo */
+      { instruction_he:"תרגם: «מה מזג האוויר?»", prompt_fr:"Quel ____ fait-il ?", trans_he:"מה מזג האוויר?", accepted:["temps"], solution_fr:"Quel temps fait-il ?", explanation_he:"Quel temps fait-il? = מה מזג האוויר? il fait beau = יפה, il fait froid = קר.", tip_he:"il fait beau · il fait froid · il fait chaud · il pleut · il neige." },
+      { instruction_he:"תרגם: «ירד גשם»", prompt_fr:"Hier, il a ____.", trans_he:"אתמול ירד גשם.", accepted:["plu"], solution_fr:"il a plu", explanation_he:"pleuvoir בpassé composé: il a plu. pleuvoir = לרדת גשם.", tip_he:"il pleut (הווה) · il a plu (עבר) · il va pleuvoir (עתיד)." },
+      { instruction_he:"תרגם: «יהיה קר»", prompt_fr:"Demain, il va faire ____.", trans_he:"מחר יהיה קר.", accepted:["froid"], solution_fr:"il va faire froid", explanation_he:"il fait froid = קר. futur proche: il va faire froid.", tip_he:"il fait chaud (חם) · il fait froid (קר) · il fait beau (יפה) · il fait gris (מעונן)." },
+    ],
   ],
+  /* stations: Panneaux · Horaires · Menus · SMS & mails · Annonces · Articles courts */
   com: [
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Sophie a vingt-deux ans. Elle est infirmière. Elle travaille à l'hôpital du lundi au vendredi. Le week-end, elle fait du yoga et elle lit des livres.", trans_he:"סופי בת 22. היא אחות. היא עובדת בבית חולים מ-שני עד שישי. בסוף שבוע היא עושה יוגה וקוראת ספרים.", question_fr:"Que fait Sophie le week-end ?", q_he:"מה סופי עושה בסוף השבוע?", options:["Elle travaille à l'hôpital","Elle fait du yoga et lit des livres","Elle sort avec des amis"], correct:1, explanation_he:"« le week-end, elle fait du yoga et elle lit des livres »." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Demain, il va faire très chaud : 35 degrés. Il est conseillé de boire beaucoup d'eau et d'éviter le soleil entre 12h et 16h.", trans_he:"מחר יהיה חם מאוד: 35 מעלות. מומלץ לשתות הרבה מים ולהימנע מהשמש בין 12 ל-16.", question_fr:"Que faut-il éviter demain ?", q_he:"ממה כדאי להימנע מחר?", options:["Boire de l'eau","Le soleil l'après-midi","Sortir le matin"], correct:1, explanation_he:"« éviter le soleil entre 12h et 16h » = להימנע מהשמש בשעות אלו." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Le musée est ouvert tous les jours sauf le mardi. L'entrée coûte 8 euros pour les adultes et 4 euros pour les enfants.", trans_he:"המוזיאון פתוח כל יום חוץ מיום שלישי. הכניסה עולה 8 יורו למבוגרים ו-4 יורו לילדים.", question_fr:"Quand le musée est-il fermé ?", q_he:"מתי המוזיאון סגור?", options:["Le lundi","Le mardi","Le dimanche"], correct:1, explanation_he:"« ouvert tous les jours sauf le mardi » = פתוח כל יום חוץ מיום שלישי." },
+    [ /* 0 — Panneaux (signs & notices) */
+      { instruction_he:"קרא וענה", prompt_fr:"FERMÉ POUR TRAVAUX\nRéouverture le 15 mars.", trans_he:"סגור לצורך עבודות. פתיחה מחדש ב-15 במרץ.", question_fr:"Pourquoi le magasin est-il fermé ?", q_he:"למה החנות סגורה?", options:["Pour les vacances","Pour des travaux","Pour l'inventaire"], correct:1, explanation_he:"« FERMÉ POUR TRAVAUX » = סגור לצורך עבודות." },
+      { instruction_he:"קרא וענה", prompt_fr:"ENTRÉE INTERDITE\nAccès réservé au personnel autorisé.", trans_he:"כניסה אסורה. גישה שמורה לצוות מורשה.", question_fr:"Qui peut entrer ?", q_he:"מי יכול להיכנס?", options:["Tout le monde","Seulement le personnel","Les clients uniquement"], correct:1, explanation_he:"« Accès réservé au personnel autorisé » = רק צוות מורשה." },
+      { instruction_he:"קרא וענה", prompt_fr:"SOLDES — 30 à 50% sur tout le magasin\nDu 10 au 25 janvier.", trans_he:"מכירות — 30 עד 50% על כל החנות. מ-10 עד 25 בינואר.", question_fr:"Quelle est la réduction maximale ?", q_he:"מהי ההנחה המקסימלית?", options:["30%","40%","50%"], correct:2, explanation_he:"« 30 à 50% » = מ-30 עד 50%. המקסימום הוא 50%." },
+    ],
+    [ /* 1 — Horaires (schedules) */
+      { instruction_he:"קרא וענה", prompt_fr:"Le musée est ouvert tous les jours sauf le mardi. L'entrée coûte 8 euros pour les adultes et 4 euros pour les enfants.", trans_he:"המוזיאון פתוח כל יום חוץ מיום שלישי. הכניסה עולה 8 יורו למבוגרים ו-4 יורו לילדים.", question_fr:"Quand le musée est-il fermé ?", q_he:"מתי המוזיאון סגור?", options:["Le lundi","Le mardi","Le dimanche"], correct:1, explanation_he:"« ouvert tous les jours sauf le mardi » = פתוח כל יום חוץ מיום שלישי." },
+      { instruction_he:"קרא וענה", prompt_fr:"Train Paris → Lyon\nDépart: 08h15 — Arrivée: 10h00\nDurée du trajet: 1h45\nPrix: 45€", trans_he:"רכבת פריז → ליון. יציאה: 08:15 — הגעה: 10:00. משך: שעה 45 דקות. מחיר: 45 יורו.", question_fr:"À quelle heure le train arrive-t-il à Lyon ?", q_he:"מתי הרכבת מגיעה לליון?", options:["À 08h15","À 10h00","À 09h45"], correct:1, explanation_he:"« Arrivée: 10h00 »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Bibliothèque municipale\nLundi-vendredi : 9h-19h\nSamedi : 10h-17h\nDimanche : fermé", trans_he:"ספרייה עירונית. שני-שישי: 9-19. שבת: 10-17. ראשון: סגור.", question_fr:"La bibliothèque est-elle ouverte le samedi soir à 18h ?", q_he:"האם הספרייה פתוחה ביום שבת בשעה 18?", options:["Oui","Non","On ne sait pas"], correct:1, explanation_he:"שבת: 10h-17h. 18h > 17h → הספרייה כבר סגורה." },
+    ],
+    [ /* 2 — Menus */
+      { instruction_he:"קרא וענה", prompt_fr:"Menu du jour — 12€\nEntrée : soupe ou salade\nPlat : poulet ou poisson\nDessert : tarte aux pommes", trans_he:"תפריט היום — 12 יורו. מנה ראשונה: מרק או סלט. מנה עיקרית: עוף או דג. קינוח: פאי תפוחים.", question_fr:"Qu'est-ce qu'on peut choisir comme entrée ?", q_he:"מה אפשר לבחור כמנה ראשונה?", options:["Poulet ou poisson","Soupe ou salade","Tarte aux pommes"], correct:1, explanation_he:"« Entrée : soupe ou salade »." },
+      { instruction_he:"קרא וענה", prompt_fr:"— Comme plat, vous avez le bœuf bourguignon ou le saumon grillé.\n— Je suis végétarienne. Il y a un plat sans viande ?\n— Oui, nous avons une quiche aux légumes.", trans_he:"— כמנה עיקרית, יש לכם בקר בורגיניון או סלמון צלוי.\n— אני צמחונית. יש מנה ללא בשר?\n— כן, יש לנו קיש ירקות.", question_fr:"Que choisit la personne végétarienne ?", q_he:"מה הצמחונית בוחרת?", options:["Le bœuf bourguignon","Le saumon grillé","La quiche aux légumes"], correct:2, explanation_he:"« nous avons une quiche aux légumes » — זה האפשרות ללא בשר." },
+      { instruction_he:"קרא וענה", prompt_fr:"Sophie a vingt-deux ans. Elle est infirmière. Elle travaille à l'hôpital du lundi au vendredi. Le week-end, elle fait du yoga et elle lit des livres.", trans_he:"סופי בת 22. היא אחות. היא עובדת בבית חולים מ-שני עד שישי. בסוף שבוע היא עושה יוגה וקוראת ספרים.", question_fr:"Que fait Sophie le week-end ?", q_he:"מה סופי עושה בסוף השבוע?", options:["Elle travaille à l'hôpital","Elle fait du yoga et lit des livres","Elle sort avec des amis"], correct:1, explanation_he:"« le week-end, elle fait du yoga et elle lit des livres »." },
+    ],
+    [ /* 3 — SMS & mails */
+      { instruction_he:"קרא וענה", prompt_fr:"Salut ! T'es libre ce soir ? On se retrouve au café vers 19h ? Réponds vite stp !", trans_he:"היי! אתה פנוי הערב? נתראה בבית הקפה בסביבות 19? ענה מהר בבקשה!", question_fr:"Pourquoi envoie-t-on ce message ?", q_he:"למה שולחים את ההודעה הזו?", options:["Pour annuler un rendez-vous","Pour proposer une rencontre","Pour demander de l'aide"], correct:1, explanation_he:"« On se retrouve au café » = לתאם פגישה." },
+      { instruction_he:"קרא וענה", prompt_fr:"Objet : Candidature pour le poste d'assistant\nMadame, Monsieur,\nJe me permets de vous adresser ma candidature pour le poste annoncé sur votre site.", trans_he:"נושא: מועמדות לתפקיד עוזר. גברת, אדון, ברשותי להגיש מועמדותי לתפקיד שפורסם באתרכם.", question_fr:"À quoi sert ce mail ?", q_he:"למה ההודעה הזו?", options:["À commander un produit","À postuler pour un travail","À réserver un hôtel"], correct:1, explanation_he:"« candidature pour le poste » = מועמדות לתפקיד." },
+      { instruction_he:"קרא וענה", prompt_fr:"SMS: Allo ! Je suis en retard, le bus est bloqué. J'arrive dans 20 min max. Désolé !", trans_he:"היי! אני מאחר, האוטובוס תקוע. אגיע בעוד 20 דקות לכל היותר. סורי!", question_fr:"Pourquoi la personne est-elle en retard ?", q_he:"למה האדם מאחר?", options:["Il a oublié le rendez-vous","Le bus est bloqué","Il est malade"], correct:1, explanation_he:"« le bus est bloqué » = האוטובוס תקוע." },
+    ],
+    [ /* 4 — Annonces */
+      { instruction_he:"קרא וענה", prompt_fr:"Demain, il va faire très chaud : 35 degrés. Il est conseillé de boire beaucoup d'eau et d'éviter le soleil entre 12h et 16h.", trans_he:"מחר יהיה חם מאוד: 35 מעלות. מומלץ לשתות הרבה מים ולהימנע מהשמש בין 12 ל-16.", question_fr:"Que faut-il éviter demain ?", q_he:"ממה כדאי להימנע מחר?", options:["Boire de l'eau","Le soleil l'après-midi","Sortir le matin"], correct:1, explanation_he:"« éviter le soleil entre 12h et 16h »." },
+      { instruction_he:"קרא וענה", prompt_fr:"OFFRE D'EMPLOI\nRestaurant cherche serveur/serveuse.\nHoraires : soir et week-end.\nExpérience souhaitée. Envoyer CV à contact@bistro.fr", trans_he:"מודעת עבודה. מסעדה מחפשת מלצר/ית. שעות: ערב וסוף שבוע. ניסיון מועדף. שלח קורות חיים.", question_fr:"Quand le poste exige-t-il de travailler ?", q_he:"מתי צריך לעבוד בתפקיד זה?", options:["Le matin et la journée","Le soir et le week-end","De nuit uniquement"], correct:1, explanation_he:"« Horaires : soir et week-end »." },
+      { instruction_he:"קרא וענה", prompt_fr:"CONCERT — Les Fatals Picards\nSamedi 15 juin, 20h30\nSalle Pleyel, Paris\nPlaces : 25€ à 45€ · Réservation sur bigliote.fr", trans_he:"קונצרט — Les Fatals Picards. שבת 15 ביוני, 20:30. Salle Pleyel, פריז. כרטיסים: 25-45 יורו.", question_fr:"Où a lieu le concert ?", q_he:"איפה מתקיים הקונצרט?", options:["À Lyon","À Paris","À Bordeaux"], correct:1, explanation_he:"« Salle Pleyel, Paris »." },
+    ],
+    [ /* 5 — Articles courts */
+      { instruction_he:"קרא וענה", prompt_fr:"De plus en plus de Français choisissent le vélo pour leurs déplacements en ville, pour des raisons écologiques et économiques.", trans_he:"יותר ויותר צרפתים בוחרים באופניים לנסיעות בעיר, מסיבות אקולוגיות וכלכליות.", question_fr:"Pourquoi les Français choisissent-ils le vélo ?", q_he:"למה הצרפתים בוחרים באופניים?", options:["Pour le sport uniquement","Pour des raisons écologiques et économiques","Parce qu'il n'y a pas de transports en commun"], correct:1, explanation_he:"« pour des raisons écologiques et économiques »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Une nouvelle application permet de trouver facilement des restaurants végétariens dans toute la France. Elle est disponible gratuitement sur smartphone.", trans_he:"אפליקציה חדשה מאפשרת למצוא בקלות מסעדות צמחוניות בכל צרפת. היא זמינה בחינם בסמארטפון.", question_fr:"À quoi sert cette application ?", q_he:"למה משמשת האפליקציה הזו?", options:["À commander des repas","À trouver des restaurants végétariens","À faire des réservations d'hôtel"], correct:1, explanation_he:"« trouver facilement des restaurants végétariens »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Le français est la langue officielle de 29 pays dans le monde. C'est la deuxième langue la plus étudiée après l'anglais.", trans_he:"הצרפתית היא השפה הרשמית של 29 מדינות בעולם. זוהי השפה השנייה הנלמדת ביותר אחרי האנגלית.", question_fr:"Combien de pays ont le français comme langue officielle ?", q_he:"כמה מדינות מכירות בצרפתית כשפה רשמית?", options:["19 pays","29 pays","39 pays"], correct:1, explanation_he:"« langue officielle de 29 pays »." },
+    ],
   ],
+  /* stations: Hier… · Mon appart · Mon week-end · Mes goûts · Ma routine · Mon quartier */
   exp: [
-    { instruction_he:"ספר מה עשית אתמול (תשובה חופשית)", prompt_fr:"Qu'est-ce que tu as fait hier ? Utilise le passé composé.", trans_he:"מה עשית אתמול? השתמש ב-passé composé.", model_fr:"Hier, je me suis levé à sept heures. J'ai mangé des céréales. Ensuite, je suis allé au travail. Le soir, j'ai regardé un film.", keys_fr:["hier","j'ai + participe","je suis allé(e)","ensuite","le soir"], tip_he:"passé composé: j'ai mangé · j'ai regardé · je suis allé(e) · je suis rentré(e)." },
-    { instruction_he:"תאר את הבית שלך (תשובה חופשית)", prompt_fr:"Décris ton appartement ou ta maison.", trans_he:"תאר את הדירה או הבית שלך.", model_fr:"J'habite dans un appartement au troisième étage. Il y a trois pièces : un salon, une chambre et une cuisine. C'est assez grand et lumineux.", keys_fr:["j'habite dans","il y a","un salon","une chambre","assez"], tip_he:"un salon (סלון) · une chambre (חדר שינה) · une cuisine (מטבח) · une salle de bains (חדר אמבטיה)." },
-    { instruction_he:"תאר את סוף השבוע שלך בדרך כלל (תשובה חופשית)", prompt_fr:"Raconte ce que tu fais normalement le week-end.", trans_he:"ספר מה אתה עושה בדרך כלל בסוף השבוע.", model_fr:"Le samedi matin, je fais les courses au marché. L'après-midi, je retrouve mes amis en ville. Le dimanche, je reste chez moi et je lis.", keys_fr:["le samedi","le dimanche","je fais","l'après-midi","en ville"], tip_he:"présent לתיאור הרגל: je fais, je retrouve, je reste, je lis." },
+    [ /* 0 — Hier… (passé composé) */
+      { instruction_he:"ספר מה עשית אתמול", prompt_fr:"Qu'est-ce que tu as fait hier ? Utilise le passé composé.", trans_he:"מה עשית אתמול? השתמש ב-passé composé.", model_fr:"Hier, je me suis levé à sept heures. J'ai mangé des céréales. Ensuite, je suis allé au travail. Le soir, j'ai regardé un film.", keys_fr:["hier","j'ai + participe","je suis allé(e)","ensuite","le soir"], tip_he:"passé composé: j'ai mangé · j'ai regardé · je suis allé(e) · je suis rentré(e)." },
+      { instruction_he:"ספר על אירוע מהשבוע שעבר", prompt_fr:"Qu'est-ce que tu as fait la semaine dernière ?", trans_he:"מה עשית בשבוע שעבר?", model_fr:"La semaine dernière, j'ai travaillé beaucoup. Mercredi soir, je suis sorti avec des amis. On a mangé dans un bon restaurant.", keys_fr:["la semaine dernière","j'ai travaillé","je suis sorti(e)","on a mangé"], tip_he:"la semaine dernière (שבוע שעבר) · hier soir (אמש) · avant-hier (שלשום)." },
+      { instruction_he:"ספר על ביקור שעשית", prompt_fr:"Décris une visite que tu as faite récemment.", trans_he:"תאר ביקור שעשית לאחרונה.", model_fr:"Le mois dernier, je suis allé à Tel Aviv. J'ai visité un musée et j'ai mangé dans un restaurant sympa. C'était super.", keys_fr:["je suis allé(e)","j'ai visité","j'ai mangé","c'était"], tip_he:"c'était = זה היה (imparfait de être) — להבעת הרגשה." },
+    ],
+    [ /* 1 — Mon appart */
+      { instruction_he:"תאר את הדירה שלך", prompt_fr:"Décris ton appartement ou ta maison.", trans_he:"תאר את הדירה או הבית שלך.", model_fr:"J'habite dans un appartement au troisième étage. Il y a trois pièces : un salon, une chambre et une cuisine. C'est assez grand et lumineux.", keys_fr:["j'habite dans","il y a","un salon","une chambre","assez"], tip_he:"un salon · une chambre · une cuisine · une salle de bains." },
+      { instruction_he:"תאר את החדר שלך", prompt_fr:"Décris ta chambre.", trans_he:"תאר את החדר שלך.", model_fr:"Ma chambre est petite mais confortable. Il y a un lit, un bureau et une armoire. J'ai des posters sur les murs.", keys_fr:["ma chambre est","il y a","un lit","un bureau","sur les murs"], tip_he:"un lit (מיטה) · un bureau (שולחן עבודה) · une armoire (ארון) · les murs (הקירות)." },
+      { instruction_he:"ספר על השכנות שלך", prompt_fr:"Parle de ton quartier ou de tes voisins.", trans_he:"ספר על שכונתך או שכניך.", model_fr:"Mon appartement est dans un quartier calme. Mes voisins sont sympas. Il y a un parc à deux minutes à pied.", keys_fr:["mon appartement est","dans un quartier","mes voisins","à deux minutes"], tip_he:"un quartier calme/animé · les voisins (שכנים) · à ... minutes à pied." },
+    ],
+    [ /* 2 — Mon week-end */
+      { instruction_he:"תאר את סוף השבוע שלך", prompt_fr:"Raconte ce que tu fais normalement le week-end.", trans_he:"ספר מה אתה עושה בדרך כלל בסוף השבוע.", model_fr:"Le samedi matin, je fais les courses au marché. L'après-midi, je retrouve mes amis en ville. Le dimanche, je reste chez moi.", keys_fr:["le samedi","le dimanche","je fais","l'après-midi","en ville"], tip_he:"présent לתיאור הרגל: je fais, je retrouve, je reste, je lis." },
+      { instruction_he:"ספר על סוף שבוע מיוחד", prompt_fr:"Décris un week-end particulièrement agréable.", trans_he:"תאר סוף שבוע מהנה במיוחד.", model_fr:"Le week-end dernier était super. Samedi, je suis allé à la plage avec des amis. Il faisait beau. Le soir, on a fait un barbecue.", keys_fr:["le week-end dernier","je suis allé(e)","il faisait beau","le soir","on a fait"], tip_he:"mélanger passé composé et imparfait: actions (PC) + contexte (imparfait)." },
+      { instruction_he:"ספר על תוכניות לסוף השבוע", prompt_fr:"Qu'est-ce que tu vas faire ce week-end ?", trans_he:"מה אתה הולך לעשות בסוף השבוע?", model_fr:"Ce week-end, je vais rendre visite à ma famille. On va manger ensemble et regarder un film. J'ai hâte !", keys_fr:["je vais","on va","hâte","ce week-end"], tip_he:"futur proche: je vais + infinitif · J'ai hâte = אני מצפה בקוצר רוח." },
+    ],
+    [ /* 3 — Mes goûts */
+      { instruction_he:"ספר על הטעמים שלך", prompt_fr:"Parle de ce que tu aimes et n'aimes pas.", trans_he:"ספר על מה שאתה אוהב ולא אוהב.", model_fr:"J'adore la musique et le cinéma. Je n'aime pas tellement les sports d'équipe, mais j'aime nager. En général, je préfère les activités calmes.", keys_fr:["j'adore","je n'aime pas tellement","mais","je préfère","en général"], tip_he:"j'adore · j'aime beaucoup · je n'aime pas tellement · je déteste." },
+      { instruction_he:"השווה שני דברים שאתה אוהב", prompt_fr:"Compare deux choses que tu aimes.", trans_he:"השווה שני דברים שאתה אוהב.", model_fr:"J'aime le café et le thé, mais je préfère le café. Le thé est plus doux, mais le café est plus fort et me réveille mieux.", keys_fr:["je préfère","plus ... que","mais","le/la ... est plus"], tip_he:"plus + adj + que = יותר...מ-. moins + adj + que = פחות...מ-. aussi ... que = כמו." },
+      { instruction_he:"ספר על ז'אנר מוזיקה אהוב", prompt_fr:"Décris le genre de musique que tu aimes.", trans_he:"תאר את הסגנון מוזיקלי האהוב עליך.", model_fr:"J'aime beaucoup le jazz. C'est une musique douce et sophistiquée. J'écoute du jazz quand je travaille ou quand je me repose.", keys_fr:["j'aime beaucoup","c'est une musique","j'écoute","quand"], tip_he:"le jazz · le rock · la musique classique · le rap · la chanson française." },
+    ],
+    [ /* 4 — Ma routine */
+      { instruction_he:"תאר את השגרה היומיומית שלך", prompt_fr:"Décris ta routine quotidienne.", trans_he:"תאר את השגרה היומיומית שלך.", model_fr:"Je me lève à six heures et demie. Je prends une douche, puis je mange. Je vais au bureau en métro. Le soir, je rentre vers dix-neuf heures.", keys_fr:["je me lève","je prends","je vais","le soir","je rentre"], tip_he:"d'abord · ensuite · puis · après · enfin." },
+      { instruction_he:"ספר על בוקר שגרתי", prompt_fr:"Décris un matin typique chez toi.", trans_he:"תאר בוקר שגרתי שלך.", model_fr:"Mon réveil sonne à sept heures. Je me lève dix minutes après. Je me douche et je m'habille. Je mange des toasts et je bois du café.", keys_fr:["mon réveil sonne","je me lève","je me douche","je m'habille","je mange"], tip_he:"se lever · se doucher · s'habiller · prendre le petit-déjeuner · partir." },
+      { instruction_he:"ספר מה אתה עושה בשעות הפנאי", prompt_fr:"Que fais-tu le soir après le travail ?", trans_he:"מה אתה עושה בערב אחרי העבודה?", model_fr:"Après le travail, je vais souvent faire du sport. Ensuite, je prépare le dîner et je regarde la télé ou je lis un peu.", keys_fr:["après le travail","je vais faire","ensuite","je prépare","je regarde"], tip_he:"après (אחרי) · ensuite (אחר כך) · souvent (לעתים קרובות)." },
+    ],
+    [ /* 5 — Mon quartier */
+      { instruction_he:"תאר את השכונה שלך", prompt_fr:"Décris ton quartier.", trans_he:"תאר את השכונה שלך.", model_fr:"J'habite dans un quartier animé près du centre-ville. Il y a beaucoup de cafés, de restaurants et de boutiques. C'est pratique mais parfois bruyant.", keys_fr:["j'habite dans","un quartier","il y a","c'est","mais"], tip_he:"animé (תוסס) · calme (שקט) · pratique (נוח) · bruyant (רועש) · propre (נקי)." },
+      { instruction_he:"ספר על חנויות/שירותים בקרבתך", prompt_fr:"Quels commerces ou services y a-t-il près de chez toi ?", trans_he:"אילו חנויות/שירותים יש בקרבת ביתך?", model_fr:"Près de chez moi, il y a une boulangerie, un supermarché et une pharmacie. Il y a aussi un parc où je me promène le week-end.", keys_fr:["près de chez moi","il y a","aussi","où je"], tip_he:"une boulangerie · un supermarché · une pharmacie · une poste · un parc." },
+      { instruction_he:"השווה שכונות", prompt_fr:"Compare ton quartier à un autre endroit que tu connais.", trans_he:"השווה את שכונתך לאזור אחר שאתה מכיר.", model_fr:"Mon quartier est plus calme que le centre-ville, mais moins animé. Il y a moins de restaurants mais plus d'espaces verts. Je préfère le calme.", keys_fr:["plus ... que","moins ... que","mais","je préfère"], tip_he:"plus calme que · moins animé · autant de · je préfère." },
+    ],
   ],
 };
 
 const BANK_B1 = {
+  /* stations: Imparfait/PC · Qui/Que · Pronoms COD · Pronoms COI · Réfléchis · Comparatifs */
   gra: [
-    { instruction_he:"השלם בimparfait או passé composé הנכון", prompt_fr:"Quand le téléphone a sonné, je ____ (dormir).", trans_he:"כשהטלפון צלצל, ישנתי.", accepted:["dormais"], solution_fr:"Quand le téléphone a sonné, je dormais.", explanation_he:"passé composé לפעולה חדה (a sonné), imparfait לרקע מתמשך (dormais).", tip_he:"imparfait = רקע/מצב · passé composé = פעולה חדה." },
-    { instruction_he:"השלם בכינוי הזיקה הנכון (qui / que)", prompt_fr:"C'est l'ami ____ j'ai rencontré hier.", trans_he:"זה החבר שפגשתי אתמול.", accepted:["que","qu'"], solution_fr:"C'est l'ami que j'ai rencontré hier.", explanation_he:"que = שאותו (מושא ישיר). l'ami הוא המושא של rencontrer → que.", tip_he:"qui = נושא (qui vient) · que = מושא (que je vois)." },
-    { instruction_he:"השלם בכינוי הזיקה הנכון (qui / que)", prompt_fr:"La femme ____ travaille ici est médecin.", trans_he:"האישה שעובדת כאן היא רופאה.", accepted:["qui"], solution_fr:"La femme qui travaille ici est médecin.", explanation_he:"qui = שהיא (נושא). la femme היא הנושא של travaille → qui.", tip_he:"qui = נושא (מה שאחריו הוא פועל)." },
-    { instruction_he:"השלם בפועל רפלקסיבי (présent)", prompt_fr:"Chaque matin, je ____ (se lever) à sept heures.", trans_he:"כל בוקר אני קם בשבע.", accepted:["me lève"], solution_fr:"Chaque matin, je me lève à sept heures.", explanation_he:"se lever = לקום. je me lève, tu te lèves, il se lève.", tip_he:"se lever · se coucher · s'habiller · se laver · se réveiller." },
-    { instruction_he:"השלם בכינוי מושא ישיר", prompt_fr:"Tu vois Marie ? — Oui, je ____ vois tous les jours.", trans_he:"אתה רואה את מארי? — כן, אני רואה אותה כל יום.", accepted:["la"], solution_fr:"Oui, je la vois tous les jours.", explanation_he:"כינוי מושא ישיר לנקבה יחיד = la. בא לפני הפועל.", tip_he:"le (אותו) · la (אותה) · les (אותם/ן)." },
-    { instruction_he:"השלם בכינוי מושא עקיף", prompt_fr:"Tu parles souvent à tes parents ? — Oui, je ____ parle tous les jours.", trans_he:"אתה מדבר עם ההורים שלך? — כן, אני מדבר איתם כל יום.", accepted:["leur"], solution_fr:"Oui, je leur parle tous les jours.", explanation_he:"כינוי מושא עקיף לרבים = leur. parler à qqn → lui/leur.", tip_he:"lui = לו/לה (יחיד) · leur = להם/להן (רבים)." },
+    [ /* 0 — Imparfait / Passé composé */
+      { instruction_he:"imparfait ל-PC: מצב רקע", prompt_fr:"Quand le téléphone a sonné, je ____ (dormir).", trans_he:"כשהטלפון צלצל, ישנתי.", accepted:["dormais"], solution_fr:"Quand le téléphone a sonné, je dormais.", explanation_he:"PC לפעולה חדה (a sonné), imparfait לרקע מתמשך (dormais).", tip_he:"imparfait = רקע/מצב · passé composé = פעולה חדה." },
+      { instruction_he:"imparfait ל-PC: פעולה חדה", prompt_fr:"J'____ (regarder) la télé quand il est entré.", trans_he:"צפיתי בטלוויזיה כשהוא נכנס.", accepted:["regardais"], solution_fr:"Je regardais la télé quand il est entré.", explanation_he:"regardais (imparfait) = רקע מתמשך. est entré (PC) = פעולה חדה שהפריעה.", tip_he:"quand/pendant que + imparfait (רקע) + PC (פעולה)." },
+      { instruction_he:"בחר imparfait או PC", prompt_fr:"Il ____ (pleuvoir) quand nous ____ (sortir).", trans_he:"ירד גשם כשיצאנו.", accepted:["pleuvait / sommes sortis","pleuvait ... sommes sortis"], solution_fr:"Il pleuvait quand nous sommes sortis.", explanation_he:"pleuvait (imparfait) = מצב מתמשך. sommes sortis (PC) = פעולה שקרתה.", tip_he:"imparfait = מה שהיה ברקע · PC = מה שקרה." },
+    ],
+    [ /* 1 — Qui / Que / Dont */
+      { instruction_he:"כינוי זיקה: נושא", prompt_fr:"La femme ____ travaille ici est médecin.", trans_he:"האישה שעובדת כאן היא רופאה.", accepted:["qui"], solution_fr:"La femme qui travaille ici est médecin.", explanation_he:"qui = שהיא (נושא). la femme היא הנושא של travaille → qui.", tip_he:"qui = נושא (אחריו פועל) · que = מושא (אחריו נושא)." },
+      { instruction_he:"כינוי זיקה: מושא ישיר", prompt_fr:"C'est l'ami ____ j'ai rencontré hier.", trans_he:"זה החבר שפגשתי אתמול.", accepted:["que","qu'"], solution_fr:"C'est l'ami que j'ai rencontré hier.", explanation_he:"que = שאותו (מושא ישיר). l'ami הוא המושא של rencontrer.", tip_he:"qui = נושא (qui vient) · que = מושא (que je vois)." },
+      { instruction_he:"כינוי זיקה: dont", prompt_fr:"C'est le livre ____ tu m'as parlé.", trans_he:"זה הספר שדיברת איתי עליו.", accepted:["dont"], solution_fr:"C'est le livre dont tu m'as parlé.", explanation_he:"dont מחליף de + שם. parler de qqch → dont.", tip_he:"dont אחרי פעלים ב-de: parler de, avoir besoin de, se souvenir de." },
+    ],
+    [ /* 2 — Pronoms COD (le/la/les) */
+      { instruction_he:"COD: la", prompt_fr:"Tu vois Marie ? — Oui, je ____ vois tous les jours.", trans_he:"אתה רואה את מארי? — כן, אני רואה אותה כל יום.", accepted:["la"], solution_fr:"Oui, je la vois tous les jours.", explanation_he:"COD לנקבה יחיד = la. בא לפני הפועל.", tip_he:"le (אותו) · la (אותה) · les (אותם/ן)." },
+      { instruction_he:"COD: les", prompt_fr:"Tu as regardé les films ? — Oui, je ____ ai regardés.", trans_he:"צפית בסרטים? — כן, צפיתי בהם.", accepted:["les"], solution_fr:"Oui, je les ai regardés.", explanation_he:"les = אותם. בpassé composé עם avoir + COD לפניו, participe מתאים: regardés.", tip_he:"COD לפני avoir בPC → participe מתאים למין ומספר." },
+      { instruction_he:"COD: placement avec infinitif", prompt_fr:"Je vais appeler ma sœur. → Je vais ____ appeler.", trans_he:"אני הולך להתקשר לאחותי. → אני הולך להתקשר אליה.", accepted:["la"], solution_fr:"Je vais la appeler. / Je vais l'appeler.", explanation_he:"עם futur proche: COD נמצא לפני ה-infinitif: vais la appeler.", tip_he:"aller + la/le/les + infinitif · veux la voir · dois les faire." },
+    ],
+    [ /* 3 — Pronoms COI (lui/leur) */
+      { instruction_he:"COI: leur", prompt_fr:"Tu parles à tes parents ? — Oui, je ____ parle tous les jours.", trans_he:"אתה מדבר עם ההורים שלך? — כן, אני מדבר איתם כל יום.", accepted:["leur"], solution_fr:"Oui, je leur parle tous les jours.", explanation_he:"COI לרבים = leur. parler à qqn → lui/leur.", tip_he:"lui = לו/לה (יחיד) · leur = להם/להן (רבים)." },
+      { instruction_he:"COI: lui", prompt_fr:"Tu as dit la vérité à Pierre ? — Oui, je ____ ai dit la vérité.", trans_he:"אמרת לפייר את האמת? — כן, אמרתי לו.", accepted:["lui"], solution_fr:"Oui, je lui ai dit la vérité.", explanation_he:"COI ליחיד (זכר) = lui. dire à qqn → lui.", tip_he:"lui ai dit · lui ai donné · lui ai montré — כולם COI יחיד." },
+      { instruction_he:"COI vs COD", prompt_fr:"Je téléphone à Marc. → Je ____ téléphone.", trans_he:"אני מתקשר למארק. → אני מתקשר לו.", accepted:["lui"], solution_fr:"Je lui téléphone.", explanation_he:"téléphoner à qqn → COI → lui. אל תשתמש ב-le (זה COD)!", tip_he:"COI: parler à, téléphoner à, écrire à, répondre à → lui/leur." },
+    ],
+    [ /* 4 — Verbes réfléchis */
+      { instruction_he:"פועל רפלקסיבי: présent", prompt_fr:"Chaque matin, je ____ (se lever) à sept heures.", trans_he:"כל בוקר אני קם בשבע.", accepted:["me lève"], solution_fr:"Chaque matin, je me lève à sept heures.", explanation_he:"se lever = לקום. je me lève, tu te lèves, il se lève.", tip_he:"se lever · se coucher · s'habiller · se laver · se réveiller." },
+      { instruction_he:"פועל רפלקסיבי: passé composé", prompt_fr:"Elle ____ (se réveiller) tard ce matin.", trans_he:"היא התעוררה מאוחר הבוקר.", accepted:["s'est réveillée","s'est reveillée"], solution_fr:"Elle s'est réveillée tard ce matin.", explanation_he:"פועלים רפלקסיביים לוקחים être בPC. elle → s'est réveillée (נקבה).", tip_he:"se + être + participe: elle s'est levée · il s'est couché." },
+      { instruction_he:"פועל רפלקסיבי: négatif", prompt_fr:"Il ____ (ne pas se dépêcher) ce matin.", trans_he:"הוא לא מיהר הבוקר.", accepted:["ne s'est pas dépêché","s'est pas dépêché"], solution_fr:"Il ne s'est pas dépêché ce matin.", explanation_he:"שלילה בPC רפלקסיבי: ne + s' + est + pas + participe.", tip_he:"Il ne s'est pas levé (לא קם) · Elle ne s'est pas habillée (לא התלבשה)." },
+    ],
+    [ /* 5 — Comparatifs / Superlatifs */
+      { instruction_he:"comparatif: plus...que", prompt_fr:"Paris est ____ grande ____ Lyon.", trans_he:"פריז גדולה יותר מליון.", accepted:["plus / que","plus...que"], solution_fr:"Paris est plus grande que Lyon.", explanation_he:"plus + adj + que = יותר...מ-.", tip_he:"plus...que · moins...que · aussi...que = כמו." },
+      { instruction_he:"superlatif: le/la plus", prompt_fr:"C'est ____ film ____ intéressant de l'année.", trans_he:"זה הסרט המעניין ביותר של השנה.", accepted:["le / plus","le plus","le film le plus"], solution_fr:"C'est le film le plus intéressant de l'année.", explanation_he:"supérlatif: le/la/les + plus + adj. le film le plus intéressant.", tip_he:"le plus (הכי) · le moins (הכי פחות) · le meilleur (הטוב ביותר)." },
+      { instruction_he:"irréguliers: meilleur / mieux", prompt_fr:"Ce restaurant est ____ que l'autre.", trans_he:"המסעדה הזו יותר טובה מהאחרת.", accepted:["meilleur","meilleure","mieux"], solution_fr:"Ce restaurant est meilleur que l'autre.", explanation_he:"bon → meilleur (תואר שם). bien → mieux (תואר פועל).", tip_he:"bon/meilleur (adj) · bien/mieux (adv) · mauvais/pire." },
+    ],
   ],
+  /* stations: Voyages · Santé · Environnement · Médias · Travail · Relations */
   voc: [
-    { instruction_he:"תרגם לצרפתית: «להגיע בזמן»", prompt_fr:"Il est important d'____ à l'heure.", trans_he:"חשוב להגיע בזמן.", accepted:["arriver","arriver à l'heure"], solution_fr:"arriver à l'heure", explanation_he:"arriver à l'heure = להגיע בזמן. être en retard = להיות מאוחר.", tip_he:"à l'heure (בזמן) · en retard (מאוחר) · en avance (מוקדם)." },
-    { instruction_he:"תרגם לצרפתית: «לדעתי זה חשוב»", prompt_fr:"____, c'est très important.", trans_he:"לדעתי, זה מאוד חשוב.", accepted:["À mon avis","a mon avis","Selon moi"], solution_fr:"À mon avis, c'est très important.", explanation_he:"À mon avis = לדעתי. Selon moi = לפי דעתי.", tip_he:"À mon avis · Je pense que · Il me semble que · Selon moi." },
-    { instruction_he:"תרגם לצרפתית: «לטייל / לנסוע»", prompt_fr:"J'adore ____ en Europe.", trans_he:"אני מאוד אוהב לטייל באירופה.", accepted:["voyager"], solution_fr:"voyager", explanation_he:"voyager = לטייל. un voyage = מסע. partir en vacances = לצאת לחופשה.", tip_he:"voyager · faire un voyage · partir en vacances · explorer." },
-    { instruction_he:"תרגם לצרפתית: «ממש עייף»", prompt_fr:"Après le sport, je suis ____.", trans_he:"אחרי ספורט, אני ממש עייף.", accepted:["épuisé","épuisée","très fatigué","très fatiguée","crevé"], solution_fr:"épuisé(e) / crevé(e)", explanation_he:"épuisé = מותש (יותר חזק מ-fatigué). crevé = סלנג לממש מותש.", tip_he:"fatigué (עייף) · épuisé (מותש) · crevé (ממש מותש, סלנג)." },
-    { instruction_he:"תרגם לצרפתית: «לשמור על הסביבה»", prompt_fr:"Il faut ____ l'environnement.", trans_he:"צריך לשמור על הסביבה.", accepted:["protéger","respecter","préserver"], solution_fr:"protéger / préserver l'environnement", explanation_he:"protéger = להגן · préserver = לשמר · l'environnement = הסביבה.", tip_he:"le réchauffement climatique · le recyclage · les énergies renouvelables." },
-    { instruction_he:"תרגם לצרפתית: «אני מסכים איתך»", prompt_fr:"Je suis ____ avec toi.", trans_he:"אני מסכים איתך.", accepted:["d'accord"], solution_fr:"Je suis d'accord avec toi.", explanation_he:"être d'accord (avec) = להסכים. Je ne suis pas d'accord = אני לא מסכים.", tip_he:"d'accord (מסכים) · au contraire (להיפך) · en revanche (לעומת זאת)." },
+    [ /* 0 — Voyages */
+      { instruction_he:"תרגם: «לטייל»", prompt_fr:"J'adore ____ en Europe.", trans_he:"אני מאוד אוהב לטייל באירופה.", accepted:["voyager"], solution_fr:"voyager", explanation_he:"voyager = לטייל. un voyage = מסע.", tip_he:"voyager · partir en vacances · explorer · faire un séjour." },
+      { instruction_he:"תרגם: «להגיע בזמן»", prompt_fr:"Il est important d'____ à l'heure.", trans_he:"חשוב להגיע בזמן.", accepted:["arriver","arriver à l'heure"], solution_fr:"arriver à l'heure", explanation_he:"arriver à l'heure = להגיע בזמן. être en retard = להיות מאוחר.", tip_he:"à l'heure (בזמן) · en retard (מאוחר) · en avance (מוקדם)." },
+      { instruction_he:"תרגם: «ביטוח נסיעה»", prompt_fr:"J'ai pris une ____ de voyage.", trans_he:"לקחתי ביטוח נסיעה.", accepted:["assurance"], solution_fr:"une assurance de voyage", explanation_he:"assurance = ביטוח. une assurance de voyage = ביטוח נסיעה.", tip_he:"une assurance · un passeport · un visa · une réservation." },
+    ],
+    [ /* 1 — Santé */
+      { instruction_he:"תרגם: «ממש עייף»", prompt_fr:"Après le sport, je suis ____.", trans_he:"אחרי ספורט, אני ממש עייף.", accepted:["épuisé","épuisée","crevé"], solution_fr:"épuisé(e) / crevé(e)", explanation_he:"épuisé = מותש. crevé = סלנג לממש מותש.", tip_he:"fatigué (עייף) · épuisé (מותש) · crevé (ממש מותש, סלנג)." },
+      { instruction_he:"תרגם: «אני מרגיש טוב יותר»", prompt_fr:"Je ____ mieux depuis hier.", trans_he:"אני מרגיש טוב יותר מאתמול.", accepted:["me sens","vais"], solution_fr:"Je me sens mieux / Je vais mieux", explanation_he:"se sentir mieux = להרגיש טוב יותר. aller mieux = להיות בסדר יותר.", tip_he:"se sentir (bien/mal) · aller mieux · être en forme." },
+      { instruction_he:"תרגם: «ניתוח»", prompt_fr:"Il doit subir une ____.", trans_he:"הוא חייב לעבור ניתוח.", accepted:["opération","intervention","chirurgie"], solution_fr:"une opération / une intervention", explanation_he:"opération = ניתוח (יומיומי) · intervention = התערבות רפואית · chirurgie = כירורגיה.", tip_he:"une opération · une anesthésie · une convalescence (החלמה)." },
+    ],
+    [ /* 2 — Environnement */
+      { instruction_he:"תרגם: «לשמור על הסביבה»", prompt_fr:"Il faut ____ l'environnement.", trans_he:"צריך לשמור על הסביבה.", accepted:["protéger","respecter","préserver"], solution_fr:"protéger / préserver l'environnement", explanation_he:"protéger = להגן · préserver = לשמר · l'environnement = הסביבה.", tip_he:"le réchauffement climatique · le recyclage · les énergies renouvelables." },
+      { instruction_he:"תרגם: «פחמן דו חמצני»", prompt_fr:"Les voitures émettent beaucoup de ____.", trans_he:"מכוניות פולטות הרבה פחמן דו חמצני.", accepted:["CO2","dioxyde de carbone","gaz carbonique"], solution_fr:"CO2 / dioxyde de carbone", explanation_he:"dioxyde de carbone = פחמן דו חמצני. gaz à effet de serre = גזי חממה.", tip_he:"les émissions de CO2 · l'effet de serre · le changement climatique." },
+      { instruction_he:"תרגם: «מיחזור»", prompt_fr:"Il est important de faire le ____.", trans_he:"חשוב לעשות מיחזור.", accepted:["recyclage"], solution_fr:"le recyclage", explanation_he:"le recyclage = מיחזור. recycler = למחזר. les déchets = פסולת.", tip_he:"recycler · trier les déchets · économiser l'énergie · le compost." },
+    ],
+    [ /* 3 — Médias */
+      { instruction_he:"תרגם: «עיתון»", prompt_fr:"Je lis le ____ tous les matins.", trans_he:"אני קורא את העיתון כל בוקר.", accepted:["journal","journal / quotidien","quotidien"], solution_fr:"journal / quotidien", explanation_he:"journal = עיתון (יומי). quotidien = יומי (adj ו-n). hebdomadaire = שבועי.", tip_he:"un journal · un magazine · une revue · une chaîne de télévision." },
+      { instruction_he:"תרגם: «לפי הידיעות»", prompt_fr:"____, il va pleuvoir demain.", trans_he:"לפי הידיעות, מחר ירד גשם.", accepted:["D'après les informations","Selon les informations","D'après les médias"], solution_fr:"D'après les informations", explanation_he:"d'après = לפי (מקור מידע). selon = לפי (דעה). d'après les infos = לפי החדשות.", tip_he:"d'après · selon · d'après les médias/la radio/le journal." },
+      { instruction_he:"תרגם: «חברת מדיה»", prompt_fr:"Cette ____ diffuse ses programmes dans le monde entier.", trans_he:"חברת המדיה הזו משדרת תוכניות ברחבי העולם.", accepted:["chaîne","chaîne de télévision","média"], solution_fr:"chaîne (de télévision)", explanation_he:"une chaîne = ערוץ טלוויזיה. un média = מדיה. les médias = כלי התקשורת.", tip_he:"une chaîne · un réseau (רשת) · les médias · la presse (העיתונות)." },
+    ],
+    [ /* 4 — Travail */
+      { instruction_he:"תרגם: «מועמדות לעבודה»", prompt_fr:"J'ai envoyé ma ____ pour ce poste.", trans_he:"שלחתי את מועמדותי לתפקיד הזה.", accepted:["candidature"], solution_fr:"ma candidature", explanation_he:"une candidature = מועמדות. un candidat/e = מועמד/ת. postuler = להגיש מועמדות.", tip_he:"postuler · une candidature · un CV · une lettre de motivation." },
+      { instruction_he:"תרגם: «עמית לעבודה»", prompt_fr:"Je m'entends bien avec mes ____.", trans_he:"אני מסתדר טוב עם עמיתיי לעבודה.", accepted:["collègues"], solution_fr:"collègues", explanation_he:"un/une collègue = עמית לעבודה. le patron/la patronne = הבוס.", tip_he:"un collègue · le patron · l'employé · le chef de projet." },
+      { instruction_he:"תרגם: «לשכת אבטלה»", prompt_fr:"Il est au ____ depuis trois mois.", trans_he:"הוא מובטל כבר שלושה חודשים.", accepted:["chômage"], solution_fr:"au chômage", explanation_he:"être au chômage = להיות מובטל. le chômage = אבטלה. Pôle emploi = לשכת התעסוקה.", tip_he:"au chômage (מובטל) · licencier (לפטר) · démissionner (להתפטר)." },
+    ],
+    [ /* 5 — Relations */
+      { instruction_he:"תרגם: «אני מסכים איתך»", prompt_fr:"Je suis ____ avec toi.", trans_he:"אני מסכים איתך.", accepted:["d'accord"], solution_fr:"Je suis d'accord avec toi.", explanation_he:"être d'accord = להסכים. Je ne suis pas d'accord = אני לא מסכים.", tip_he:"d'accord · au contraire (להיפך) · en revanche (לעומת זאת)." },
+      { instruction_he:"תרגם: «להסכים / להתפשר»", prompt_fr:"On a trouvé un ____.", trans_he:"מצאנו פשרה.", accepted:["compromis"], solution_fr:"un compromis", explanation_he:"un compromis = פשרה. trouver un compromis = להגיע לפשרה.", tip_he:"un compromis · un accord · une solution · négocier (לנהל משא ומתן)." },
+      { instruction_he:"תרגם: «תמיכה»", prompt_fr:"J'ai besoin de ton ____.", trans_he:"אני צריך את תמיכתך.", accepted:["soutien","aide","support"], solution_fr:"soutien / aide", explanation_he:"le soutien = תמיכה. l'aide = עזרה. soutenir = לתמוך.", tip_he:"le soutien · l'aide · la solidarité · l'entraide (עזרה הדדית)." },
+    ],
   ],
+  /* stations: Faits divers · Blogs · Publicités · Interviews · Critiques · Reportages */
   com: [
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"De plus en plus de consommateurs se tournent vers les produits biologiques, convaincus qu'ils sont meilleurs pour la santé, malgré un prix souvent plus élevé.", trans_he:"יותר ויותר צרכנים פונים למוצרים אורגניים, משוכנעים שהם בריאים יותר, למרות מחיר גבוה יותר.", question_fr:"Qu'est-ce qui peut freiner l'achat de produits bio ?", q_he:"מה עלול להרתיע מקנייה של מוצרים אורגניים?", options:["Leur goût","Leur prix plus élevé","Leur rareté"], correct:1, explanation_he:"« malgré un prix souvent plus élevé » = למרות מחיר גבוה יותר — זה החיסרון." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Apprendre une langue étrangère demande de la patience : les progrès sont parfois lents, mais la régularité finit toujours par payer.", trans_he:"ללמוד שפה זרה דורש סבלנות: ההתקדמות לפעמים איטית, אך ההתמדה תמיד משתלמת בסוף.", question_fr:"Quel facteur est essentiel selon le texte ?", q_he:"איזה גורם חיוני לפי הטקסט?", options:["Le talent inné","La régularité","La rapidité"], correct:1, explanation_he:"« la régularité finit toujours par payer » = ההתמדה תמיד משתלמת." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Les réseaux sociaux permettent de rester en contact avec ses proches, mais une utilisation excessive peut nuire à la concentration et au sommeil.", trans_he:"הרשתות החברתיות מאפשרות להישאר בקשר, אך שימוש מופרז עלול לפגוע בריכוז ובשינה.", question_fr:"Quel risque le texte mentionne-t-il ?", q_he:"איזה סיכון מזכיר הטקסט?", options:["Une meilleure concentration","Des troubles du sommeil","Une perte de contacts"], correct:1, explanation_he:"הטקסט מזכיר ש-« peut nuire à la concentration et au sommeil »." },
+    [ /* 0 — Faits divers */
+      { instruction_he:"קרא וענה", prompt_fr:"De plus en plus de consommateurs se tournent vers les produits biologiques, convaincus qu'ils sont meilleurs pour la santé, malgré un prix souvent plus élevé.", trans_he:"יותר ויותר צרכנים פונים למוצרים אורגניים, משוכנעים שהם בריאים יותר, למרות מחיר גבוה יותר.", question_fr:"Qu'est-ce qui peut freiner l'achat de produits bio ?", q_he:"מה עלול להרתיע מקנייה של מוצרים אורגניים?", options:["Leur goût","Leur prix plus élevé","Leur rareté"], correct:1, explanation_he:"« malgré un prix souvent plus élevé »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Un incendie s'est déclaré hier soir dans un immeuble du centre-ville. Cinq personnes ont été évacuées. Aucune victime n'est à déplorer.", trans_he:"שריפה פרצה אמש בבניין במרכז העיר. חמישה אנשים פונו. אין נפגעים.", question_fr:"Combien de personnes ont été évacuées ?", q_he:"כמה אנשים פונו?", options:["Trois personnes","Cinq personnes","Dix personnes"], correct:1, explanation_he:"« Cinq personnes ont été évacuées »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Un jeune de 17 ans a remporté le premier prix du concours de mathématiques national. Il représentera la France aux Olympiades internationales.", trans_he:"נער בן 17 זכה בפרס הראשון בתחרות מתמטיקה לאומית. הוא ייצג את צרפת באולימפיאדה הבינלאומית.", question_fr:"Que va faire ce jeune maintenant ?", q_he:"מה הנער עומד לעשות כעת?", options:["Il va quitter la France","Il va représenter la France aux Olympiades","Il va enseigner les maths"], correct:1, explanation_he:"« Il représentera la France aux Olympiades internationales »." },
+    ],
+    [ /* 1 — Blogs */
+      { instruction_he:"קרא וענה", prompt_fr:"Apprendre une langue étrangère demande de la patience : les progrès sont parfois lents, mais la régularité finit toujours par payer.", trans_he:"ללמוד שפה זרה דורש סבלנות: ההתקדמות לפעמים איטית, אך ההתמדה תמיד משתלמת בסוף.", question_fr:"Quel facteur est essentiel selon le texte ?", q_he:"איזה גורם חיוני לפי הטקסט?", options:["Le talent inné","La régularité","La rapidité"], correct:1, explanation_he:"« la régularité finit toujours par payer »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Mon blog parle de ma vie à Paris en tant qu'étudiante étrangère. Je raconte mes aventures, mes galères et mes découvertes culturelles.", trans_he:"הבלוג שלי מדבר על חיי בפריז כסטודנטית זרה. אני מספרת על ההרפתקאות, הקשיים והגילויים התרבותיים שלי.", question_fr:"De quoi parle ce blog ?", q_he:"במה עוסק הבלוג?", options:["De recettes de cuisine","De la vie d'une étudiante étrangère à Paris","De voyages en Europe"], correct:1, explanation_he:"« ma vie à Paris en tant qu'étudiante étrangère »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Hier, j'ai essayé une nouvelle recette : une tarte aux courgettes. Le résultat était délicieux et mes amis ont adoré. Je vous donne la recette en bas de l'article.", trans_he:"אתמול ניסיתי מתכון חדש: פאי קישואים. התוצאה הייתה טעימה ואחיי אהבו. אני נותן לכם את המתכון בתחתית הכתבה.", question_fr:"Où peut-on trouver la recette ?", q_he:"איפה אפשר למצוא את המתכון?", options:["En début d'article","En bas de l'article","Sur un autre site"], correct:1, explanation_he:"« Je vous donne la recette en bas de l'article »." },
+    ],
+    [ /* 2 — Publicités */
+      { instruction_he:"קרא וענה", prompt_fr:"Nouvelle voiture électrique NOVA : 500 km d'autonomie, charge en 30 minutes, à partir de 29 000€. Révolutionnez vos déplacements.", trans_he:"מכונית חשמלית חדשה NOVA: 500 ק\"מ טווח, טעינה ב-30 דקות, מ-29,000 יורו. שנו את הנסיעות שלכם.", question_fr:"Combien de temps dure la charge ?", q_he:"כמה זמן לוקחת הטעינה?", options:["15 minutes","30 minutes","1 heure"], correct:1, explanation_he:"« charge en 30 minutes »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Abonnez-vous à notre magazine pendant 6 mois et recevez le 7e mois gratuit ! Offre valable jusqu'au 31 décembre.", trans_he:"הירשמו למגזין שלנו ל-6 חודשים וקבלו את החודש השביעי חינם! ההצעה תקפה עד 31 בדצמבר.", question_fr:"Quel est l'avantage de cette offre ?", q_he:"מה היתרון של ההצעה הזו?", options:["Un mois gratuit","Deux mois gratuits","La livraison gratuite"], correct:0, explanation_he:"« recevez le 7e mois gratuit » = חודש 7 חינם." },
+      { instruction_he:"קרא וענה", prompt_fr:"Les réseaux sociaux permettent de rester en contact avec ses proches, mais une utilisation excessive peut nuire à la concentration et au sommeil.", trans_he:"הרשתות החברתיות מאפשרות להישאר בקשר, אך שימוש מופרז עלול לפגוע בריכוז ובשינה.", question_fr:"Quel risque le texte mentionne-t-il ?", q_he:"איזה סיכון מזכיר הטקסט?", options:["Une meilleure concentration","Des troubles du sommeil","Une perte de contacts"], correct:1, explanation_he:"« peut nuire à la concentration et au sommeil »." },
+    ],
+    [ /* 3 — Interviews */
+      { instruction_he:"קרא וענה", prompt_fr:"— Comment êtes-vous devenu chef cuisinier ?\n— Tout a commencé dans la cuisine de ma grand-mère. J'avais dix ans et elle m'apprenait ses recettes.", trans_he:"— איך הפכתם לשף?\n— הכל התחיל במטבח של סבתא שלי. הייתי בן עשר והיא לימדה אותי את המתכונים שלה.", question_fr:"Où la passion du chef a-t-elle commencé ?", q_he:"איפה התחיל התשוקה של השף?", options:["Dans une école de cuisine","Dans la cuisine de sa grand-mère","Dans un restaurant célèbre"], correct:1, explanation_he:"« Tout a commencé dans la cuisine de ma grand-mère »." },
+      { instruction_he:"קרא וענה", prompt_fr:"— Quel est votre conseil pour les jeunes qui veulent travailler dans l'éducation ?\n— Soyez patient. Les résultats prennent du temps, mais la satisfaction de voir un élève progresser est incomparable.", trans_he:"— מה העצה שלכם לצעירים שרוצים לעבוד בחינוך?\n— היו סבלניים. התוצאות לוקחות זמן, אבל הסיפוק מלראות תלמיד מתקדם אין לו תחליף.", question_fr:"Quel est le conseil principal de la personne interviewée ?", q_he:"מה העצה העיקרית של הנסכח?", options:["Travailler beaucoup d'heures","Être patient","Changer d'école souvent"], correct:1, explanation_he:"« Soyez patient » = היו סבלניים." },
+      { instruction_he:"קרא וענה", prompt_fr:"— Vous avez publié votre premier roman à 65 ans. Pourquoi si tard ?\n— J'ai toujours voulu écrire, mais la vie professionnelle ne me laissait pas le temps.", trans_he:"— פרסמתם את הרומן הראשון שלכם בגיל 65. למה כל כך מאוחר?\n— תמיד רציתי לכתוב, אבל חיי המקצועיים לא הותירו לי זמן.", question_fr:"Pourquoi l'auteur n'a-t-il pas écrit plus tôt ?", q_he:"למה הסופר לא כתב מוקדם יותר?", options:["Il n'aimait pas écrire","Sa vie professionnelle ne lui laissait pas le temps","Il manquait d'inspiration"], correct:1, explanation_he:"« la vie professionnelle ne me laissait pas le temps »." },
+    ],
+    [ /* 4 — Critiques */
+      { instruction_he:"קרא וענה", prompt_fr:"« Si le livre numérique a séduit de nombreux lecteurs par sa praticité, le livre papier conserve un charme que beaucoup ne sont pas prêts à abandonner. »", trans_he:"אם הספר הדיגיטלי כבש קוראים בזכות הנוחות, הספר המודפס שומר על קסם שרבים לא מוכנים לוותר עליו.", question_fr:"Que dit le texte sur le livre papier ?", q_he:"מה אומר הטקסט על הספר המודפס?", options:["Il a complètement disparu","Il garde un charme apprécié","Il est plus pratique que le numérique"], correct:1, explanation_he:"« conserve un charme que beaucoup ne sont pas prêts à abandonner »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Malgré un accueil critique mitigé, le dernier film du réalisateur a rencontré un franc succès auprès du public, dépassant le million d'entrées en une semaine. »", trans_he:"למרות קבלת פנים ביקורתית מעורבת, הסרט האחרון זכה להצלחה גדולה בקרב הקהל, ועבר מיליון צופים בשבוע.", question_fr:"Comment le film a-t-il été reçu ?", q_he:"כיצד התקבל הסרט?", options:["Aimé par la critique mais ignoré du public","Critiqué mais très populaire auprès du public","Un échec total"], correct:1, explanation_he:"« accueil critique mitigé » + « franc succès auprès du public »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Ce roman est à la fois touchant et décevant. L'auteur crée des personnages attachants, mais l'intrigue perd de sa vigueur dans la deuxième moitié.", trans_he:"הרומן הזה מרגש ומאכזב בו-זמנית. הסופר יוצר דמויות מרתקות, אך העלילה מאבדת מכוחה במחצית השנייה.", question_fr:"Quel est le défaut du roman selon le critique ?", q_he:"מה החיסרון של הרומן לפי המבקר?", options:["Les personnages sont peu intéressants","L'intrigue s'affaiblit dans la deuxième moitié","Le style est trop complexe"], correct:1, explanation_he:"« l'intrigue perd de sa vigueur dans la deuxième moitié »." },
+    ],
+    [ /* 5 — Reportages */
+      { instruction_he:"קרא וענה", prompt_fr:"« Pour désengorger le centre-ville, la municipalité encourage l'usage du vélo en multipliant les pistes cyclables. »", trans_he:"כדי לפנות את הגודש במרכז העיר, העירייה מעודדת שימוש באופניים על ידי הרבטת שבילי אופניים.", question_fr:"Quel est l'objectif de la municipalité ?", q_he:"מה המטרה של העירייה?", options:["Augmenter le trafic automobile","Réduire l'encombrement du centre-ville","Interdire totalement les voitures"], correct:1, explanation_he:"« désengorger le centre-ville » = להקל על הגודש." },
+      { instruction_he:"קרא וענה", prompt_fr:"Dans certaines régions de France, des producteurs locaux ont créé des marchés alternatifs pour vendre directement leurs produits aux consommateurs, sans intermédiaire.", trans_he:"באזורים מסוימים בצרפת, יצרנים מקומיים יצרו שווקים חלופיים למכירה ישירה לצרכנים ללא מתווכים.", question_fr:"Quel est l'avantage de ces marchés ?", q_he:"מה היתרון של השווקים האלה?", options:["Ils sont réservés aux touristes","Ils permettent une vente directe sans intermédiaire","Ils sont moins chers que les supermarchés"], correct:1, explanation_he:"« vendre directement aux consommateurs, sans intermédiaire »." },
+      { instruction_he:"קרא וענה", prompt_fr:"Un rapport récent montre que la France est l'un des pays d'Europe où l'on travaille le moins d'heures par semaine, grâce aux 35 heures légales.", trans_he:"דוח עדכני מראה שצרפת היא מהמדינות באירופה שבהן עובדים הכי מעט שעות בשבוע, הודות לחוק 35 השעות.", question_fr:"À quoi est attribuée la faible durée de travail en France ?", q_he:"למה מיוחסות שעות העבודה הנמוכות בצרפת?", options:["Au manque de travail","Aux 35 heures légales","Au chômage élevé"], correct:1, explanation_he:"« grâce aux 35 heures légales » = הודות לחוק 35 השעות." },
+    ],
   ],
+  /* stations: Opinion · Événement · Description · Comparaison · Conseil · Récit */
   exp: [
-    { instruction_he:"ספר על סוף שבוע שהשאיר רושם (תשובה חופשית)", prompt_fr:"Raconte un week-end qui t'a marqué. Utilise le passé composé et l'imparfait.", trans_he:"ספר על סוף שבוע שהשאיר בך רושם. השתמש ב-passé composé וב-imparfait.", model_fr:"Le week-end dernier, je suis allé à la montagne avec des amis. Il faisait un temps magnifique et nous avons fait une longue randonnée. Le soir, nous étions épuisés mais heureux.", keys_fr:["le week-end dernier","je suis allé","il faisait","nous avons fait","nous étions"], tip_he:"passé composé לפעולות (je suis allé) · imparfait לרקע (il faisait, nous étions)." },
-    { instruction_he:"תאר את המנה האהובה עליך (תשובה חופשית)", prompt_fr:"Décris ton plat préféré et explique pourquoi tu l'aimes.", trans_he:"תאר את המנה האהובה עליך והסבר למה אתה אוהב אותה.", model_fr:"Mon plat préféré, c'est sans doute les pâtes à la carbonara. J'apprécie ce plat parce qu'il est à la fois simple et réconfortant. De plus, il me rappelle un voyage en Italie.", keys_fr:["mon plat préféré","j'apprécie parce que","à la fois","de plus","il me rappelle"], tip_he:"קישורים: « à la fois… » · « de plus… » · « parce que… »." },
-    { instruction_he:"הבע עמדה על הרשתות החברתיות (תשובה חופשית)", prompt_fr:"Selon toi, les réseaux sociaux rapprochent-ils ou éloignent-ils les gens ?", trans_he:"לדעתך, הרשתות החברתיות מקרבות או מרחיקות בין אנשים?", model_fr:"À mon avis, les réseaux sociaux rapprochent les gens qui sont loin, mais ils peuvent aussi nous éloigner de ceux qui sont à côté de nous. Tout dépend de la manière dont on les utilise.", keys_fr:["à mon avis","rapprocher","éloigner","tout dépend de","la manière dont"], tip_he:"« D'un côté… de l'autre… » או « Tout dépend de… » להבעת עמדה מאוזנת." },
+    [ /* 0 — Opinion */
+      { instruction_he:"הבע עמדה על הרשתות החברתיות", prompt_fr:"Selon toi, les réseaux sociaux rapprochent-ils ou éloignent-ils les gens ?", trans_he:"לדעתך, הרשתות החברתיות מקרבות או מרחיקות?", model_fr:"À mon avis, les réseaux sociaux rapprochent les gens qui sont loin, mais peuvent nous éloigner de ceux qui sont à côté. Tout dépend de l'utilisation.", keys_fr:["à mon avis","rapprocher","éloigner","tout dépend de"], tip_he:"D'un côté… de l'autre… · À mon avis · Je pense que · Tout dépend de." },
+      { instruction_he:"הבע עמדה על הסביבה", prompt_fr:"Penses-tu que les individus peuvent vraiment aider l'environnement ?", trans_he:"לדעתך, האם אנשים יכולים באמת לעזור לסביבה?", model_fr:"Je pense que oui, les gestes quotidiens comptent : recycler, prendre les transports en commun, réduire sa consommation. Mais les entreprises ont une part de responsabilité plus grande.", keys_fr:["je pense que","les gestes quotidiens","mais","une part de responsabilité"], tip_he:"Je pense que · certes (כמובן) · mais · cependant (עם זאת)." },
+      { instruction_he:"הבע עמדה על הטכנולוגיה", prompt_fr:"La technologie améliore-t-elle notre vie quotidienne ?", trans_he:"האם הטכנולוגיה משפרת את חיינו היומיומיים?", model_fr:"En général, je dirais que oui. La technologie nous facilite la vie, mais elle peut aussi créer une dépendance. Il faut l'utiliser de façon raisonnée.", keys_fr:["en général","je dirais que","mais","une dépendance","de façon raisonnée"], tip_he:"en général · il faut + infinitif · de façon raisonnée = בצורה מחושבת." },
+    ],
+    [ /* 1 — Événement */
+      { instruction_he:"ספר על סוף שבוע שהשאיר רושם", prompt_fr:"Raconte un week-end qui t'a marqué.", trans_he:"ספר על סוף שבוע שהשאיר בך רושם.", model_fr:"Le week-end dernier, je suis allé à la montagne avec des amis. Il faisait magnifique et nous avons fait une longue randonnée. Le soir, nous étions épuisés mais heureux.", keys_fr:["le week-end dernier","je suis allé","il faisait","nous avons fait","nous étions"], tip_he:"PC לפעולות + imparfait לרקע: il faisait beau · nous étions fatigués." },
+      { instruction_he:"ספר על ארוע שחווית", prompt_fr:"Décris un événement récent qui t'a touché ou surpris.", trans_he:"תאר ארוע עדכני שנגע בך או הפתיע אותך.", model_fr:"La semaine dernière, j'ai assisté à un concert de jazz. Je ne m'attendais pas à apprécier autant. L'ambiance était fantastique et les musiciens étaient incroyables.", keys_fr:["j'ai assisté à","je ne m'attendais pas","l'ambiance était","incroyables"], tip_he:"je ne m'attendais pas = לא ציפיתי. l'ambiance = האווירה." },
+      { instruction_he:"ספר על חגיגה משפחתית", prompt_fr:"Décris une fête familiale récente.", trans_he:"תאר חגיגה משפחתית שהתקיימה לאחרונה.", model_fr:"Le mois dernier, nous avons fêté l'anniversaire de ma grand-mère. Toute la famille s'était réunie. On a mangé, dansé et ri toute la soirée.", keys_fr:["nous avons fêté","toute la famille","s'était réunie","on a mangé","toute la soirée"], tip_he:"on a = nous avons (יומיומי) · toute la soirée = כל הערב." },
+    ],
+    [ /* 2 — Description */
+      { instruction_he:"תאר אדם שאתה מכיר", prompt_fr:"Décris une personne que tu admires. Son apparence et sa personnalité.", trans_he:"תאר אדם שאתה מעריך. מראהו ואישיותו.", model_fr:"J'admire beaucoup mon professeur de musique. Il est grand et élégant, avec des cheveux grisonnants. C'est un homme patient et passionné.", keys_fr:["j'admire","il est","avec des cheveux","c'est un homme","passionné"], tip_he:"apparence: grand/e · brun/e · élégant/e · personnalité: patient/e · généreux/se." },
+      { instruction_he:"תאר מקום אהוב", prompt_fr:"Décris un endroit que tu aimes particulièrement.", trans_he:"תאר מקום שאתה אוהב במיוחד.", model_fr:"J'adore la plage de Bat Yam. C'est un endroit calme avec une belle vue sur la mer. Le soir, on peut voir le coucher de soleil, c'est magnifique.", keys_fr:["j'adore","c'est un endroit","avec une belle vue","le soir","magnifique"], tip_he:"avec + description · c'est un endroit où... · on peut y + verb." },
+      { instruction_he:"תאר את המנה האהובה עליך", prompt_fr:"Décris ton plat préféré et explique pourquoi tu l'aimes.", trans_he:"תאר את המנה האהובה עליך.", model_fr:"Mon plat préféré, c'est les pâtes à la carbonara. C'est à la fois simple et réconfortant. De plus, ça me rappelle un voyage en Italie.", keys_fr:["mon plat préféré","à la fois","de plus","ça me rappelle"], tip_he:"à la fois... et... · de plus · parce que · ça me rappelle." },
+    ],
+    [ /* 3 — Comparaison */
+      { instruction_he:"השווה שתי ערים", prompt_fr:"Compare deux villes que tu connais.", trans_he:"השווה בין שתי ערים שאתה מכיר.", model_fr:"Tel Aviv est plus moderne et plus animée que Jérusalem. Mais Jérusalem est plus historique et plus calme. Les deux ont leur charme particulier.", keys_fr:["plus ... que","mais","les deux","leur charme"], tip_he:"plus...que · moins...que · aussi...que · les deux (שתיהן)." },
+      { instruction_he:"השווה שתי אפשרויות", prompt_fr:"Est-il mieux de travailler en équipe ou seul ? Compare les deux.", trans_he:"מה עדיף: לעבוד בצוות או לבד? השווה.", model_fr:"Travailler en équipe permet de partager les idées et de s'entraider. Travailler seul est plus tranquille et permet de se concentrer. Personnellement, je préfère une combinaison des deux.", keys_fr:["permet de","travailler seul","personnellement","je préfère"], tip_he:"permet de + inf · d'un côté... de l'autre · personnellement." },
+      { instruction_he:"השווה שני סגנונות חיים", prompt_fr:"Comparez la vie à la campagne et la vie en ville.", trans_he:"השווה בין חיים בכפר לחיים בעיר.", model_fr:"La vie en ville est pratique : tout est proche. Mais c'est aussi plus stressant et plus bruyant. La campagne est plus calme et plus verte, mais on y manque de services.", keys_fr:["la vie en ville est","mais","la campagne","on y manque de"], tip_he:"pratique (נוח) · stressant (מלחיץ) · manquer de (חסר)." },
+    ],
+    [ /* 4 — Conseil */
+      { instruction_he:"תן עצה לתלמיד חדש", prompt_fr:"Quels conseils donnerais-tu à un élève qui commence le lycée ?", trans_he:"אילו עצות היית נותן לתלמיד שמתחיל תיכון?", model_fr:"Je lui conseillerais de s'organiser dès le début et de ne pas remettre au lendemain. Il devrait aussi participer en classe et ne pas hésiter à poser des questions.", keys_fr:["je lui conseillerais de","s'organiser","ne pas remettre","participer","ne pas hésiter"], tip_he:"je te conseille de + inf · tu devrais + inf · il faut que tu + subj." },
+      { instruction_he:"תן עצה בריאותית", prompt_fr:"Quels conseils donnerais-tu à quelqu'un qui veut être en meilleure santé ?", trans_he:"אילו עצות היית נותן למישהו שרוצה להיות בריא יותר?", model_fr:"Je lui conseillerais d'abord de faire du sport régulièrement, même 30 minutes par jour. Ensuite, il faudrait réduire le sucre et dormir suffisamment.", keys_fr:["je lui conseillerais","régulièrement","il faudrait","réduire","suffisamment"], tip_he:"régulièrement = באופן סדיר · réduire = להפחית · suffisamment = מספיק." },
+      { instruction_he:"תן עצה לנסיעה", prompt_fr:"Quels conseils donnerais-tu à quelqu'un qui visite Paris pour la première fois ?", trans_he:"אילו עצות היית נותן למי שמבקר בפריז בפעם הראשונה?", model_fr:"Je lui conseille de prendre le métro plutôt que le taxi. Il devrait aussi visiter les quartiers moins touristiques comme Montmartre ou le Marais.", keys_fr:["je lui conseille de","plutôt que","il devrait","les quartiers"], tip_he:"je conseille de + inf · plutôt que (במקום) · il devrait (הוא צריך)." },
+    ],
+    [ /* 5 — Récit */
+      { instruction_he:"ספר סיפור בעבר", prompt_fr:"Raconte une aventure ou une anecdote amusante.", trans_he:"ספר הרפתקה או סיפור מצחיק.", model_fr:"Un jour, je me suis perdu dans un quartier inconnu de Paris. Je ne parlais pas français à l'époque. Finalement, un passant m'a aidé avec des gestes.", keys_fr:["un jour","je me suis perdu","je ne parlais pas","finalement","m'a aidé"], tip_he:"un jour (יום אחד) · finalement (לבסוף) · à l'époque (באותה תקופה)." },
+      { instruction_he:"ספר על רגע מיוחד", prompt_fr:"Raconte un moment important de ta vie.", trans_he:"ספר על רגע חשוב בחייך.", model_fr:"Le moment le plus important de ma vie a été quand j'ai réussi mon baccalauréat. J'avais travaillé dur pendant des mois et quand j'ai vu les résultats, j'ai pleuré de joie.", keys_fr:["le moment le plus important","j'ai réussi","j'avais travaillé","quand j'ai vu","j'ai pleuré de joie"], tip_he:"plus-que-parfait pour l'arrière-plan: j'avais travaillé · j'avais préparé." },
+      { instruction_he:"ספר על חוויה בחו\"ל", prompt_fr:"Raconte une expérience à l'étranger.", trans_he:"ספר על חוויה בחו\"ל.", model_fr:"L'été dernier, je suis allé en France pour la première fois. Tout me semblait différent : la nourriture, le rythme de vie, la façon de parler. J'ai adoré cette expérience.", keys_fr:["l'été dernier","pour la première fois","tout me semblait","la façon de","j'ai adoré"], tip_he:"tout me semblait (הכל נראה לי) · la façon de + inf · pour la première fois." },
+    ],
   ],
 };
 
 const BANK_C2 = {
+  /* stations: Passif · Participe composé · Ne explétif · Quoi que… · Hypothèses · Style littéraire */
   gra: [
-    { instruction_he:"השלם במבנה הפאסיף", prompt_fr:"Cette chanson ____ (chanter) par des millions de personnes.", trans_he:"השיר הזה נשר על ידי מיליוני אנשים.", accepted:["est chantée","a été chantée"], solution_fr:"Cette chanson est chantée par des millions de personnes.", explanation_he:"פאסיף = être + participe passé. chanson נקבה → chantée.", tip_he:"פאסיף: sujet + être + participe passé + par + agent." },
-    { instruction_he:"השלם בparticipe passé composé (אחרי השלמת הפעולה)", prompt_fr:"____ (finir) son discours, il a quitté la salle.", trans_he:"לאחר שסיים את נאומו, עזב את האולם.", accepted:["Ayant fini"], solution_fr:"Ayant fini son discours, il a quitté la salle.", explanation_he:"participe passé composé = ayant/étant + participe passé. מבטא פעולה שקדמה.", tip_he:"Ayant terminé (לאחר שסיים) · Étant arrivé (לאחר שהגיע)." },
-    { instruction_he:"השלם בne explétif אחרי avant que", prompt_fr:"Partons avant qu'il ne ____ (pleuvoir).", trans_he:"נצא לפני שירד גשם.", accepted:["pleuve"], solution_fr:"Partons avant qu'il ne pleuve.", explanation_he:"avant que + subjonctif. ה-ne explétif הוא מנומס/ספרותי — לא שלילה.", tip_he:"ne explétif אחרי avant que, à moins que, de peur que — לא משמעות שלילית." },
-    { instruction_he:"השלם בsubjonctif אחרי quoi que", prompt_fr:"Quoi qu'il ____ (faire), il ne réussira pas à nous tromper.", trans_he:"יהיה מה שיהיה, הוא לא יצליח לרמות אותנו.", accepted:["fasse"], solution_fr:"Quoi qu'il fasse, il ne réussira pas à nous tromper.", explanation_he:"quoi que = יהיה מה שיהיה, תמיד עם subjonctif. faire → fasse.", tip_he:"quoi que · qui que · où que — כולם עם subjonctif." },
-    { instruction_he:"השלם בhypothèse עבר (si + plus-que-parfait)", prompt_fr:"S'il avait plu, nous ____ (rester) à la maison.", trans_he:"אילו ירד גשם, היינו נשארים בבית.", accepted:["serions restés","serions restées"], solution_fr:"S'il avait plu, nous serions restés à la maison.", explanation_he:"היפוך בעבר: Si + plus-que-parfait → conditionnel passé. rester עם être.", tip_he:"Si + avait/était → conditionnel passé (aurait/serait + participe)." },
-    { instruction_he:"השלם בביטוי ספרותי מתאים", prompt_fr:"C'est un phénomène ____ dans la littérature contemporaine. (בולט, ראוי לציון)", trans_he:"זוהי תופעה בולטת בספרות העכשווית.", accepted:["remarquable","notable","saillant","prépondérant"], solution_fr:"remarquable", explanation_he:"remarquable = ראוי לציון, בולט. notable = חשוב. prépondérant = דומיננטי.", tip_he:"remarquable · prépondérant · incontournable · emblématique · paradigmatique." },
+    [ /* 0 — Passif */
+      { instruction_he:"פאסיף: présent", prompt_fr:"Cette chanson ____ (chanter) par des millions de personnes.", trans_he:"השיר הזה נשר על ידי מיליוני אנשים.", accepted:["est chantée","a été chantée"], solution_fr:"Cette chanson est chantée par des millions de personnes.", explanation_he:"פאסיף = être + participe passé. chanson נקבה → chantée.", tip_he:"פאסיף: sujet + être + participe passé + par + agent." },
+      { instruction_he:"פאסיף: passé composé", prompt_fr:"Le rapport ____ (rédiger) par l'équipe hier.", trans_he:"הדוח נכתב על ידי הצוות אתמול.", accepted:["a été rédigé"], solution_fr:"Le rapport a été rédigé par l'équipe hier.", explanation_he:"פאסיף בעבר: avoir + été + participe passé. rapport זכר → rédigé.", tip_he:"passé composé passif: a été + participe." },
+      { instruction_he:"פאסיף: futur simple", prompt_fr:"Les résultats ____ (annoncer) demain.", trans_he:"התוצאות יוכרזו מחר.", accepted:["seront annoncés","seront annoncées"], solution_fr:"Les résultats seront annoncés demain.", explanation_he:"פאסיף עתיד: seront + participe. résultats זכר רבים → annoncés.", tip_he:"futur passif: sera/seront + participe passé." },
+    ],
+    [ /* 1 — Participe composé (ayant/étant + participe) */
+      { instruction_he:"participe passé composé: ayant", prompt_fr:"____ (finir) son discours, il a quitté la salle.", trans_he:"לאחר שסיים את נאומו, עזב את האולם.", accepted:["Ayant fini"], solution_fr:"Ayant fini son discours, il a quitté la salle.", explanation_he:"participe passé composé = ayant/étant + participe passé. מבטא פעולה שקדמה.", tip_he:"Ayant terminé (לאחר שסיים) · Étant arrivé (לאחר שהגיע)." },
+      { instruction_he:"participe passé composé: étant", prompt_fr:"____ (arriver) en avance, elle a pu choisir sa place.", trans_he:"לאחר שהגיעה מוקדם, הצליחה לבחור את מקומה.", accepted:["Étant arrivée","Etant arrivée"], solution_fr:"Étant arrivée en avance, elle a pu choisir sa place.", explanation_he:"verbe d'état/mouvement → étant + participe. elle → arrivée (נקבה).", tip_he:"Étant parti · Étant arrivé · S'étant levé — עם être." },
+      { instruction_he:"participe présent vs participe passé composé", prompt_fr:"____ (lire) la lettre, il a compris la situation.", trans_he:"לאחר שקרא את המכתב, הבין את המצב.", accepted:["Ayant lu"], solution_fr:"Ayant lu la lettre, il a compris la situation.", explanation_he:"participe passé composé לפעולה שקדמה לפעולה אחרת: ayant lu.", tip_he:"Lisant (בו-זמני) vs Ayant lu (קדמה לפעולה)." },
+    ],
+    [ /* 2 — Ne explétif */
+      { instruction_he:"ne explétif: avant que", prompt_fr:"Partons avant qu'il ne ____ (pleuvoir).", trans_he:"נצא לפני שירד גשם.", accepted:["pleuve"], solution_fr:"Partons avant qu'il ne pleuve.", explanation_he:"avant que + subjonctif. ה-ne explétif הוא מנומס/ספרותי — לא שלילה.", tip_he:"ne explétif אחרי avant que, à moins que, de peur que — לא משמעות שלילית." },
+      { instruction_he:"ne explétif: de peur que", prompt_fr:"Il chuchote de peur qu'on ne l'____ (entendre).", trans_he:"הוא לוחש מחשש שישמעו אותו.", accepted:["entende"], solution_fr:"Il chuchote de peur qu'on ne l'entende.", explanation_he:"de peur que גורר subjonctif + ne explétif. entendre → entende.", tip_he:"de peur que · craindre que → ne explétif + subjonctif." },
+      { instruction_he:"ne explétif: à moins que", prompt_fr:"Je viendrai à moins qu'il ne ____ (être) trop tard.", trans_he:"אבוא אלא אם יהיה מאוחר מדי.", accepted:["soit"], solution_fr:"Je viendrai à moins qu'il ne soit trop tard.", explanation_he:"à moins que = אלא אם. subjonctif + ne explétif. être → soit.", tip_he:"à moins que ne → subjonctif. לא שלילה אמיתית!" },
+    ],
+    [ /* 3 — Quoi que… / Qui que… / Où que… */
+      { instruction_he:"quoi que + subjonctif", prompt_fr:"Quoi qu'il ____ (faire), il ne réussira pas à nous tromper.", trans_he:"יהיה מה שיהיה, הוא לא יצליח לרמות אותנו.", accepted:["fasse"], solution_fr:"Quoi qu'il fasse, il ne réussira pas à nous tromper.", explanation_he:"quoi que = יהיה מה שיהיה, תמיד עם subjonctif. faire → fasse.", tip_he:"quoi que · qui que · où que — כולם עם subjonctif." },
+      { instruction_he:"où que + subjonctif", prompt_fr:"Où qu'il ____ (aller), il emporte ses livres.", trans_he:"לאן שילך, הוא לוקח את ספריו.", accepted:["aille"], solution_fr:"Où qu'il aille, il emporte ses livres.", explanation_he:"où que = לאן שהוא. aller → aille (subjonctif irrégulier).", tip_he:"aller au subjonctif: j'aille · tu ailles · il aille." },
+      { instruction_he:"qui que + subjonctif", prompt_fr:"Qui que tu ____ (être), tu mérites le respect.", trans_he:"מי שאתה תהיה, אתה ראוי לכבוד.", accepted:["sois"], solution_fr:"Qui que tu sois, tu mérites le respect.", explanation_he:"qui que = מי שהוא. être → sois (subjonctif).", tip_he:"qui que vous soyez · quoi qu'il en soit = כך או כך." },
+    ],
+    [ /* 4 — Hypothèses complexes */
+      { instruction_he:"Si + PQP → conditionnel passé", prompt_fr:"S'il avait plu, nous ____ (rester) à la maison.", trans_he:"אילו ירד גשם, היינו נשארים בבית.", accepted:["serions restés","serions restées"], solution_fr:"S'il avait plu, nous serions restés à la maison.", explanation_he:"היפוך בעבר: Si + plus-que-parfait → conditionnel passé. rester עם être.", tip_he:"Si + avait/était → conditionnel passé (aurait/serait + participe)." },
+      { instruction_he:"Si + PQP → conditionnel présent (conséquence actuelle)", prompt_fr:"Si j'avais étudié le droit, je ____ (être) avocat aujourd'hui.", trans_he:"אלו למדתי משפטים, הייתי עורך דין היום.", accepted:["serais"], solution_fr:"Si j'avais étudié le droit, je serais avocat aujourd'hui.", explanation_he:"תנאי עבר עם תוצאה בהווה: Si + PQP → conditionnel présent.", tip_he:"Si + avait fait → serait (today) — תוצאה בהווה של תנאי עבר." },
+      { instruction_he:"Hypothèse avec sans / avec", prompt_fr:"Sans ton aide, je n'____ pas réussi.", trans_he:"בלי עזרתך, לא הייתי מצליח.", accepted:["aurais"], solution_fr:"Sans ton aide, je n'aurais pas réussi.", explanation_he:"sans + שם עצם ← conditionnel passé. תחליף ל-si + PQP.", tip_he:"sans toi, j'aurais… · avec plus de temps, j'aurais…" },
+    ],
+    [ /* 5 — Style littéraire / avancé */
+      { instruction_he:"style littéraire: inversion du sujet", prompt_fr:"Peut-____ faut-il reconsidérer cette approche.", trans_he:"אולי צריך לשקול מחדש גישה זו.", accepted:["être"], solution_fr:"Peut-être faut-il reconsidérer cette approche.", explanation_he:"peut-être en début de phrase → inversion du sujet: faut-il (לא il faut).", tip_he:"peut-être + inversion: faut-il · est-ce · doit-on." },
+      { instruction_he:"ביטוי ספרותי: souligner", prompt_fr:"L'auteur ____ l'importance du dialogue dans son œuvre.", trans_he:"הסופר מדגיש את חשיבות הדיאלוג ביצירתו.", accepted:["souligne","met en relief","accentue"], solution_fr:"souligne / met en relief", explanation_he:"souligner = להדגיש (ספרותי). mettre en relief = להבליט.", tip_he:"souligner · mettre en relief · accentuer · insister sur." },
+      { instruction_he:"style littéraire: remarquable", prompt_fr:"C'est un phénomène ____ dans la littérature contemporaine.", trans_he:"זוהי תופעה בולטת בספרות העכשווית.", accepted:["remarquable","notable","prépondérant","saillant"], solution_fr:"remarquable", explanation_he:"remarquable = ראוי לציון, בולט. notable = חשוב. prépondérant = דומיננטי.", tip_he:"remarquable · prépondérant · incontournable · emblématique · paradigmatique." },
+    ],
   ],
+  /* stations: Diversité · Philosophie · Rhétorique · Littéraire · Académique · Épistémologie */
   voc: [
-    { instruction_he:"תרגם לצרפתית: «גיוון תרבותי»", prompt_fr:"La ____ des cultures enrichit notre société.", trans_he:"הגיוון של התרבויות מעשיר את החברה שלנו.", accepted:["diversité"], solution_fr:"la diversité", explanation_he:"diversité = גיוון. pluralité = ריבוי. hétérogénéité = הטרוגניות.", tip_he:"diversité · pluralité · singularité · homogénéité." },
-    { instruction_he:"תרגם לצרפתית: «משתמע מזה, נובע מזה»", prompt_fr:"Il ____ de cette décision une profonde injustice.", trans_he:"מהחלטה זו משתמעת עוולה עמוקה.", accepted:["ressort","résulte","découle"], solution_fr:"il ressort / il résulte / il découle", explanation_he:"il ressort de = משתמע מ-. il résulte de = נובע מ-. il découle de = נובע (ספרותי).", tip_he:"il s'ensuit que · il en résulte que · il ressort de cela que." },
-    { instruction_he:"תרגם לצרפתית: «להתעמק בנושא»", prompt_fr:"Il convient d'____ cette question.", trans_he:"ראוי להתעמק בשאלה זו.", accepted:["approfondir","creuser"], solution_fr:"approfondir", explanation_he:"approfondir = להעמיק. creuser (סלנג) = לחפור, לחקור לעומק.", tip_he:"approfondir · élucider (להבהיר) · décortiquer (לפרק לגורמים)." },
-    { instruction_he:"תרגם לצרפתית: «הנחת מוצא»", prompt_fr:"Ce raisonnement repose sur une ____ erronée.", trans_he:"הנימוק מבוסס על הנחת מוצא שגויה.", accepted:["prémisse","présupposition","postulat"], solution_fr:"prémisse / postulat", explanation_he:"prémisse = הנחת יסוד (בהגיון). postulat = אקסיומה. présupposé = הנחה סמויה.", tip_he:"prémisse · postulat · présupposé · axiome · paradigme." },
-    { instruction_he:"תרגם לצרפתית: «המרפסת משקיפה על הים»", prompt_fr:"Ce balcon ____ sur la mer.", trans_he:"המרפסת הזו משקיפה על הים.", accepted:["donne","s'ouvre","domine"], solution_fr:"donne sur", explanation_he:"donner sur = להשקיף על, לפנות אל. la fenêtre donne sur la rue.", tip_he:"donner sur · faire face à · surplomber (להשקיף על מגובה)." },
-    { instruction_he:"תרגם לצרפתית: «הסופר מדגיש»", prompt_fr:"L'auteur ____ l'importance du dialogue.", trans_he:"הסופר מדגיש את החשיבות של הדיאלוג.", accepted:["souligne","met en avant","insiste sur","met l'accent sur"], solution_fr:"souligne / met en avant", explanation_he:"souligner = להדגיש (ספרותי). mettre en avant = להעמיד בחזית.", tip_he:"souligner · mettre en relief · accentuer · insister sur." },
+    [ /* 0 — Diversité */
+      { instruction_he:"גיוון תרבותי", prompt_fr:"La ____ des cultures enrichit notre société.", trans_he:"הגיוון של התרבויות מעשיר את החברה שלנו.", accepted:["diversité"], solution_fr:"la diversité", explanation_he:"diversité = גיוון. pluralité = ריבוי. hétérogénéité = הטרוגניות.", tip_he:"diversité · pluralité · singularité · homogénéité." },
+      { instruction_he:"הכללה / אחידות", prompt_fr:"Ce mouvement prône l'____ sociale.", trans_he:"התנועה הזו תומכת בכלילה חברתית.", accepted:["inclusion","intégration"], solution_fr:"l'inclusion / l'intégration", explanation_he:"inclusion = כלילה (מקבל שונות). intégration = שילוב. assimilation = התבוללות.", tip_he:"inclusion · intégration · assimilation · exclusion (הדרה)." },
+      { instruction_he:"ביטוי: ריבוי", prompt_fr:"La ____ des points de vue est une richesse.", trans_he:"ריבוי נקודות המבט הוא עושר.", accepted:["pluralité","diversité","multiplicité"], solution_fr:"la pluralité", explanation_he:"pluralité = ריבוי (פילוסופי/ספרותי). diversité = גיוון (יומיומי).", tip_he:"pluralité · multiplicité · hétérogénéité · singularité." },
+    ],
+    [ /* 1 — Philosophie */
+      { instruction_he:"נובע מזה", prompt_fr:"Il ____ de cette décision une profonde injustice.", trans_he:"מהחלטה זו נובעת עוולה עמוקה.", accepted:["ressort","résulte","découle"], solution_fr:"il ressort / il résulte / il découle", explanation_he:"il ressort de = משתמע מ-. il résulte de = נובע מ-.", tip_he:"il s'ensuit que · il en résulte que · il ressort de cela que." },
+      { instruction_he:"הנחת מוצא", prompt_fr:"Ce raisonnement repose sur une ____ erronée.", trans_he:"הנימוק מבוסס על הנחת מוצא שגויה.", accepted:["prémisse","présupposition","postulat"], solution_fr:"prémisse / postulat", explanation_he:"prémisse = הנחת יסוד (בהגיון). postulat = אקסיומה.", tip_he:"prémisse · postulat · présupposé · axiome · paradigme." },
+      { instruction_he:"להתעמק", prompt_fr:"Il convient d'____ cette question.", trans_he:"ראוי להתעמק בשאלה זו.", accepted:["approfondir","creuser"], solution_fr:"approfondir", explanation_he:"approfondir = להעמיק. creuser = לחפור/לחקור לעומק.", tip_he:"approfondir · élucider (להבהיר) · décortiquer (לפרק לגורמים)." },
+    ],
+    [ /* 2 — Rhétorique */
+      { instruction_he:"ביטוי רטורי: להדגיש", prompt_fr:"L'orateur ____ ce point essentiel à plusieurs reprises.", trans_he:"הנואם הדגיש את הנקודה החיונית הזו מספר פעמים.", accepted:["souligne","martèle","insiste sur"], solution_fr:"souligne / martèle", explanation_he:"marteler = לפטיש, לחזור שוב ושוב. souligner = להדגיש.", tip_he:"souligner · marteler · mettre en exergue (להבליט)." },
+      { instruction_he:"שאלה רטורית", prompt_fr:"Peut-on vraiment parler de progrès sans parler d'____ ?", trans_he:"האם ניתן לדבר על קדמה בלי לדבר על שוויון?", accepted:["égalité","équité"], solution_fr:"égalité / équité", explanation_he:"égalité = שוויון (מידה). équité = הוגנות (מחשבה). שאלה רטורית = שאלה ללא ציפייה לתשובה.", tip_he:"l'égalité (שוויון) · l'équité (הוגנות) · la justice · la liberté." },
+      { instruction_he:"concession רטורית", prompt_fr:"____ que cette théorie soit séduisante, elle comporte des limites.", trans_he:"למרות שהתיאוריה הזו מפתה, יש לה מגבלות.", accepted:["Si","Bien","Certes"], solution_fr:"Si (= même si) / Certes", explanation_he:"concession: Si séduisante que soit… · certes… mais… · il est vrai que…", tip_he:"certes (כמובן ש-) · il est vrai que · si ... que ... soit." },
+    ],
+    [ /* 3 — Littéraire */
+      { instruction_he:"מרפסת משקיפה", prompt_fr:"Ce balcon ____ sur la mer.", trans_he:"המרפסת הזו משקיפה על הים.", accepted:["donne","s'ouvre","domine"], solution_fr:"donne sur", explanation_he:"donner sur = להשקיף על. la fenêtre donne sur la rue.", tip_he:"donner sur · faire face à · surplomber (להשקיף על מגובה)." },
+      { instruction_he:"תיאור ספרותי: אטמוספרה", prompt_fr:"Une atmosphère ____ régnait sur la ville.", trans_he:"אווירה מאיימת שלטה על העיר.", accepted:["menaçante","lourde","oppressante","sinistre"], solution_fr:"menaçante / oppressante", explanation_he:"menaçante = מאיימת. oppressante = מעיקה. sinistre = מוזר ומאיים.", tip_he:"atmosphère + adj: lourde · pesante · menaçante · sereine (שלווה)." },
+      { instruction_he:"פיגורה: personification", prompt_fr:"La nuit ____ ses étoiles sur la ville endormie.", trans_he:"הלילה פיזר את כוכביו על העיר הנרדמת.", accepted:["répand","étend","jette"], solution_fr:"répand / étend", explanation_he:"personification = ייחוס תכונות אנושיות. « la nuit étend » = הלילה פורש.", tip_he:"la nuit enveloppe · le vent murmure · la ville s'éveille." },
+    ],
+    [ /* 4 — Académique */
+      { instruction_he:"ביטוי אקדמי: הצגת טיעון", prompt_fr:"Cet article ____ la thèse selon laquelle…", trans_he:"מאמר זה טוען את הטענה ש-…", accepted:["soutient","défend","avance","prétend"], solution_fr:"soutient / défend", explanation_he:"soutenir une thèse = לטעון טענה. défendre = להגן עליה. avancer = להציע.", tip_he:"soutenir · défendre · avancer · formuler (לנסח)." },
+      { instruction_he:"ביטוי אקדמי: סיכום", prompt_fr:"En ____, on peut affirmer que…", trans_he:"לסיכום, ניתן לקבוע ש-…", accepted:["conclusion","somme","définitive"], solution_fr:"En conclusion / En somme / En définitive", explanation_he:"en conclusion = לסיכום. en somme = בסה\"כ. en définitive = בסופו של דבר.", tip_he:"en conclusion · en somme · bref · pour conclure · en définitive." },
+      { instruction_he:"ביטוי אקדמי: ניגוד", prompt_fr:"____ les apparences, la situation est complexe.", trans_he:"למרות המראה החיצוני, המצב מורכב.", accepted:["Contrairement à","Malgré","Au-delà de"], solution_fr:"Contrairement aux apparences / Malgré les apparences", explanation_he:"contrairement à = בניגוד ל-. malgré = למרות. au-delà de = מעבר ל-.", tip_he:"contrairement à · malgré · nonobstant (ספרותי: למרות)." },
+    ],
+    [ /* 5 — Épistémologie */
+      { instruction_he:"ידע / הכרה", prompt_fr:"La ____ est l'étude des fondements du savoir.", trans_he:"האפיסטמולוגיה היא חקר יסודות הידע.", accepted:["épistémologie","epistemologie"], solution_fr:"L'épistémologie", explanation_he:"épistémologie = תורת ההכרה/פילוסופיה של הידע. épistème = בסיס הידע.", tip_he:"épistémologie · ontologie (מהות) · phénoménologie (תיאור חוויה)." },
+      { instruction_he:"ערעור ידע", prompt_fr:"Cette découverte ____ les certitudes établies.", trans_he:"הגילוי הזה מערער את הוודאויות המבוססות.", accepted:["remet en question","ébranle","remet en cause"], solution_fr:"remet en question / ébranle", explanation_he:"remettre en question = לערער. ébranler = לטלטל, לערער. invalider = לבטל.", tip_he:"remettre en question · ébranler · invalider · contredire (לסתור)." },
+      { instruction_he:"פרדיגמה", prompt_fr:"Ce chercheur propose un changement de ____.", trans_he:"החוקר הזה מציע שינוי פרדיגמה.", accepted:["paradigme"], solution_fr:"paradigme", explanation_he:"paradigme = פרדיגמה (מסגרת תיאורטית שלטת). Thomas Kuhn הגדיר שינוי פרדיגמה.", tip_he:"un paradigme · un changement de paradigme · une rupture épistémologique." },
+    ],
   ],
+  /* stations: Philosophie · Littérature · Sociologie · Politique · Esthétique · Épistémologie */
   com: [
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« L'essence même de la démocratie réside non dans l'unanimité des opinions, mais dans la capacité d'une société à tolérer, voire à valoriser, la divergence des points de vue. »", trans_he:"מהות הדמוקרטיה אינה בפה אחד, אלא ביכולת של חברה לסבול ואף להעריך שונות בדעות.", question_fr:"Selon ce texte, qu'est-ce qui caractérise une démocratie ?", q_he:"לפי הטקסט, מה מאפיין דמוקרטיה?", options:["L'accord unanime des citoyens","La tolérance envers la divergence des opinions","L'absence de tout débat politique"], correct:1, explanation_he:"« capacité à tolérer la divergence des points de vue » = היכולת לסבול שונות בדעות." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« Si la modernité a affranchi l'individu des contraintes collectives, elle l'a simultanément privé des cadres symboliques qui donnaient sens à son existence. Ce paradoxe fonde le malaise contemporain. »", trans_he:"אם המודרניות שחררה את הפרט ממאסרים קולקטיביים, היא שללה ממנו את המסגרות הסמליות שנתנו משמעות לקיומו. פרדוקס זה מהווה בסיס לאי-הנוחות הקונטמפורנית.", question_fr:"Quel est le paradoxe évoqué dans ce texte ?", q_he:"מהו הפרדוקס בטקסט?", options:["La liberté moderne crée à la fois émancipation et perte de sens","La modernité a renforcé les liens collectifs","Les contraintes collectives donnent un sens à la vie"], correct:0, explanation_he:"הפרדוקס: המודרניות שחררה (חיובי) אבל שללה את המסגרות הסמליות (שלילי)." },
-    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« La traduction n'est jamais neutre : elle est toujours un acte d'interprétation, voire de création, car le traducteur ne transporte pas seulement des mots, mais des mondes. »", trans_he:"תרגום אינו ניטרלי: הוא תמיד מעשה פרשנות, ואף יצירה, כי המתרגם מעביר לא רק מילים אלא עולמות.", question_fr:"Selon l'auteur, que fait réellement le traducteur ?", q_he:"מה עושה המתרגם בפועל?", options:["Il copie des mots d'une langue à une autre","Il interprète et crée en transférant des univers culturels","Il reste strictement fidèle à l'original"], correct:1, explanation_he:"« acte d'interprétation, voire de création... transporte des mondes » = מפרש, יוצר, מעביר עולמות." },
+    [ /* 0 — Philosophie */
+      { instruction_he:"קרא וענה", prompt_fr:"« L'essence même de la démocratie réside non dans l'unanimité des opinions, mais dans la capacité d'une société à tolérer, voire à valoriser, la divergence des points de vue. »", trans_he:"מהות הדמוקרטיה אינה בפה אחד, אלא ביכולת של חברה לסבול ואף להעריך שונות בדעות.", question_fr:"Selon ce texte, qu'est-ce qui caractérise une démocratie ?", q_he:"לפי הטקסט, מה מאפיין דמוקרטיה?", options:["L'accord unanime des citoyens","La tolérance envers la divergence des opinions","L'absence de tout débat politique"], correct:1, explanation_he:"« capacité à tolérer la divergence des points de vue »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Si la modernité a affranchi l'individu des contraintes collectives, elle l'a simultanément privé des cadres symboliques qui donnaient sens à son existence. Ce paradoxe fonde le malaise contemporain. »", trans_he:"אם המודרניות שחררה את הפרט, היא שללה ממנו את המסגרות הסמליות שנתנו משמעות לקיומו.", question_fr:"Quel est le paradoxe évoqué dans ce texte ?", q_he:"מהו הפרדוקס בטקסט?", options:["La liberté moderne crée à la fois émancipation et perte de sens","La modernité a renforcé les liens collectifs","Les contraintes collectives donnent un sens à la vie"], correct:0, explanation_he:"הפרדוקס: המודרניות שחררה (חיובי) אבל שללה את המסגרות הסמליות (שלילי)." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le bonheur n'est pas un état mais un mouvement : il ne s'atteint pas, il se vit dans la quête elle-même. »", trans_he:"האושר אינו מצב אלא תנועה: הוא לא מושג, אלא חי בחיפוש עצמו.", question_fr:"Comment l'auteur définit-il le bonheur ?", q_he:"כיצד מגדיר הכותב את האושר?", options:["Comme un état stable à atteindre","Comme un processus vécu dans la recherche","Comme une illusion impossible"], correct:1, explanation_he:"« il se vit dans la quête elle-même » = חי בחיפוש עצמו." },
+    ],
+    [ /* 1 — Littérature */
+      { instruction_he:"קרא וענה", prompt_fr:"« La traduction n'est jamais neutre : elle est toujours un acte d'interprétation, voire de création, car le traducteur ne transporte pas seulement des mots, mais des mondes. »", trans_he:"תרגום אינו ניטרלי: הוא תמיד מעשה פרשנות, ואף יצירה, כי המתרגם מעביר לא רק מילים אלא עולמות.", question_fr:"Selon l'auteur, que fait réellement le traducteur ?", q_he:"מה עושה המתרגם בפועל?", options:["Il copie des mots d'une langue à une autre","Il interprète et crée en transférant des univers culturels","Il reste strictement fidèle à l'original"], correct:1, explanation_he:"« acte d'interprétation, voire de création... transporte des mondes »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La littérature n'est pas un miroir du réel, mais un prisme qui le démultiplie, le déforme, le réinvente pour en révéler des vérités autrement inaccessibles. »", trans_he:"הספרות אינה מראה של המציאות, אלא פריזמה המכפילה, מעוותת ומחדשת אותה כדי לחשוף אמיתות אחרות.", question_fr:"Quelle est la fonction de la littérature selon ce texte ?", q_he:"מה תפקיד הספרות לפי הטקסט?", options:["Reproduire fidèlement la réalité","Révéler des vérités à travers une transformation du réel","Distraire le lecteur"], correct:1, explanation_he:"« réinvente pour en révéler des vérités autrement inaccessibles »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Lire, c'est habiter temporairement une autre conscience, s'ouvrir à des modes d'être que la vie quotidienne ne permettrait jamais d'explorer. »", trans_he:"לקרוא זה לשהות זמנית בתודעה אחרת, להיפתח לאופני קיום שהחיים היומיומיים לא יאפשרו לחקור.", question_fr:"Que représente la lecture selon l'auteur ?", q_he:"מה מייצגת הקריאה לפי הכותב?", options:["Une façon d'éviter la réalité","L'expérience temporaire d'une autre conscience","Un exercice purement intellectuel"], correct:1, explanation_he:"« habiter temporairement une autre conscience »." },
+    ],
+    [ /* 2 — Sociologie */
+      { instruction_he:"קרא וענה", prompt_fr:"« Loin d'être un simple effet de mode, la consommation locale traduit une véritable prise de conscience écologique chez les jeunes générations. »", trans_he:"רחוק מלהיות סתם אופנה חולפת, הצריכה המקומית מבטאת מודעות אקולוגית אמיתית בקרב הדורות הצעירים.", question_fr:"Que pense l'auteur de la consommation locale ?", q_he:"מה דעת הכותב על צריכה מקומית?", options:["C'est une mode passagère","C'est le signe d'une vraie conscience écologique","C'est réservé aux personnes âgées"], correct:1, explanation_he:"« loin d'être un simple effet de mode » + « véritable prise de conscience »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La précarité économique ne se réduit pas à un manque d'argent : elle génère une instabilité cognitive qui affecte la prise de décision et reproduit les inégalités. »", trans_he:"חוסר יציבות כלכלי אינו מסתכם בחוסר כסף: הוא מייצר חוסר יציבות קוגניטיבי המשפיע על קבלת החלטות ומשכפל את האי-שוויון.", question_fr:"Quel effet la précarité a-t-elle selon le texte ?", q_he:"איזה השפעה יש לחוסר הביטחון?", options:["Elle renforce la prise de décision","Elle crée une instabilité cognitive qui perpétue les inégalités","Elle n'affecte que les finances"], correct:1, explanation_he:"« instabilité cognitive qui affecte la prise de décision et reproduit les inégalités »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Les sociétés contemporaines valorisent à la fois l'individualisme et la solidarité, créant une tension structurelle difficile à résoudre. »", trans_he:"החברות העכשוויות מעריכות גם אינדיבידואליזם וגם סולידריות, ויוצרות מתח מבני קשה לפתרון.", question_fr:"Quelle tension le texte identifie-t-il ?", q_he:"איזה מתח מזהה הטקסט?", options:["Entre liberté et sécurité","Entre individualisme et solidarité","Entre tradition et modernité"], correct:1, explanation_he:"« valorisent à la fois l'individualisme et la solidarité, créant une tension »." },
+    ],
+    [ /* 3 — Politique */
+      { instruction_he:"קרא וענה", prompt_fr:"« Le populisme se nourrit du sentiment d'abandon des classes moyennes, exploitant la méfiance envers les élites pour proposer des solutions simplistes à des problèmes complexes. »", trans_he:"הפופוליזם ניזון מתחושת הנטישה של מעמד הביניים, ומנצל את חוסר האמון באליטות כדי להציע פתרונות פשטניים לבעיות מורכבות.", question_fr:"Comment le texte explique-t-il le populisme ?", q_he:"כיצד מסביר הטקסט את הפופוליזם?", options:["Comme une idéologie bien définie","Comme une exploitation du mécontentement populaire","Comme un système politique stable"], correct:1, explanation_he:"« exploitant la méfiance envers les élites pour proposer des solutions simplistes »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La démocratie délibérative suppose que la légitimité des décisions politiques découle non du vote seul, mais de la qualité du débat qui le précède. »", trans_he:"הדמוקרטיה הדיונית מניחה שלגיטימיות ההחלטות הפוליטיות נובעת לא רק מהצבעה, אלא מאיכות הדיון שקודם לה.", question_fr:"Qu'est-ce qui légitime une décision selon la démocratie délibérative ?", q_he:"מה מעניק לגיטימיות להחלטה?", options:["Le vote seul","La qualité du débat préalable","La décision des experts"], correct:1, explanation_he:"« légitimité découle... de la qualité du débat qui le précède »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La souveraineté nationale et l'intégration européenne créent une dialectique permanente entre identité et appartenance à un espace politique plus large. »", trans_he:"ריבונות לאומית והשתלבות אירופאית יוצרים דיאלקטיקה בין זהות ושייכות למרחב פוליטי רחב יותר.", question_fr:"Quelle tension le texte décrit-il ?", q_he:"איזה מתח מתאר הטקסט?", options:["Entre droite et gauche","Entre souveraineté nationale et intégration européenne","Entre tradition et révolution"], correct:1, explanation_he:"« souveraineté nationale et l'intégration européenne »." },
+    ],
+    [ /* 4 — Esthétique */
+      { instruction_he:"קרא וענה", prompt_fr:"« L'art contemporain provoque souvent un sentiment d'incompréhension non par manque de talent de l'artiste, mais parce qu'il exige du spectateur une disposition à l'incertitude. »", trans_he:"האמנות העכשווית גורמת לעתים לתחושת אי-הבנה לא בגלל חוסר כישרון, אלא כי היא דורשת מהצופה נכונות לחוסר ודאות.", question_fr:"Pourquoi l'art contemporain est-il parfois incompris ?", q_he:"מדוע אמנות עכשווית לא מובנת לפעמים?", options:["À cause du manque de talent des artistes","Parce qu'il demande une tolérance à l'incertitude","Parce qu'il est trop traditionnel"], correct:1, explanation_he:"« exige du spectateur une disposition à l'incertitude »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le beau ne réside pas dans l'objet, mais dans la relation dynamique entre l'œuvre et le regard qui la reçoit, selon les catégories culturelles du spectateur. »", trans_he:"היופי אינו טמון בחפץ, אלא בקשר הדינמי בין היצירה ובין המבט שמקבל אותה, בהתאם לקטגוריות התרבותיות של הצופה.", question_fr:"Où réside le beau selon ce texte ?", q_he:"איפה נמצא היופי לפי הטקסט?", options:["Dans l'objet lui-même","Dans la relation entre l'œuvre et le regard du spectateur","Dans les règles de l'art classique"], correct:1, explanation_he:"« dans la relation dynamique entre l'œuvre et le regard qui la reçoit »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« L'esthétique kantienne distingue le beau du sublime : si le beau apaise, le sublime confronte l'homme à ses propres limites face à l'infini. »", trans_he:"האסתטיקה הקאנטיאנית מבחינה בין יפה לנשגב: אם היפה מרגיע, הנשגב מעמת את האדם עם גבולותיו מול האינסוף.", question_fr:"Quelle est la différence entre le beau et le sublime selon Kant ?", q_he:"מה ההבדל בין יפה לנשגב לפי קאנט?", options:["Le beau est plus rare que le sublime","Le beau apaise, le sublime confronte à nos limites","Le sublime est plus simple à comprendre"], correct:1, explanation_he:"« le beau apaise, le sublime confronte l'homme à ses propres limites »." },
+    ],
+    [ /* 5 — Épistémologie */
+      { instruction_he:"קרא וענה", prompt_fr:"« La science ne produit pas des vérités définitives, mais des modèles provisoires, constamment révisés à la lumière de nouvelles données. »", trans_he:"המדע אינו מייצר אמיתות סופיות, אלא מודלים זמניים, המתוקנים ללא הרף לאור נתונים חדשים.", question_fr:"Comment le texte décrit-il la science ?", q_he:"כיצד מתאר הטקסט את המדע?", options:["Comme une source de vérités définitives","Comme un ensemble de modèles provisoires et révisables","Comme une discipline figée"], correct:1, explanation_he:"« modèles provisoires, constamment révisés »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La notion de paradigme, telle que définie par Thomas Kuhn, désigne l'ensemble des présupposés théoriques et méthodologiques partagés par une communauté scientifique. »", trans_he:"מושג הפרדיגמה, כפי שהוגדר על ידי תומס קון, מציין את מכלול ההנחות התיאורטיות והמתודולוגיות שחולקת קהילה מדעית.", question_fr:"Que désigne le terme « paradigme » selon Kuhn ?", q_he:"מה מציין המונח «פרדיגמה» לפי קון?", options:["Une découverte scientifique majeure","L'ensemble des présupposés partagés d'une communauté scientifique","Un outil de mesure scientifique"], correct:1, explanation_he:"« l'ensemble des présupposés théoriques et méthodologiques partagés »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le scepticisme épistémologique ne conduit pas au nihilisme, mais invite à une vigilance critique permanente face aux certitudes établies. »", trans_he:"הספקנות האפיסטמולוגית אינה מובילה לניהיליזם, אלא מזמינה לדריכות ביקורתית מתמדת מול הוודאויות המבוססות.", question_fr:"Quel est l'effet du scepticisme épistémologique selon le texte ?", q_he:"מה ההשפעה של הספקנות האפיסטמולוגית?", options:["Il mène au nihilisme","Il encourage une vigilance critique face aux certitudes","Il renforce les certitudes établies"], correct:1, explanation_he:"« invite à une vigilance critique permanente face aux certitudes établies »." },
+    ],
   ],
+  /* stations: Dissertation · Commentaire · Thèse/Antithèse · Analyse · Nuance · Maîtrise */
   exp: [
-    { instruction_he:"הצג טיעון פילוסופי מאוזן (תשובה חופשית)", prompt_fr:"Dans quelle mesure le progrès technique améliore-t-il la condition humaine ? Développez en deux paragraphes.", trans_he:"באיזו מידה ההתקדמות הטכנולוגית משפרת את המצב האנושי? פתחו בשני פסקאות.", model_fr:"D'une part, le progrès technique a indéniablement transformé nos conditions de vie en réduisant la souffrance physique. D'autre part, cette évolution soulève des interrogations profondes quant à la déshumanisation des rapports sociaux.", keys_fr:["d'une part... d'autre part","indéniablement","soulève des interrogations","quant à","déshumanisation"], tip_he:"מבנה dialectique: thèse → antithèse. d'une part... d'autre part · certes... cependant." },
-    { instruction_he:"פרשנות ציטוט (תשובה חופשית)", prompt_fr:"Commentez brièvement cette citation de Camus : « Je me révolte, donc nous sommes. »", trans_he:"הגיבו בקצרה על ציטוט זה של קאמי: «אני מורד, לכן אנחנו קיימים.»", model_fr:"Camus renverse ici le cogito cartésien pour affirmer que la révolte n'est pas un acte individuel, mais le fondement même du lien social. En se révoltant contre l'injustice, l'individu transcende son moi et crée une solidarité avec autrui.", keys_fr:["renverse","le cogito cartésien","la révolte","transcende","solidarité","autrui"], tip_he:"ניתוח ציטוט: התייחסות לטקסט קיים → פרשנות המשמעות." },
-    { instruction_he:"עמדה מנומקת עם גוונים (תשובה חופשית)", prompt_fr:"L'intelligence artificielle représente-t-elle une menace ou une opportunité pour l'humanité ? Nuancez votre réponse.", trans_he:"האם בינה מלאכותית מהווה איום או הזדמנות לאנושות? הדגישו גוונים בתשובתכם.", model_fr:"Loin de se réduire à une opposition binaire, la question de l'IA exige une lecture nuancée. Si ses applications médicales ouvrent des perspectives inédites, le risque d'instrumentalisation à des fins de surveillance demeure préoccupant.", keys_fr:["loin de se réduire à","exige une lecture nuancée","ouvrent des perspectives","demeure préoccupant","instrumentalisation"], tip_he:"C2: « il serait réducteur de » · « la réalité est plus complexe » · « il convient de distinguer »." },
+    [ /* 0 — Dissertation */
+      { instruction_he:"מבנה dissertation: d'une part / d'autre part", prompt_fr:"Dans quelle mesure le progrès technique améliore-t-il la condition humaine ? Développez en deux paragraphes.", trans_he:"באיזו מידה ההתקדמות הטכנולוגית משפרת את המצב האנושי? פתחו בשני פסקאות.", model_fr:"D'une part, le progrès technique a indéniablement transformé nos conditions de vie. D'autre part, cette évolution soulève des interrogations quant à la déshumanisation des rapports sociaux.", keys_fr:["d'une part... d'autre part","indéniablement","soulève des interrogations","quant à"], tip_he:"d'une part... d'autre part · certes... cependant · il est vrai que... néanmoins." },
+      { instruction_he:"dissertation: conclusion dialectique", prompt_fr:"La liberté est-elle compatible avec la loi ? Rédigez une conclusion en 3-4 phrases.", trans_he:"האם חופש מתיישב עם חוק? כתבו מסקנה ב-3-4 משפטים.", model_fr:"En somme, liberté et loi ne s'opposent pas fondamentalement. La loi, loin d'entraver la liberté, en est la condition même. Sans cadre juridique, la liberté de l'un empiéterait nécessairement sur celle d'autrui.", keys_fr:["en somme","ne s'opposent pas","loin d'","en est la condition","empiéterait"], tip_he:"en somme · loin de + inf · nécessairement · la condition même de." },
+      { instruction_he:"dissertation: introduction — poser la problématique", prompt_fr:"Rédigez une introduction sur : « L'art peut-il changer le monde ? »", trans_he:"כתבו מבוא לנושא: «האם האמנות יכולה לשנות את העולם?»", model_fr:"De tout temps, l'art a été porteur de messages politiques et sociaux. Mais peut-il véritablement transformer la société ? C'est à cette question que nous tenterons de répondre.", keys_fr:["de tout temps","porteur de messages","véritablement","nous tenterons de répondre"], tip_he:"מבוא dissertation: context → question → annonce du plan." },
+    ],
+    [ /* 1 — Commentaire */
+      { instruction_he:"פרשנות ציטוט: Camus", prompt_fr:"Commentez brièvement : « Je me révolte, donc nous sommes. » (Camus)", trans_he:"הגיבו בקצרה: «אני מורד, לכן אנחנו קיימים.» (קאמי)", model_fr:"Camus renverse le cogito cartésien pour affirmer que la révolte n'est pas individuelle, mais le fondement du lien social. En se révoltant, l'individu transcende son moi et crée une solidarité avec autrui.", keys_fr:["renverse","le cogito","la révolte","transcende","solidarité","autrui"], tip_he:"ניתוח ציטוט: מה הוא אומר? על מה הוא מתבסס? איזו השלכה יש לו?" },
+      { instruction_he:"commentaire de texte: repérer le ton", prompt_fr:"Analysez le ton de ce passage : « La machine ne connaît ni pitié ni repos. Elle avance, implacable, vers l'horizon vide de tout sens humain. »", trans_he:"נתחו את הטון של הקטע הזה.", model_fr:"Le ton est pessimiste et même tragique. L'auteur personnifie la machine pour en faire une force hostile. La répétition sonore (« pitié », « implacable ») renforce la sensation d'inéluctabilité.", keys_fr:["pessimiste","personnifie","répétition","inéluctabilité"], tip_he:"repérer le ton: ironique · lyrique · pessimiste · critique · solennel." },
+      { instruction_he:"commentaire: identifier la figure de style", prompt_fr:"Identifiez et expliquez la figure de style dans : « Le temps est un voleur silencieux. »", trans_he:"זהו והסבירו את הדמות הרטורית ב: «הזמן הוא גנב שקט.»", model_fr:"C'est une métaphore : le temps est comparé à un voleur sans utiliser « comme ». Cela suggère que le temps nous dérobe insensiblement notre vie, nos souvenirs, notre jeunesse.", keys_fr:["métaphore","comparé à","sans utiliser","dérobe insensiblement"], tip_he:"métaphore (ללא comme) · comparaison (עם comme) · personnification · oxymore." },
+    ],
+    [ /* 2 — Thèse/Antithèse */
+      { instruction_he:"thèse: טיעון תומך", prompt_fr:"Formulez une thèse en faveur du travail à distance.", trans_he:"נסחו טענה בעד עבודה מרחוק.", model_fr:"Le télétravail favorise l'autonomie et réduit le temps de transport, permettant aux salariés de gagner en qualité de vie et en productivité.", keys_fr:["favorise","réduit","permettant","qualité de vie","productivité"], tip_he:"thèse: sujet + verbe fort + argument + exemple/conséquence." },
+      { instruction_he:"antithèse: טיעון מנוגד", prompt_fr:"Formulez une antithèse contre le travail à distance.", trans_he:"נסחו טענה נגד עבודה מרחוק.", model_fr:"Cependant, le télétravail isole les employés, érode la cohésion d'équipe et brouille les frontières entre vie professionnelle et vie privée.", keys_fr:["cependant","isole","érode","brouille","frontières"], tip_he:"antithèse: cependant · en revanche · or · néanmoins + טיעון מנוגד." },
+      { instruction_he:"synthèse: עמדה מאוזנת", prompt_fr:"Proposez une synthèse sur le travail à distance.", trans_he:"הציעו סינתזה על עבודה מרחוק.", model_fr:"En définitive, il convient d'adopter une approche hybride : le télétravail partiel préserve la flexibilité tout en maintenant le lien social indispensable au bien-être collectif.", keys_fr:["en définitive","il convient d'","hybride","tout en maintenant","indispensable"], tip_he:"synthèse: en définitive · au final · il convient de · une approche équilibrée." },
+    ],
+    [ /* 3 — Analyse */
+      { instruction_he:"ניתוח: בינה מלאכותית — הזדמנות או איום?", prompt_fr:"L'intelligence artificielle représente-t-elle une menace ou une opportunité ? Nuancez.", trans_he:"האם בינה מלאכותית מהווה איום או הזדמנות? הדגישו גוונים.", model_fr:"Loin d'une opposition binaire, l'IA exige une lecture nuancée. Si ses applications médicales ouvrent des perspectives inédites, le risque d'instrumentalisation à des fins de surveillance demeure préoccupant.", keys_fr:["loin d'une opposition","exige une lecture nuancée","ouvrent des perspectives","demeure préoccupant"], tip_he:"il serait réducteur de · la réalité est plus complexe · il convient de distinguer." },
+      { instruction_he:"ניתוח: השפעת הרשתות החברתיות", prompt_fr:"Analysez les effets des réseaux sociaux sur la démocratie.", trans_he:"נתחו את השפעות הרשתות החברתיות על הדמוקרטיה.", model_fr:"D'un côté, les réseaux sociaux facilitent la mobilisation citoyenne. De l'autre, ils favorisent la désinformation et les chambres d'écho, fragmentant l'espace public.", keys_fr:["d'un côté","de l'autre","facilitent","désinformation","chambres d'écho","fragmentant"], tip_he:"d'un côté · de l'autre · par ailleurs · en outre · cela étant." },
+      { instruction_he:"ניתוח: מגבלות וסיכויים", prompt_fr:"Analysez les limites et opportunités de l'éducation en ligne.", trans_he:"נתחו את המגבלות וההזדמנויות של לימוד מקוון.", model_fr:"Si l'éducation en ligne offre une accessibilité accrue, elle présente des lacunes en termes d'interaction sociale et de suivi individualisé. Son potentiel reste néanmoins considérable.", keys_fr:["si","offre","présente des lacunes","en termes de","néanmoins"], tip_he:"si (= bien que) · présente des lacunes (יש לה חסרונות) · reste néanmoins." },
+    ],
+    [ /* 4 — Nuance */
+      { instruction_he:"גוון עמדה: certes / mais", prompt_fr:"Nuancez cette affirmation : « La technologie détruit le lien social. »", trans_he:"גוונו את הטענה: «הטכנולוגיה הורסת את הקשר החברתי.»", model_fr:"Certes, les écrans peuvent substituer aux interactions réelles. Mais ils créent aussi de nouveaux liens entre personnes éloignées. Il serait réducteur de condamner la technologie sans distinguer ses usages.", keys_fr:["certes","mais","il serait réducteur de","sans distinguer"], tip_he:"certes... mais · il est vrai que... néanmoins · on peut admettre que... cependant." },
+      { instruction_he:"גוון: להציג שני היבטים", prompt_fr:"Nuancez : « La mondialisation est une chance pour tous. »", trans_he:"גוונו: «הגלובליזציה היא הזדמנות לכולם.»", model_fr:"Si la mondialisation a permis à des millions de sortir de la pauvreté, elle a également creusé les inégalités au sein des sociétés et fragilisé les cultures locales.", keys_fr:["si ... a permis","elle a également","creusé les inégalités","fragilisé"], tip_he:"si + avantage → elle a également + désavantage. Ne pas oublier la nuance!" },
+      { instruction_he:"גוון: הוספת פרספקטיבה", prompt_fr:"Ajoutez une nuance à : « Le travail manuel est moins valorisé que le travail intellectuel. »", trans_he:"הוסיפו גוון: «עבודה ידנית מוערכת פחות מעבודה אינטלקטואלית.»", model_fr:"Ce constat mérite d'être nuancé selon les époques et les cultures. Dans certaines sociétés, le savoir-faire artisanal est hautement respecté. La hiérarchie des métiers varie selon le contexte.", keys_fr:["mérite d'être nuancé","selon","savoir-faire artisanal","la hiérarchie varie"], tip_he:"mérite d'être nuancé · selon les contextes · il convient de distinguer · cela varie selon." },
+    ],
+    [ /* 5 — Maîtrise */
+      { instruction_he:"שליטה: ביטוי ספונטני על נושא עכשווי", prompt_fr:"Exprimez-vous librement sur l'avenir du français dans le monde.", trans_he:"הביעו עצמכם בחופשיות על עתיד הצרפתית בעולם.", model_fr:"Le français, parlé par plus de 300 millions de locuteurs, connaît une expansion notable en Afrique. Loin de son déclin annoncé, il reste une langue de culture et de diplomatie, adaptant son usage aux réalités contemporaines.", keys_fr:["locuteurs","expansion","loin de","reste une langue de","adaptant"], tip_he:"C2: phrases longues · participiales · registre formel · vocabulaire précis." },
+      { instruction_he:"שליטה: improvisation sur אתיקה", prompt_fr:"La fin justifie-t-elle les moyens ? Développez en 5 phrases.", trans_he:"האם המטרה מקדשת את האמצעים? פתחו ב-5 משפטים.", model_fr:"Cette formule, attribuée à Machiavel, soulève une question éthique fondamentale. Si certains actes répréhensibles peuvent sembler justifiés par leurs effets, cette logique ouvre la voie à toutes les dérives. Une société ne peut prospérer sur un relativisme moral absolu.", keys_fr:["soulève","répréhensibles","ouvre la voie","dérives","relativisme moral"], tip_he:"attribuée à · soulève une question · ouvre la voie à · toutes les dérives." },
+      { instruction_he:"שליטה: אנליזה פתוחה", prompt_fr:"« Parler, c'est agir. » Développez cette idée.", trans_he:"«לדבר זה לפעול.» פתחו רעיון זה.", model_fr:"Selon Austin et les théories des actes de langage, la parole n'est pas un simple reflet de la pensée : elle produit des effets dans le monde. Promettre, ordonner, déclarer — ces actes transforment la réalité.", keys_fr:["actes de langage","produit des effets","promettre","ordonner","transforment la réalité"], tip_he:"selon + philosophe/théorie · la parole n'est pas seulement · elle produit / génère / transforme." },
+    ],
   ],
 };
 
-/* -------------------- BUILT-IN BANK (B2/C1 → split by level) -------------------- */
+/* -------------------- B2 bank (2D: 6 stations × 3 questions) -------------------- */
+const BANK_B2 = {
+  /* stations: Dont/Y/En · Gérondif · Plus-que-parfait · Conditionnel · Accord PP · Prépositions */
+  gra: [
+    [ /* 0 — Dont / Y / En */
+      { instruction_he:"כינוי dont", prompt_fr:"Le livre ____ je t'ai parlé est passionnant.", trans_he:"הספר שדיברתי איתך עליו מרתק.", accepted:["dont"], solution_fr:"Le livre dont je t'ai parlé est passionnant.", explanation_he:"dont מחליף de + שם. parler de qqch → dont.", tip_he:"dont אחרי: parler de · avoir besoin de · se souvenir de." },
+      { instruction_he:"כינוי y", prompt_fr:"Tu penses à ton avenir ? — Oui, j'____ pense souvent.", trans_he:"אתה חושב על עתידך? — כן, אני חושב על זה לעיתים.", accepted:["y"], solution_fr:"Oui, j'y pense souvent.", explanation_he:"y מחליף à + דבר (לא אדם). penser à qqch → y penser.", tip_he:"à + דבר (לא אדם) → y." },
+      { instruction_he:"כינוי en", prompt_fr:"Tu as des amis à Paris ? — Oui, j'____ ai beaucoup.", trans_he:"יש לך חברים בפריז? — כן, יש לי הרבה.", accepted:["en"], solution_fr:"Oui, j'en ai beaucoup.", explanation_he:"en מחליף de/des + שם ובמיוחד ביטויי כמות.", tip_he:"כמות (beaucoup, trois, un peu) → en." },
+    ],
+    [ /* 1 — Gérondif */
+      { instruction_he:"gérondif: אופן/בו-זמניות", prompt_fr:"Il a appris le français ____ (regarder) des films.", trans_he:"הוא למד צרפתית תוך כדי צפייה בסרטים.", accepted:["en regardant"], solution_fr:"Il a appris le français en regardant des films.", explanation_he:"gérondif = en + participe présent. מביע אופן או בו-זמניות.", tip_he:"en + פועל בסיומת -ant = תוך כדי…" },
+      { instruction_he:"gérondif: tout en (ניגוד)", prompt_fr:"Il sourit ____ (penser) à son erreur.", trans_he:"הוא מחייך בחשבו על טעותו.", accepted:["en pensant","tout en pensant"], solution_fr:"Il sourit en pensant à son erreur.", explanation_he:"en pensant = בחשבו. tout en pensant מדגיש בו-זמניות עם ניגוד קל.", tip_he:"tout en + gérondif מדגיש את הניגוד: tout en souriant, il pleurait." },
+      { instruction_he:"gérondif: condition", prompt_fr:"Tu perdras du poids ____ (faire) du sport régulièrement.", trans_he:"תרד במשקל על ידי עשיית ספורט בקביעות.", accepted:["en faisant"], solution_fr:"Tu perdras du poids en faisant du sport régulièrement.", explanation_he:"gérondif מביע תנאי/אמצעי: en faisant = על ידי עשיית.", tip_he:"en faisant (על ידי) · en mangeant (על ידי אכילת) · en étudiant." },
+    ],
+    [ /* 2 — Plus-que-parfait */
+      { instruction_he:"plus-que-parfait: עבר שלפני עבר", prompt_fr:"Quand je suis arrivé à la gare, le train ____ déjà (partir).", trans_he:"כשהגעתי לתחנה, הרכבת כבר יצאה.", accepted:["était déjà parti","était parti"], solution_fr:"le train était déjà parti.", explanation_he:"פעולה שהסתיימה לפני פעולה אחרת בעבר → plus-que-parfait.", tip_he:"עבר שלפני עבר = plus-que-parfait (avais/était + participe)." },
+      { instruction_he:"plus-que-parfait: דיבור עקיף", prompt_fr:"Elle a dit qu'elle ____ (finir) son travail la veille.", trans_he:"היא אמרה שהיא סיימה את עבודתה יום קודם.", accepted:["avait fini"], solution_fr:"Elle avait fini son travail la veille.", explanation_he:"בדיבור עקיף בעבר, פעולה שקדמה → plus-que-parfait.", tip_he:"« hier » בדיבור עקיף הופך ל-« la veille »." },
+      { instruction_he:"plus-que-parfait: bien que", prompt_fr:"Bien qu'il ____ (faire) de son mieux, il a échoué.", trans_he:"למרות שעשה כמיטב יכולתו, הוא נכשל.", accepted:["ait fait"], solution_fr:"Bien qu'il ait fait de son mieux, il a échoué.", explanation_he:"כשהפעולה כבר הושלמה, אחרי bien que בא subjonctif passé: ait fait.", tip_he:"subjonctif passé = aie/aies/ait + participe." },
+    ],
+    [ /* 3 — Conditionnel présent & passé */
+      { instruction_he:"conditionnel présent: hypothèse", prompt_fr:"Si j'avais plus de temps, je ____ (voyager) davantage.", trans_he:"אם היה לי יותר זמן, הייתי מטייל יותר.", accepted:["voyagerais"], solution_fr:"je voyagerais davantage.", explanation_he:"Si + imparfait → conditionnel présent.", tip_he:"Si + imparfait → conditionnel présent." },
+      { instruction_he:"conditionnel passé: hypothèse irréelle", prompt_fr:"Si j'avais su, je ne ____ (venir) pas.", trans_he:"אילו ידעתי, לא הייתי בא.", accepted:["serais venu","serais venue"], solution_fr:"je ne serais pas venu.", explanation_he:"Si + plus-que-parfait → conditionnel passé. venir עם être.", tip_he:"Si + avais su → ... serais venu (חרטה על העבר)." },
+      { instruction_he:"conditionnel: politesse", prompt_fr:"Je ____ un café, s'il vous plaît.", trans_he:"הייתי רוצה קפה, בבקשה.", accepted:["voudrais","aimerais"], solution_fr:"Je voudrais un café.", explanation_he:"conditionnel לבקשה מנומסת. voudrais = הייתי רוצה.", tip_he:"je voudrais · j'aimerais · pourriez-vous — כולם conditionnel לנימוס." },
+    ],
+    [ /* 4 — Accord du participe passé */
+      { instruction_he:"accord PP עם avoir + COD לפניו", prompt_fr:"Les fleurs que j'ai ____ (acheter) sont magnifiques.", trans_he:"הפרחים שקניתי נהדרים.", accepted:["achetées"], solution_fr:"Les fleurs que j'ai achetées sont magnifiques.", explanation_he:"COD לפני avoir → PP מתאים. fleurs נקבה רבים → achetées.", tip_he:"COD לפני avoir → התאמה במין ובמספר." },
+      { instruction_he:"accord PP עם être", prompt_fr:"Les filles sont ____ (partir) tôt.", trans_he:"הבנות יצאו מוקדם.", accepted:["parties"], solution_fr:"Les filles sont parties tôt.", explanation_he:"avec être, PP מתאים תמיד לנושא. filles נקבה רבות → parties.", tip_he:"être + PP → תמיד מתאים לנושא." },
+      { instruction_he:"accord PP: le seul qui", prompt_fr:"C'est le seul ami qui me ____ (comprendre) vraiment.", trans_he:"זה החבר היחיד שבאמת מבין אותי.", accepted:["comprenne"], solution_fr:"C'est le seul ami qui me comprenne vraiment.", explanation_he:"le seul qui → subjonctif. comprendre → comprenne.", tip_he:"le seul qui, le premier qui → subjonctif." },
+    ],
+    [ /* 5 — Prépositions avancées */
+      { instruction_he:"מילת יחס: rêver de", prompt_fr:"Je rêve ____ visiter le Canada un jour.", trans_he:"אני חולם לבקר בקנדה יום אחד.", accepted:["de"], solution_fr:"Je rêve de visiter le Canada.", explanation_he:"rêver de faire qqch — הפועל rêver דורש de לפני שם הפועל.", tip_he:"rêver de · décider de · essayer de · oublier de." },
+      { instruction_he:"מילת יחס: tenir à", prompt_fr:"Je tiens ____ vous remercier.", trans_he:"אני מרגיש צורך להודות לכם.", accepted:["à"], solution_fr:"Je tiens à vous remercier.", explanation_he:"tenir à faire qqch = לרצות בחזקה / לחשוב שחשוב לעשות.", tip_he:"tenir à · s'opposer à · renoncer à · réussir à." },
+      { instruction_he:"מילת יחס: se passer de", prompt_fr:"Je ne peux pas me passer ____ café le matin.", trans_he:"אני לא יכול בלי קפה בבוקר.", accepted:["de"], solution_fr:"Je ne peux pas me passer de café.", explanation_he:"se passer de = להסתדר בלי. toujours de לפני שם העצם.", tip_he:"se passer de · manquer de · avoir besoin de · profiter de." },
+    ],
+  ],
+  /* stations: Travail · Émotions · Expressions · Nuances · Registres · Idiomes */
+  voc: [
+    [ /* 0 — Travail */
+      { instruction_he:"להתפטר", prompt_fr:"Il a décidé de ____ (להתפטר).", trans_he:"הוא החליט להתפטר.", accepted:["démissionner","donner sa démission"], solution_fr:"démissionner", explanation_he:"démissionner = להתפטר. donner sa démission = להגיש התפטרות.", tip_he:"démissionner · être licencié (לפוטר) · être au chômage." },
+      { instruction_he:"מועד אחרון", prompt_fr:"Je dois respecter l'____ (המועד האחרון).", trans_he:"אני חייב לעמוד במועד האחרון.", accepted:["échéance","date limite"], solution_fr:"l'échéance / la date limite", explanation_he:"échéance = מועד אחרון. délai = פרק הזמן עד המועד.", tip_he:"respecter les délais = לעמוד בלוחות זמנים." },
+      { instruction_he:"להסתדר לבד", prompt_fr:"Je dois apprendre à me ____ (להסתדר לבד).", trans_he:"אני חייב ללמוד להסתדר לבד.", accepted:["débrouiller","se débrouiller"], solution_fr:"se débrouiller", explanation_he:"se débrouiller = להסתדר, למצוא פתרון לבד.", tip_he:"Débrouille-toi ! = תסתדר לבד!" },
+    ],
+    [ /* 1 — Émotions */
+      { instruction_he:"מתוסכל", prompt_fr:"Je suis vraiment ____ (תחושת תסכול).", trans_he:"אני ממש מתוסכל.", accepted:["frustré","frustrée","frustré(e)"], solution_fr:"frustré(e)", explanation_he:"frustré = מתוסכל. la frustration = התסכול.", tip_he:"frustré · déçu (מאוכזב) · énervé (מעצבן) · soulagé (מוקל)." },
+      { instruction_he:"מודאג", prompt_fr:"Je suis vraiment ____ pour lui. (דואג)", trans_he:"אני ממש דואג לו.", accepted:["inquiet","inquiète","soucieux"], solution_fr:"inquiet", explanation_he:"inquiet = מודאג. s'inquiéter = לדאוג.", tip_he:"Ne t'inquiète pas = אל תדאג." },
+      { instruction_he:"לוותר", prompt_fr:"Il ne faut jamais ____ (להרים ידיים).", trans_he:"אסור אף פעם לוותר.", accepted:["abandonner","laisser tomber","renoncer"], solution_fr:"abandonner / laisser tomber", explanation_he:"abandonner = לוותר. laisser tomber = לעזוב את זה (מדובר).", tip_he:"Laisse tomber ! = עזוב את זה!" },
+    ],
+    [ /* 2 — Expressions courantes */
+      { instruction_he:"שווה את זה", prompt_fr:"Ce film, ça ____ le coup !", trans_he:"הסרט הזה שווה את זה!", accepted:["vaut le coup","vaut la peine"], solution_fr:"ça vaut le coup / la peine", explanation_he:"ça vaut le coup/la peine = שווה את זה.", tip_he:"ça ne vaut pas le coup = לא שווה את הטרחה." },
+      { instruction_he:"בכוונה", prompt_fr:"Il l'a fait ____ (לא במקרה).", trans_he:"הוא עשה את זה בכוונה.", accepted:["exprès","expres","volontairement"], solution_fr:"exprès", explanation_he:"faire exprès = לעשות בכוונה.", tip_he:"Je ne l'ai pas fait exprès = לא עשיתי בכוונה." },
+      { instruction_he:"להתחרט", prompt_fr:"Je ____ vraiment ma décision.", trans_he:"אני ממש מתחרט על ההחלטה.", accepted:["regrette"], solution_fr:"Je regrette ma décision.", explanation_he:"regretter = להתחרט/להצטער.", tip_he:"Je regrette = אני מצטער / מתחרט." },
+    ],
+    [ /* 3 — Nuances */
+      { instruction_he:"להתרגל ל-", prompt_fr:"Je dois m'____ à ce nouveau rythme.", trans_he:"אני חייב להתרגל לקצב החדש הזה.", accepted:["habituer","habituer à"], solution_fr:"s'habituer à", explanation_he:"s'habituer à qqch = להתרגל למשהו.", tip_he:"être habitué à = להיות רגיל ל-." },
+      { instruction_he:"להעמיד פנים", prompt_fr:"Il ____ de ne pas comprendre.", trans_he:"הוא מעמיד פנים שאינו מבין.", accepted:["fait semblant","fait semblant de"], solution_fr:"faire semblant (de)", explanation_he:"faire semblant de = להעמיד פנים.", tip_he:"faire semblant de + שם פועל." },
+      { instruction_he:"מעצבן (nuance)", prompt_fr:"Ce bruit constant est vraiment ____ !", trans_he:"הרעש המתמיד הזה ממש מעצבן!", accepted:["agaçant","agacant","énervant","enervant"], solution_fr:"agaçant / énervant", explanation_he:"agaçant = מעצבן (קל יותר) · énervant = מעצבן (חזק יותר).", tip_he:"agaçant · énervant · irritant · exaspérant (מתסכל ביותר)." },
+    ],
+    [ /* 4 — Registres */
+      { instruction_he:"בכל זאת (ניגוד)", prompt_fr:"C'était difficile, mais j'ai réussi ____ (בכל זאת).", trans_he:"זה היה קשה, אבל הצלחתי בכל זאת.", accepted:["quand même","quand meme","malgré tout","malgre tout"], solution_fr:"quand même / malgré tout", explanation_he:"quand même = בכל זאת. malgré tout = למרות הכל.", tip_he:"Merci quand même = תודה בכל זאת." },
+      { instruction_he:"להתלונן", prompt_fr:"Il n'arrête pas de se ____ de tout !", trans_he:"הוא לא מפסיק להתלונן על הכל!", accepted:["plaindre","se plaindre"], solution_fr:"se plaindre (de)", explanation_he:"se plaindre de qqch = להתלונן על משהו.", tip_he:"se plaindre de = להתלונן על." },
+      { instruction_he:"לדעתי (registre)", prompt_fr:"____, cette décision est la bonne. (לדעתי — רשמי)", trans_he:"לדעתי, ההחלטה הזו נכונה (רשמי).", accepted:["à mon avis","a mon avis","selon moi","à mon sens"], solution_fr:"À mon avis / Selon moi / À mon sens", explanation_he:"à mon sens = ספרותי יותר. selon moi = רשמי. à mon avis = יומיומי.", tip_he:"à mon avis · selon moi · à mon sens · de mon point de vue." },
+    ],
+    [ /* 5 — Idiomes B2 */
+      { instruction_he:"ביטוי: מחר בבוקר", prompt_fr:"Ne remets pas ____ ce que tu peux faire aujourd'hui.", trans_he:"אל תדחה להמחרת מה שאתה יכול לעשות היום.", accepted:["au lendemain","à demain"], solution_fr:"au lendemain", explanation_he:"remettre au lendemain = לדחות למחר. procrastiner = לדחות.", tip_he:"remettre au lendemain = procrastiner = לשים בצד." },
+      { instruction_he:"ביטוי: לראות את התמונה הגדולה", prompt_fr:"Il faut voir les choses ____ (בפרספקטיבה נרחבת).", trans_he:"צריך לראות דברים בפרספקטיבה רחבה.", accepted:["dans leur ensemble","en perspective","globalement"], solution_fr:"dans leur ensemble / en perspective", explanation_he:"voir dans leur ensemble = לראות בכללות. en perspective = בפרספקטיבה.", tip_he:"globalement · dans l'ensemble · en perspective · vue d'ensemble." },
+      { instruction_he:"ביטוי: לא כדאי", prompt_fr:"Ce n'est pas la ____ (לא שווה את המאמץ).", trans_he:"זה לא שווה את המאמץ.", accepted:["peine","peine d'y aller"], solution_fr:"Ce n'est pas la peine.", explanation_he:"ce n'est pas la peine = לא כדאי, לא צריך להטריח.", tip_he:"ce n'est pas la peine · ça ne vaut pas le coup · inutile de." },
+    ],
+  ],
+  /* stations: Presse · Chroniques · Débats TV · Essais · Discours · Analyses */
+  com: [
+    [ /* 0 — Presse */
+      { instruction_he:"קרא וענה", prompt_fr:"« Depuis la pandémie, le télétravail s'est imposé dans de nombreuses entreprises. Si certains salariés y voient un gain de liberté, d'autres regrettent le manque de contact humain et peinent à séparer vie professionnelle et vie privée. »", trans_he:"מאז המגפה, העבודה מרחוק התבססה. חלק מהעובדים רואים בכך חופש, אחרים מתגעגעים למגע האנושי ומתקשים להפריד בין עבודה לחיים.", question_fr:"Selon le texte, quel est un inconvénient du télétravail ?", q_he:"מהו חיסרון של עבודה מרחוק?", options:["Il réduit la liberté des salariés","Il brouille la frontière entre travail et vie privée","Il augmente les contacts humains"], correct:1, explanation_he:"« peinent à séparer vie professionnelle et vie privée »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le maire a annoncé que la nouvelle ligne de tramway serait mise en service d'ici deux ans, à condition que le financement soit validé par la région. »", trans_he:"ראש העיר הודיע שקו הטראם ייכנס לשירות בתוך שנתיים, בתנאי שהמימון יאושר.", question_fr:"La mise en service du tramway dépend de quoi ?", q_he:"כניסת הטראם לשירות תלויה במה?", options:["De l'approbation du financement régional","De la décision des habitants","De la météo"], correct:0, explanation_he:"« à condition que le financement soit validé par la région »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Loin d'être un simple effet de mode, la consommation locale traduit une véritable prise de conscience écologique chez les jeunes générations. »", trans_he:"רחוק מלהיות סתם אופנה, הצריכה המקומית מבטאת מודעות אקולוגית אמיתית בקרב הדורות הצעירים.", question_fr:"Que pense l'auteur de la consommation locale ?", q_he:"מה דעת הכותב על צריכה מקומית?", options:["C'est une mode passagère","C'est le signe d'une vraie conscience écologique","C'est réservé aux personnes âgées"], correct:1, explanation_he:"« loin d'être un simple effet de mode » + « véritable prise de conscience »." },
+    ],
+    [ /* 1 — Chroniques */
+      { instruction_he:"קרא וענה", prompt_fr:"« Si le livre numérique a séduit de nombreux lecteurs par sa praticité, le livre papier conserve un charme que beaucoup ne sont pas prêts à abandonner. »", trans_he:"אם הספר הדיגיטלי כבש קוראים בנוחות, הספר המודפס שומר על קסם שרבים לא מוכנים לוותר עליו.", question_fr:"Que dit le texte sur le livre papier ?", q_he:"מה אומר הטקסט על הספר המודפס?", options:["Il a complètement disparu","Il garde un charme apprécié","Il est plus pratique que le numérique"], correct:1, explanation_he:"« conserve un charme que beaucoup ne sont pas prêts à abandonner »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Les réseaux sociaux permettent de rester en contact avec ses proches, mais une utilisation excessive peut nuire à la concentration et au sommeil. »", trans_he:"הרשתות החברתיות מאפשרות להישאר בקשר, אך שימוש מופרז עלול לפגוע בריכוז ובשינה.", question_fr:"Quel risque le texte mentionne-t-il ?", q_he:"איזה סיכון מזכיר הטקסט?", options:["Une meilleure concentration","Des troubles du sommeil","Une perte de contacts"], correct:1, explanation_he:"« peut nuire à la concentration et au sommeil »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« De plus en plus de consommateurs se tournent vers les produits biologiques, convaincus qu'ils sont meilleurs pour la santé, malgré un prix souvent plus élevé. »", trans_he:"יותר ויותר צרכנים פונים למוצרים אורגניים, למרות מחיר גבוה יותר.", question_fr:"Qu'est-ce qui peut freiner l'achat de produits bio ?", q_he:"מה עלול להרתיע מקנייה אורגנית?", options:["Leur goût","Leur prix plus élevé","Leur rareté"], correct:1, explanation_he:"« malgré un prix souvent plus élevé »." },
+    ],
+    [ /* 2 — Débats TV */
+      { instruction_he:"קרא וענה", prompt_fr:"« Malgré un accueil critique mitigé, le dernier film du réalisateur a rencontré un franc succès auprès du public, dépassant le million d'entrées en une semaine. »", trans_he:"למרות ביקורות מעורבות, הסרט זכה להצלחה גדולה בקרב הקהל, ועבר מיליון צופים.", question_fr:"Comment le film a-t-il été reçu ?", q_he:"כיצד התקבל הסרט?", options:["Aimé par la critique mais ignoré du public","Critiqué mais très populaire auprès du public","Un échec total"], correct:1, explanation_he:"« accueil critique mitigé » + « franc succès auprès du public »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Pour désengorger le centre-ville, la municipalité encourage l'usage du vélo en multipliant les pistes cyclables. »", trans_he:"כדי להקל על הגודש, העירייה מעודדת שימוש באופניים על ידי הרבת שבילי אופניים.", question_fr:"Quel est l'objectif de la municipalité ?", q_he:"מה המטרה של העירייה?", options:["Augmenter le trafic automobile","Réduire l'encombrement du centre-ville","Interdire les voitures"], correct:1, explanation_he:"« désengorger le centre-ville »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le numérique a profondément reconfiguré notre rapport au temps. L'immédiateté des échanges génère paradoxalement une nouvelle forme d'impatience qui érode notre capacité à la réflexion approfondie. »", trans_he:"הדיגיטלי מחדש את יחסנו לזמן. המיידיות יוצרת חוסר סבלנות ששוחק את יכולת ההרהור.", question_fr:"Quel est l'effet paradoxal du numérique ?", q_he:"מהו האפקט הפרדוקסלי של הדיגיטלי?", options:["Il rapproche les gens et renforce la réflexion","Il abolit les distances mais génère de l'impatience","Il améliore notre rapport au temps"], correct:1, explanation_he:"פרדוקס: מבטל מרחקים אבל יוצר חוסר סבלנות." },
+    ],
+    [ /* 3 — Essais */
+      { instruction_he:"קרא וענה", prompt_fr:"« La précarité économique ne se réduit pas à un manque d'argent : elle génère une instabilité cognitive qui affecte la prise de décision. »", trans_he:"חוסר ביטחון כלכלי אינו מסתכם בחוסר כסף: הוא מייצר חוסר יציבות קוגניטיבי שמשפיע על קבלת החלטות.", question_fr:"Quel effet la précarité a-t-elle ?", q_he:"איזה השפעה יש לחוסר הביטחון?", options:["Elle renforce la prise de décision","Elle crée une instabilité cognitive","Elle n'affecte que les finances"], correct:1, explanation_he:"« instabilité cognitive qui affecte la prise de décision »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Apprendre une langue étrangère demande de la patience : les progrès sont parfois lents, mais la régularité finit toujours par payer. »", trans_he:"ללמוד שפה זרה דורש סבלנות: ההתקדמות לפעמים איטית, אך ההתמדה תמיד משתלמת.", question_fr:"Quel facteur est essentiel selon le texte ?", q_he:"איזה גורם חיוני?", options:["Le talent inné","La régularité","La rapidité"], correct:1, explanation_he:"« la régularité finit toujours par payer »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Les sociétés contemporaines valorisent à la fois l'individualisme et la solidarité, créant une tension structurelle difficile à résoudre. »", trans_he:"החברות העכשוויות מעריכות גם אינדיבידואליזם וגם סולידריות, ויוצרות מתח מבני.", question_fr:"Quelle tension le texte identifie-t-il ?", q_he:"איזה מתח מזהה הטקסט?", options:["Entre liberté et sécurité","Entre individualisme et solidarité","Entre tradition et modernité"], correct:1, explanation_he:"« valorisent à la fois l'individualisme et la solidarité »." },
+    ],
+    [ /* 4 — Discours */
+      { instruction_he:"קרא וענה", prompt_fr:"« Le populisme se nourrit du sentiment d'abandon des classes moyennes, exploitant la méfiance envers les élites pour proposer des solutions simplistes à des problèmes complexes. »", trans_he:"הפופוליזם ניזון מתחושת נטישה ומנצל את חוסר האמון באליטות.", question_fr:"Comment le texte explique-t-il le populisme ?", q_he:"כיצד מסביר הטקסט את הפופוליזם?", options:["Comme une idéologie bien définie","Comme une exploitation du mécontentement populaire","Comme un système stable"], correct:1, explanation_he:"« exploitant la méfiance envers les élites »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La science ne produit pas des vérités définitives, mais des modèles provisoires, constamment révisés à la lumière de nouvelles données. »", trans_he:"המדע אינו מייצר אמיתות סופיות, אלא מודלים זמניים, המתוקנים ללא הרף.", question_fr:"Comment le texte décrit-il la science ?", q_he:"כיצד מתאר הטקסט את המדע?", options:["Comme une source de vérités définitives","Comme un ensemble de modèles provisoires","Comme une discipline figée"], correct:1, explanation_he:"« modèles provisoires, constamment révisés »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La démocratie délibérative suppose que la légitimité des décisions découle non du vote seul, mais de la qualité du débat qui le précède. »", trans_he:"הדמוקרטיה הדיונית מניחה שלגיטימיות ההחלטות נובעת לא מהצבעה בלבד אלא מאיכות הדיון.", question_fr:"Qu'est-ce qui légitime une décision ?", q_he:"מה מעניק לגיטימיות?", options:["Le vote seul","La qualité du débat préalable","La décision des experts"], correct:1, explanation_he:"« qualité du débat qui le précède »." },
+    ],
+    [ /* 5 — Analyses */
+      { instruction_he:"קרא וענה", prompt_fr:"« L'esthétique kantienne distingue le beau du sublime : si le beau apaise, le sublime confronte l'homme à ses propres limites face à l'infini. »", trans_he:"קאנט מבחין בין יפה לנשגב: היפה מרגיע, הנשגב מעמת עם הגבולות.", question_fr:"Quelle est la différence entre le beau et le sublime ?", q_he:"מה ההבדל בין יפה לנשגב?", options:["Le beau est plus rare","Le beau apaise, le sublime confronte à nos limites","Le sublime est plus simple"], correct:1, explanation_he:"« le beau apaise, le sublime confronte l'homme à ses propres limites »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La traduction n'est jamais neutre : elle est toujours un acte d'interprétation, voire de création, car le traducteur ne transporte pas seulement des mots, mais des mondes. »", trans_he:"תרגום אינו ניטרלי: הוא תמיד מעשה פרשנות ואף יצירה.", question_fr:"Que fait réellement le traducteur ?", q_he:"מה עושה המתרגם?", options:["Il copie des mots","Il interprète et crée en transférant des univers","Il reste fidèle à l'original"], correct:1, explanation_he:"« acte d'interprétation, voire de création... transporte des mondes »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Si la modernité a affranchi l'individu des contraintes collectives, elle l'a privé des cadres symboliques qui donnaient sens à son existence. »", trans_he:"המודרניות שחררה את הפרט ממאסרים קולקטיביים אבל שללה ממנו את המסגרות הסמליות.", question_fr:"Quel est le paradoxe évoqué ?", q_he:"מהו הפרדוקס?", options:["La liberté moderne crée émancipation et perte de sens","La modernité a renforcé les liens","Les contraintes donnent un sens à la vie"], correct:0, explanation_he:"הפרדוקס: שחרור + שלילת מסגרות סמליות." },
+    ],
+  ],
+  /* stations: Société · Culture · Argumentation · Nuancer · Convaincre · Improviser */
+  exp: [
+    [ /* 0 — Société */
+      { instruction_he:"הבע עמדה: עבודה מרחוק", prompt_fr:"Que penses-tu du télétravail ? Donne ton avis en deux phrases.", trans_he:"מה דעתך על עבודה מרחוק?", model_fr:"Personnellement, je trouve que le télétravail offre une grande flexibilité. Cependant, il peut créer un sentiment d'isolement, c'est pourquoi je préfère un rythme hybride.", keys_fr:["personnellement","je trouve que","cependant","c'est pourquoi"], tip_he:"personnellement · je trouve que · cependant · c'est pourquoi." },
+      { instruction_he:"הבע עמדה: רשתות חברתיות", prompt_fr:"Les réseaux sociaux : avantage ou danger pour la société ?", trans_he:"רשתות חברתיות: יתרון או סכנה לחברה?", model_fr:"À mon avis, les réseaux sociaux rapprochent les gens qui sont loin, mais peuvent nous éloigner de ceux qui sont à côté. Tout dépend de la manière dont on les utilise.", keys_fr:["à mon avis","rapprocher","éloigner","tout dépend de"], tip_he:"D'un côté… de l'autre… · à mon avis · tout dépend de." },
+      { instruction_he:"הבע עמדה: שינויי אקלים", prompt_fr:"Les individus peuvent-ils vraiment aider l'environnement ?", trans_he:"האם אנשים יכולים באמת לעזור לסביבה?", model_fr:"Je pense que oui : recycler, consommer moins, prendre les transports en commun — ces gestes comptent. Mais la responsabilité principale incombe aux entreprises et aux gouvernements.", keys_fr:["je pense que","ces gestes comptent","mais","incombe aux"], tip_he:"ces gestes comptent (המעשים האלה חשובים) · incombe à (מוטלת על)." },
+    ],
+    [ /* 1 — Culture */
+      { instruction_he:"תאר מנה אהובה", prompt_fr:"Décris ton plat préféré et explique pourquoi tu l'aimes.", trans_he:"תאר את המנה האהובה עליך.", model_fr:"Mon plat préféré, c'est sans doute les pâtes à la carbonara. J'apprécie ce plat parce qu'il est simple et réconfortant. De plus, il me rappelle un voyage en Italie.", keys_fr:["sans doute","j'apprécie parce que","à la fois","de plus","il me rappelle"], tip_he:"à la fois · de plus · parce que · il me rappelle." },
+      { instruction_he:"תאר יום סוף שבוע אידיאלי", prompt_fr:"Décris ta journée de week-end idéale.", trans_he:"תאר את יום סוף השבוע האידיאלי שלך.", model_fr:"Ma journée idéale commencerait par un petit-déjeuner tranquille. Ensuite, je me promènerais en ville, puis je retrouverais des amis. Le soir, je regarderais un film.", keys_fr:["commencerait par","ensuite","puis","le soir"], tip_he:"conditionnel: commencerait · je me promènerais · je retrouverais." },
+      { instruction_he:"השווה שתי תרבויות", prompt_fr:"Compare deux pays ou cultures que tu connais.", trans_he:"השווה בין שתי מדינות או תרבויות שאתה מכיר.", model_fr:"Israël et la France ont des cultures très différentes. En Israël, on est direct et informel. En France, on valorise davantage la politesse formelle et la gastronomie. Les deux ont leur charme.", keys_fr:["en Israël","en France","davantage","les deux ont leur charme"], tip_he:"en ... on + verbe · davantage (יותר) · les deux · à l'inverse." },
+    ],
+    [ /* 2 — Argumentation */
+      { instruction_he:"מסגרת טיעון: ב-2 טיעונים", prompt_fr:"Donnez deux arguments pour ou contre la semaine de 4 jours.", trans_he:"תנו שני טיעונים בעד או נגד שבוע עבודה בן 4 ימים.", model_fr:"Premièrement, la semaine de 4 jours améliore le bien-être des employés et réduit l'absentéisme. Deuxièmement, elle peut augmenter la productivité en concentrant les efforts.", keys_fr:["premièrement","deuxièmement","améliore","réduit","augmenter"], tip_he:"premièrement · deuxièmement · en outre (בנוסף) · de plus (יתרה מזאת)." },
+      { instruction_he:"תן עצה: ללמוד צרפתית", prompt_fr:"Quels conseils donnerais-tu à quelqu'un qui commence le français ?", trans_he:"אילו עצות היית נותן למי שמתחיל ללמוד צרפתית?", model_fr:"Je lui conseillerais d'écouter du français tous les jours, même quelques minutes. Il ne faudrait pas avoir peur de faire des erreurs, car c'est en se trompant qu'on apprend.", keys_fr:["je lui conseillerais","ne pas avoir peur","c'est en se trompant que"], tip_he:"je lui conseille de + inf · il faudrait que · c'est en + gérondif que." },
+      { instruction_he:"בנה טיעון: conditionnel", prompt_fr:"Si tu étais président(e), quelle loi voterais-tu en premier ?", trans_he:"אם היית נשיא/ה, על איזה חוק היית מצביע ראשון?", model_fr:"Si j'étais président, je voterais d'abord une loi obligatoire sur le recyclage. Je pense que l'urgence climatique exige des mesures concrètes et immédiates.", keys_fr:["si j'étais","je voterais","je pense que","l'urgence climatique","exige"], tip_he:"Si + imparfait → conditionnel. je voterais · je créerais · j'imposerais." },
+    ],
+    [ /* 3 — Nuancer */
+      { instruction_he:"גוון עמדה: הוסף certes/mais", prompt_fr:"Nuancez : « La technologie détruit le lien social. »", trans_he:"גוונו: «הטכנולוגיה הורסת את הקשר החברתי.»", model_fr:"Certes, les écrans peuvent substituer aux interactions réelles. Mais ils créent aussi de nouveaux liens entre personnes éloignées. Il serait réducteur de condamner la technologie.", keys_fr:["certes","mais","il serait réducteur de"], tip_he:"certes... mais · il est vrai que... néanmoins · on peut admettre que... cependant." },
+      { instruction_he:"גוון: שני היבטים", prompt_fr:"Nuancez : « La mondialisation est une chance pour tous. »", trans_he:"גוונו: «הגלובליזציה היא הזדמנות לכולם.»", model_fr:"Si la mondialisation a permis à des millions de sortir de la pauvreté, elle a également creusé les inégalités au sein des sociétés et fragilisé les cultures locales.", keys_fr:["si ... a permis","elle a également","creusé les inégalités","fragilisé"], tip_he:"si (avantage) → elle a également (désavantage). Ne pas oublier la nuance!" },
+      { instruction_he:"גוון: הפרדה בין היבטים", prompt_fr:"Nuancez le rôle des réseaux sociaux dans les mouvements citoyens.", trans_he:"גוונו את תפקיד הרשתות החברתיות בתנועות אזרחיות.", model_fr:"D'un côté, les réseaux sociaux ont facilité des mobilisations historiques. De l'autre, ils peuvent aussi propager des fausses informations et diviser. Tout dépend de l'usage.", keys_fr:["d'un côté","de l'autre","facilité","propager","tout dépend de l'usage"], tip_he:"d'un côté · de l'autre · par ailleurs · tout dépend de." },
+    ],
+    [ /* 4 — Convaincre */
+      { instruction_he:"שכנע: הצג מסקנה", prompt_fr:"Rédigez une conclusion convaincante sur l'importance des langues étrangères.", trans_he:"כתבו מסקנה משכנעת על חשיבות שפות זרות.", model_fr:"En définitive, apprendre une langue étrangère n'est pas seulement un atout professionnel : c'est une ouverture sur le monde, un enrichissement culturel et humain irremplaçable.", keys_fr:["en définitive","n'est pas seulement","c'est une ouverture","enrichissement","irremplaçable"], tip_he:"en définitive · n'est pas seulement... c'est aussi · irremplaçable." },
+      { instruction_he:"שכנע: הגב להתנגדות", prompt_fr:"Quelqu'un dit : « L'art n'est pas utile. » Comment répondez-vous ?", trans_he:"מישהו אומר: «אמנות אינה שימושית.» כיצד תגיבו?", model_fr:"Je comprends ce point de vue, mais l'utilité n'est pas la seule valeur. L'art nourrit l'esprit, développe la créativité et offre un espace de réflexion que rien d'autre ne peut remplacer.", keys_fr:["je comprends","mais","nourrit l'esprit","développe","rien d'autre ne peut remplacer"], tip_he:"je comprends... mais · loin de là · bien au contraire · néanmoins." },
+      { instruction_he:"שכנע: תמוך בעמדה", prompt_fr:"Convainquez quelqu'un d'apprendre le français.", trans_he:"שכנעו מישהו ללמוד צרפתית.", model_fr:"Le français est une langue internationale parlée sur cinq continents. En apprenant le français, vous accédez à une culture riche, à des opportunités professionnelles et à des relations humaines élargies.", keys_fr:["internationale","cinq continents","en apprenant","opportunités","relations humaines élargies"], tip_he:"en + gérondif = בזכות + infinitif · vous accédez à · une culture riche." },
+    ],
+    [ /* 5 — Improviser */
+      { instruction_he:"אימפרוביזציה: תגובה היפותטית", prompt_fr:"Comment réagirais-tu si un ami annulait à la dernière minute ?", trans_he:"איך היית מגיב אם חבר מבטל ברגע האחרון?", model_fr:"Je serais un peu déçu, mais je comprendrais s'il avait une bonne raison. Je lui proposerais de reporter à un autre jour plutôt que de me fâcher.", keys_fr:["je serais","je comprendrais","je lui proposerais","plutôt que de"], tip_he:"conditionnel présent: je serais · je comprendrais · je proposerais." },
+      { instruction_he:"אימפרוביזציה: מיומנות שתרצה", prompt_fr:"Si tu pouvais maîtriser une compétence instantanément, laquelle choisirais-tu ?", trans_he:"אם יכולת לרכוש מיומנות אחת מיידית, איזו היית בוחר?", model_fr:"Si je pouvais maîtriser une compétence, je choisirais de jouer du piano. Ce serait une source de joie quotidienne et cela me permettrait d'exprimer des émotions autrement.", keys_fr:["si je pouvais","je choisirais","ce serait","cela me permettrait"], tip_he:"Si + imparfait → conditionnel: je choisirais · ce serait · je pourrais." },
+      { instruction_he:"אימפרוביזציה: עצה לדמות היסטורית", prompt_fr:"Quels conseils donnerais-tu à un jeune Napoléon ?", trans_he:"אילו עצות היית נותן לנפוליאון הצעיר?", model_fr:"Je lui conseillerais d'écouter davantage ses conseillers et de ne pas laisser l'orgueil dicter ses décisions militaires. La modération est souvent plus puissante que l'ambition débridée.", keys_fr:["je lui conseillerais","d'écouter davantage","ne pas laisser","l'orgueil","la modération"], tip_he:"je lui conseillerais de · ne pas laisser + N + inf · la modération." },
+    ],
+  ],
+};
+
+/* -------------------- C1 bank (2D: 6 stations × 3 questions) -------------------- */
+const BANK_C1 = {
+  /* stations: Subjonctif · Conditionnel passé · Disc. indirect · Concordance · Subj. passé · Style avancé */
+  gra: [
+    [ /* 0 — Subjonctif présent */
+      { instruction_he:"subjonctif: il faut que", prompt_fr:"Il faut que tu ____ (finir) ce rapport avant midi.", trans_he:"צריך שתסיים את הדוח לפני הצהריים.", accepted:["finisses"], solution_fr:"Il faut que tu finisses ce rapport avant midi.", explanation_he:"il faut que + subjonctif. finir → finisses.", tip_he:"il faut que · il est important que · il est essentiel que → subjonctif." },
+      { instruction_he:"subjonctif: bien que", prompt_fr:"Bien qu'il ____ (être) fatigué, il continue à travailler.", trans_he:"למרות שהוא עייף, הוא ממשיך לעבוד.", accepted:["soit"], solution_fr:"Bien qu'il soit fatigué, il continue à travailler.", explanation_he:"bien que (אף ש-) + subjonctif. être → soit.", tip_he:"bien que · quoique · encore que → subjonctif." },
+      { instruction_he:"subjonctif: pour que", prompt_fr:"Je répète l'explication pour que tu ____ (comprendre).", trans_he:"אני חוזר על ההסבר כדי שתבין.", accepted:["comprennes"], solution_fr:"pour que tu comprennes.", explanation_he:"pour que (כדי ש-) + subjonctif. comprendre → comprennes.", tip_he:"pour que · afin que · à condition que → subjonctif." },
+    ],
+    [ /* 1 — Conditionnel passé */
+      { instruction_he:"conditionnel passé: regret", prompt_fr:"Si j'avais su, je ne ____ (venir) pas.", trans_he:"אילו ידעתי, לא הייתי בא.", accepted:["serais venu","serais venue"], solution_fr:"je ne serais pas venu.", explanation_he:"Si + PQP → conditionnel passé. venir = être → serais venu.", tip_he:"Si + avais su → ... serais venu." },
+      { instruction_he:"conditionnel passé: conséquence actuelle", prompt_fr:"Si j'avais étudié la médecine, je ____ (être) médecin aujourd'hui.", trans_he:"אלו למדתי רפואה, הייתי רופא היום.", accepted:["serais"], solution_fr:"je serais médecin aujourd'hui.", explanation_he:"תנאי עבר + תוצאה בהווה: Si + PQP → conditionnel présent.", tip_he:"Si + avait fait → serait (aujourd'hui) — תוצאה בהווה." },
+      { instruction_he:"conditionnel passé: reprocher", prompt_fr:"Tu ____ (pouvoir) me prévenir !", trans_he:"יכולת להזהיר אותי!", accepted:["aurais pu"], solution_fr:"Tu aurais pu me prévenir !", explanation_he:"conditionnel passé לגינוי/ייאוש. avoir + pu.", tip_he:"tu aurais pu · il aurait dû · vous auriez dû." },
+    ],
+    [ /* 2 — Discours indirect */
+      { instruction_he:"discours indirect: passé composé → PQP", prompt_fr:"Elle a dit qu'elle ____ (finir) son travail la veille.", trans_he:"היא אמרה שסיימה את עבודתה יום קודם.", accepted:["avait fini"], solution_fr:"Elle a dit qu'elle avait fini son travail la veille.", explanation_he:"בדיבור עקיף בעבר, PC → PQP.", tip_he:"« hier » בדיבור עקיף → « la veille »." },
+      { instruction_he:"discours indirect: futur → conditionnel", prompt_fr:"Il m'a dit qu'il ____ (venir) le lendemain.", trans_he:"הוא אמר לי שיבוא למחרת.", accepted:["viendrait"], solution_fr:"Il m'a dit qu'il viendrait le lendemain.", explanation_he:"futur בדיבור ישיר → conditionnel présent בדיבור עקיף.", tip_he:"futur → conditionnel en discours indirect passé." },
+      { instruction_he:"discours indirect: question", prompt_fr:"Elle lui a demandé s'il ____ (comprendre) le cours.", trans_he:"היא שאלה אותו אם הוא מבין את השיעור.", accepted:["comprenait"], solution_fr:"s'il comprenait le cours.", explanation_he:"שאלה בדיבור עקיף: si + imparfait (כשהשאלה המקורית בpresent).", tip_he:"direct: « Tu comprends ? » → indirect: il demande si elle comprend." },
+    ],
+    [ /* 3 — Concordance des temps */
+      { instruction_he:"concordance: present → imparfait", prompt_fr:"Je pensais qu'il ____ (avoir) raison.", trans_he:"חשבתי שהוא צודק.", accepted:["avait"], solution_fr:"je pensais qu'il avait raison.", explanation_he:"présent בעבר. penser (imparfait) → avoir (imparfait) בפסוקית.", tip_he:"pensais/croyais/savais → ... avait / faisait / était." },
+      { instruction_he:"concordance: subjonctif imparfait (style soutenu)", prompt_fr:"Il fallait qu'il ____ (faire) mieux. (style soutenu)", trans_he:"היה צורך שיעשה טוב יותר (סגנון רשמי).", accepted:["fît","fit"], solution_fr:"Il fallait qu'il fît mieux.", explanation_he:"subjonctif imparfait בסגנון ספרותי/רשמי אחרי fallait que.", tip_he:"fît (littéraire) vs fasse (courant) — שניהם אחרי fallait que." },
+      { instruction_he:"concordance: séquence narrative", prompt_fr:"Quand il est arrivé, tout le monde ____ déjà (partir).", trans_he:"כשהגיע, כולם כבר הלכו.", accepted:["était parti","était déjà parti"], solution_fr:"tout le monde était déjà parti.", explanation_he:"PQP לפעולה שקדמה לעבר: était parti.", tip_he:"עבר שלפני עבר = PQP (avait/était + participe)." },
+    ],
+    [ /* 4 — Subjonctif passé */
+      { instruction_he:"subjonctif passé: bien que (פעולה מוגמרת)", prompt_fr:"Bien qu'il ____ (finir) tôt, il est resté.", trans_he:"למרות שסיים מוקדם, הוא נשאר.", accepted:["ait fini"], solution_fr:"Bien qu'il ait fini tôt, il est resté.", explanation_he:"subjonctif passé לפעולה שהסתיימה אחרי bien que.", tip_he:"subjonctif passé = avoir/être au subjonctif + participe." },
+      { instruction_he:"subjonctif passé: douter que", prompt_fr:"Je doute qu'il ____ (lire) ce rapport.", trans_he:"אני מטיל ספק שהוא קרא את הדוח הזה.", accepted:["ait lu"], solution_fr:"Je doute qu'il ait lu ce rapport.", explanation_he:"douter que + subjonctif passé. lire → ait lu.", tip_he:"douter que · ne pas penser que · ne pas croire que → subjonctif." },
+      { instruction_he:"subjonctif passé: le seul qui", prompt_fr:"C'est le seul ami qui me ____ (vraiment aider).", trans_he:"זה החבר היחיד שבאמת עזר לי.", accepted:["ait vraiment aidé","ait aidé"], solution_fr:"C'est le seul ami qui m'ait vraiment aidé.", explanation_he:"le seul qui + subjonctif passé כשהפעולה הסתיימה.", tip_he:"le seul/premier/dernier qui + subjonctif (présent ou passé)." },
+    ],
+    [ /* 5 — Style avancé */
+      { instruction_he:"inversion du sujet: peut-être", prompt_fr:"____ faut-il reconsidérer cette approche.", trans_he:"אולי צריך לשקול מחדש גישה זו.", accepted:["Peut-être"], solution_fr:"Peut-être faut-il reconsidérer cette approche.", explanation_he:"peut-être en début → inversion: faut-il, est-ce, doit-on.", tip_he:"peut-être + inversion: faut-il · est-ce · doit-on." },
+      { instruction_he:"style avancé: sans que + subjonctif", prompt_fr:"Il est parti ____ que personne (savoir).", trans_he:"הוא עזב מבלי שאיש ידע.", accepted:["sans","sans que"], solution_fr:"Il est parti sans que personne sache.", explanation_he:"sans que + subjonctif. savoir → sache.", tip_he:"sans que + subjonctif. sans + infinitif (même sujet)." },
+      { instruction_he:"style avancé: quoi que", prompt_fr:"____ vous fassiez, faites-le avec conviction.", trans_he:"יהיה מה שתעשו, עשו זאת בהכרה.", accepted:["Quoi que","Quoique"], solution_fr:"Quoi que vous fassiez, faites-le avec conviction.", explanation_he:"quoi que + subjonctif = quel que soit ce que.", tip_he:"quoi que · où que · qui que — כולם עם subjonctif." },
+    ],
+  ],
+  /* stations: Abstrait · Professionnel · Académique · Registres · Idiomes avancés · Littéraire */
+  voc: [
+    [ /* 0 — Abstrait */
+      { instruction_he:"מושג מופשט: empathy", prompt_fr:"L'____ est la capacité de comprendre les émotions d'autrui.", trans_he:"האמפתיה היא היכולת להבין את רגשות הזולת.", accepted:["empathie"], solution_fr:"L'empathie", explanation_he:"empathie = אמפתיה. autrui = הזולת (ספרותי). sympathie = הזדהות.", tip_he:"empathie · sympathie · compassion · bienveillance (נדיבות)." },
+      { instruction_he:"מושג: résilience", prompt_fr:"La ____ est la capacité de surmonter les épreuves.", trans_he:"החוסן הוא היכולת להתגבר על קשיים.", accepted:["résilience","resilience"], solution_fr:"La résilience", explanation_he:"résilience = חוסן. surmonter = להתגבר על. une épreuve = מבחן/קשי.", tip_he:"résilience · persévérance · détermination · endurance." },
+      { instruction_he:"מושג: ambiguïté", prompt_fr:"Ce texte est marqué par une grande ____.", trans_he:"הטקסט הזה מאופיין בעמימות רבה.", accepted:["ambiguïté","ambiguité"], solution_fr:"une grande ambiguïté", explanation_he:"ambiguïté = עמימות. ambigu = עמום. ambigu = ניתן לפרשנות כפולה.", tip_he:"ambigu · équivoque · ambigu (adj) · l'ambiguïté (n)." },
+    ],
+    [ /* 1 — Professionnel */
+      { instruction_he:"עסקי: négocier", prompt_fr:"Les deux parties ont dû ____ un compromis.", trans_he:"שני הצדדים נאלצו לנהל משא ומתן לפשרה.", accepted:["négocier"], solution_fr:"négocier", explanation_he:"négocier = לנהל משא ומתן. une négociation = משא ומתן.", tip_he:"négocier · conclure un accord · trouver un terrain d'entente." },
+      { instruction_he:"עסקי: sous-traiter", prompt_fr:"L'entreprise a décidé de ____ cette tâche.", trans_he:"החברה החליטה לקבלן-משנה משימה זו.", accepted:["sous-traiter","externaliser"], solution_fr:"sous-traiter / externaliser", explanation_he:"sous-traiter = לקבלן-משנה. externaliser = לבצע מחוץ לחברה.", tip_he:"sous-traiter · externaliser · déléguer · confier à." },
+      { instruction_he:"עסקי: rentable", prompt_fr:"Ce projet n'est pas assez ____.", trans_he:"הפרויקט הזה לא מספיק כלכלי.", accepted:["rentable"], solution_fr:"rentable", explanation_he:"rentable = כלכלי/רווחי. la rentabilité = כדאיות כלכלית.", tip_he:"rentable · profitable · viable · lucratif." },
+    ],
+    [ /* 2 — Académique */
+      { instruction_he:"אקדמי: soutenir une thèse", prompt_fr:"Cet article ____ la thèse selon laquelle…", trans_he:"מאמר זה מגן על הטענה ש-…", accepted:["soutient","défend","avance"], solution_fr:"soutient / défend", explanation_he:"soutenir une thèse = לטעון/להגן. avancer = להציע.", tip_he:"soutenir · défendre · avancer · formuler (לנסח)." },
+      { instruction_he:"אקדמי: résulte de", prompt_fr:"Il ____ de cette analyse que…", trans_he:"מניתוח זה נובע ש-…", accepted:["ressort","résulte","découle"], solution_fr:"Il ressort / résulte / découle de cette analyse", explanation_he:"il ressort de = משתמע מ-. il résulte de = נובע מ-.", tip_he:"il ressort · il résulte · il découle · il s'ensuit que." },
+      { instruction_he:"אקדמי: en conclusion", prompt_fr:"____, on peut affirmer que la mondialisation est ambivalente.", trans_he:"לסיכום, ניתן לקבוע שהגלובליזציה היא דו-ערכית.", accepted:["En conclusion","En somme","En définitive","Pour conclure"], solution_fr:"En conclusion / En somme / En définitive", explanation_he:"en conclusion = לסיכום. en somme = בסה\"כ. en définitive = בסופו של דבר.", tip_he:"en conclusion · en somme · bref · pour conclure · en définitive." },
+    ],
+    [ /* 3 — Registres */
+      { instruction_he:"רישום: רשמי vs מדובר", prompt_fr:"Registre soutenu de : « J'ai pas eu le temps. »", trans_he:"כתבו ברישום רשמי: «לא היה לי זמן.»", accepted:["Je n'ai pas eu le temps","Je n'ai pas disposé du temps nécessaire"], solution_fr:"Je n'ai pas eu le temps.", explanation_he:"רישום מדובר: pas (ללא ne). רשמי: ne … pas.", tip_he:"מדובר: j'ai pas · y'a pas · c'est pas · רשמי: je n'ai pas · il n'y a pas." },
+      { instruction_he:"רישום: ironique", prompt_fr:"Identifiez l'ironie dans : « Quelle surprise, encore du retard ! »", trans_he:"זהו את האירוניה: «איזה הפתעה, עוד עיכוב!»", accepted:["ironie","ironiqu","l'ironie"], solution_fr:"C'est de l'ironie / c'est ironique", explanation_he:"ironique = אירוני. le locuteur לא מופתע — ההפך מהמשמעות המילולית.", tip_he:"ironie = הפך בין מה שנאמר למה שמתכוונים." },
+      { instruction_he:"רישום: soutenu", prompt_fr:"Version soutenue de : « Il est vachement bien ce film ! »", trans_he:"נסחו ברישום ספרותי: «הסרט הזה מדהים!»", accepted:["Ce film est remarquable","Ce film est excellent","Ce film est exceptionnel"], solution_fr:"Ce film est remarquable / exceptionnel.", explanation_he:"vachement = סלנג. remarquable/exceptionnel = רשמי/ספרותי.", tip_he:"vachement bien → remarquable · super → excellent · nul → médiocre." },
+    ],
+    [ /* 4 — Idiomes avancés */
+      { instruction_he:"idiome: avoir le cafard", prompt_fr:"Depuis son départ, elle a vraiment le ____.", trans_he:"מאז שהוא עזב, יש לה מרה שחורה ממש.", accepted:["cafard"], solution_fr:"avoir le cafard", explanation_he:"avoir le cafard = להיות בדכאון/במרה שחורה (idiome).", tip_he:"avoir le cafard · broyer du noir · ne pas avoir le moral." },
+      { instruction_he:"idiome: casser les pieds", prompt_fr:"Arrête, tu me ____ avec tes questions !", trans_he:"תפסיק, אתה מציק לי עם השאלות שלך!", accepted:["casses les pieds","casses les pieds"], solution_fr:"tu me casses les pieds", explanation_he:"casser les pieds à qqn = להציק (idiome מדובר).", tip_he:"casser les pieds = להציק · casser les pieds à qqn = לעצבן מישהו." },
+      { instruction_he:"idiome: mettre les pieds dans le plat", prompt_fr:"Il a vraiment mis les ____ dans le plat lors de la réunion.", trans_he:"הוא ממש הכניס את הרגליים לצלחת בפגישה.", accepted:["pieds"], solution_fr:"mettre les pieds dans le plat", explanation_he:"mettre les pieds dans le plat = לשים טלאי במקום הלא נכון / לפה פתוח.", tip_he:"mettre les pieds dans le plat = to put one's foot in it." },
+    ],
+    [ /* 5 — Littéraire */
+      { instruction_he:"ביטוי ספרותי: souligner", prompt_fr:"L'auteur ____ l'importance du dialogue dans son œuvre.", trans_he:"הסופר מדגיש את חשיבות הדיאלוג ביצירתו.", accepted:["souligne","met en relief","accentue","met en exergue"], solution_fr:"souligne / met en relief", explanation_he:"souligner = להדגיש. mettre en exergue = להבליט (ספרותי).", tip_he:"souligner · mettre en relief · accentuer · mettre en exergue." },
+      { instruction_he:"ביטוי ספרותי: paradigmatique", prompt_fr:"Ce roman est ____ de son époque.", trans_he:"הרומן הזה מייצג את תקופתו.", accepted:["paradigmatique","emblématique","représentatif"], solution_fr:"paradigmatique / emblématique", explanation_he:"paradigmatique = מייצג תקופה/מגמה. emblématique = מסמל.", tip_he:"paradigmatique · emblématique · symptomatique · caractéristique." },
+      { instruction_he:"ביטוי ספרותי: prépondérant", prompt_fr:"La question du sens joue un rôle ____ dans ce texte.", trans_he:"שאלת המשמעות ממלאת תפקיד דומיננטי בטקסט זה.", accepted:["prépondérant","essentiel","central","fondamental"], solution_fr:"prépondérant", explanation_he:"prépondérant = דומיננטי, שולט. rôle prépondérant = תפקיד מוביל.", tip_he:"prépondérant · essentiel · fondamental · central · pivot." },
+    ],
+  ],
+  /* stations: Débats · Littérature · Philosophie · Politique · Sciences · Arts */
+  com: [
+    [ /* 0 — Débats */
+      { instruction_he:"קרא וענה", prompt_fr:"« Les réseaux sociaux ont transformé le débat public en amplifiant les voix marginales, mais au prix d'une fragmentation de l'espace commun et d'une radicalisation des opinions. »", trans_he:"הרשתות החברתיות שינו את השיח הציבורי על ידי הגברת קולות שוליים, אך במחיר פיצול המרחב המשותף.", question_fr:"Quel est l'effet paradoxal des réseaux sociaux sur le débat ?", q_he:"מה האפקט הפרדוקסלי של הרשתות על הדיון?", options:["Ils suppriment les voix marginales","Ils amplifient ces voix mais fragmentent l'espace commun","Ils unifient les opinions"], correct:1, explanation_he:"מגברים קולות שוליים אבל מפצלים את המרחב הציבורי." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le numérique a profondément reconfiguré notre rapport au temps. L'immédiateté des échanges génère paradoxalement une nouvelle forme d'impatience qui érode notre capacité à la réflexion approfondie. »", trans_he:"הדיגיטלי מחדש את יחסנו לזמן. המיידיות יוצרת חוסר סבלנות ששוחק את יכולת ההרהור.", question_fr:"Quel est l'effet paradoxal du numérique ?", q_he:"מהו האפקט הפרדוקסלי?", options:["Il renforce la réflexion","Il génère de l'impatience qui érode la réflexion","Il améliore notre rapport au temps"], correct:1, explanation_he:"פרדוקס: מיידיות → חוסר סבלנות → שחיקת הרהור." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La démocratie délibérative suppose que la légitimité des décisions découle non du vote seul, mais de la qualité du débat qui le précède. »", trans_he:"הדמוקרטיה הדיונית מניחה שלגיטימיות ההחלטות נובעת מאיכות הדיון.", question_fr:"Qu'est-ce qui légitime une décision ?", q_he:"מה מעניק לגיטימיות?", options:["Le vote seul","La qualité du débat préalable","La décision des experts"], correct:1, explanation_he:"« qualité du débat qui le précède »." },
+    ],
+    [ /* 1 — Littérature */
+      { instruction_he:"קרא וענה", prompt_fr:"« La littérature n'est pas un miroir du réel, mais un prisme qui le démultiplie, le déforme, le réinvente pour en révéler des vérités autrement inaccessibles. »", trans_he:"הספרות אינה מראה של המציאות, אלא פריזמה שמחדשת אותה כדי לחשוף אמיתות.", question_fr:"Quelle est la fonction de la littérature selon ce texte ?", q_he:"מה תפקיד הספרות?", options:["Reproduire fidèlement la réalité","Révéler des vérités à travers une transformation du réel","Distraire le lecteur"], correct:1, explanation_he:"« réinvente pour en révéler des vérités autrement inaccessibles »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Lire, c'est habiter temporairement une autre conscience, s'ouvrir à des modes d'être que la vie quotidienne ne permettrait jamais d'explorer. »", trans_he:"לקרוא זה לשהות זמנית בתודעה אחרת.", question_fr:"Que représente la lecture selon l'auteur ?", q_he:"מה מייצגת הקריאה?", options:["Une façon d'éviter la réalité","L'expérience temporaire d'une autre conscience","Un exercice purement intellectuel"], correct:1, explanation_he:"« habiter temporairement une autre conscience »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La traduction n'est jamais neutre : elle est toujours un acte d'interprétation, voire de création. »", trans_he:"תרגום אינו ניטרלי: הוא תמיד מעשה פרשנות ואף יצירה.", question_fr:"Que fait réellement le traducteur ?", q_he:"מה עושה המתרגם?", options:["Il copie des mots","Il interprète et crée","Il reste fidèle à l'original"], correct:1, explanation_he:"« acte d'interprétation, voire de création »." },
+    ],
+    [ /* 2 — Philosophie */
+      { instruction_he:"קרא וענה", prompt_fr:"« L'essence même de la démocratie réside non dans l'unanimité des opinions, mais dans la capacité d'une société à tolérer la divergence des points de vue. »", trans_he:"מהות הדמוקרטיה ביכולת לסבול שונות בדעות.", question_fr:"Qu'est-ce qui caractérise une démocratie ?", q_he:"מה מאפיין דמוקרטיה?", options:["L'accord unanime","La tolérance envers la divergence","L'absence de débat"], correct:1, explanation_he:"« capacité à tolérer la divergence des points de vue »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Si la modernité a affranchi l'individu des contraintes collectives, elle l'a privé des cadres symboliques qui donnaient sens à son existence. »", trans_he:"המודרניות שחררה את הפרט אבל שללה ממנו את המסגרות הסמליות.", question_fr:"Quel est le paradoxe de la modernité ?", q_he:"מהו הפרדוקס של המודרניות?", options:["Elle a renforcé les liens sociaux","Elle libère mais prive de sens","Elle a supprimé toute contrainte"], correct:1, explanation_he:"שחרור + שלילת מסגרות סמליות = פרדוקס." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le bonheur n'est pas un état mais un mouvement : il ne s'atteint pas, il se vit dans la quête elle-même. »", trans_he:"האושר אינו מצב אלא תנועה: חי בחיפוש עצמו.", question_fr:"Comment l'auteur définit-il le bonheur ?", q_he:"כיצד מגדיר הכותב את האושר?", options:["Comme un état stable","Comme un processus vécu dans la recherche","Comme une illusion"], correct:1, explanation_he:"« il se vit dans la quête elle-même »." },
+    ],
+    [ /* 3 — Politique */
+      { instruction_he:"קרא וענה", prompt_fr:"« Le populisme se nourrit du sentiment d'abandon des classes moyennes, exploitant la méfiance envers les élites pour proposer des solutions simplistes à des problèmes complexes. »", trans_he:"הפופוליזם ניזון מתחושת נטישה ומנצל את חוסר האמון באליטות.", question_fr:"Comment le texte explique-t-il le populisme ?", q_he:"כיצד מסביר הטקסט את הפופוליזם?", options:["Comme une idéologie bien définie","Comme une exploitation du mécontentement","Comme un système stable"], correct:1, explanation_he:"« exploitant la méfiance envers les élites »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La souveraineté nationale et l'intégration européenne créent une dialectique permanente entre identité et appartenance à un espace politique plus large. »", trans_he:"ריבונות לאומית והשתלבות אירופאית יוצרים דיאלקטיקה.", question_fr:"Quelle tension le texte décrit-il ?", q_he:"איזה מתח?", options:["Entre droite et gauche","Entre souveraineté nationale et intégration européenne","Entre tradition et révolution"], correct:1, explanation_he:"« souveraineté nationale et l'intégration européenne »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La précarité économique génère une instabilité cognitive qui affecte la prise de décision et reproduit les inégalités. »", trans_he:"חוסר ביטחון כלכלי מייצר חוסר יציבות קוגניטיבי שמשכפל אי-שוויון.", question_fr:"Quel effet la précarité a-t-elle ?", q_he:"איזה השפעה?", options:["Elle renforce la décision","Elle crée instabilité et reproduit inégalités","Elle n'affecte que les finances"], correct:1, explanation_he:"« instabilité cognitive » + « reproduit les inégalités »." },
+    ],
+    [ /* 4 — Sciences */
+      { instruction_he:"קרא וענה", prompt_fr:"« La science ne produit pas des vérités définitives, mais des modèles provisoires, constamment révisés à la lumière de nouvelles données. »", trans_he:"המדע אינו מייצר אמיתות סופיות, אלא מודלים זמניים.", question_fr:"Comment le texte décrit-il la science ?", q_he:"כיצד מתאר הטקסט את המדע?", options:["Comme une source de vérités définitives","Comme des modèles provisoires révisables","Comme une discipline figée"], correct:1, explanation_he:"« modèles provisoires, constamment révisés »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La notion de paradigme désigne l'ensemble des présupposés théoriques et méthodologiques partagés par une communauté scientifique. »", trans_he:"מושג הפרדיגמה מציין את ההנחות התיאורטיות שחולקת קהילה מדעית.", question_fr:"Que désigne le terme « paradigme » ?", q_he:"מה מציין «פרדיגמה»?", options:["Une découverte scientifique","L'ensemble des présupposés d'une communauté scientifique","Un outil de mesure"], correct:1, explanation_he:"« l'ensemble des présupposés théoriques et méthodologiques partagés »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« L'intelligence artificielle redéfinit les frontières entre créativité humaine et machine, posant des questions inédites sur la paternité des œuvres. »", trans_he:"בינה מלאכותית מגדירה מחדש את הגבולות בין יצירתיות אנושית למכונה.", question_fr:"Quelle question l'IA soulève-t-elle ?", q_he:"איזו שאלה מעלה הבינה המלאכותית?", options:["La vitesse de calcul","La paternité des œuvres créatives","Le coût de production"], correct:1, explanation_he:"« questions inédites sur la paternité des œuvres »." },
+    ],
+    [ /* 5 — Arts */
+      { instruction_he:"קרא וענה", prompt_fr:"« L'art contemporain provoque souvent un sentiment d'incompréhension non par manque de talent, mais parce qu'il exige du spectateur une disposition à l'incertitude. »", trans_he:"האמנות העכשווית גורמת לאי-הבנה כי דורשת נכונות לחוסר ודאות.", question_fr:"Pourquoi l'art contemporain est-il parfois incompris ?", q_he:"מדוע אמנות עכשווית לא מובנת?", options:["À cause du manque de talent","Parce qu'il demande une tolérance à l'incertitude","Parce qu'il est trop traditionnel"], correct:1, explanation_he:"« exige du spectateur une disposition à l'incertitude »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« Le beau ne réside pas dans l'objet, mais dans la relation dynamique entre l'œuvre et le regard qui la reçoit, selon les catégories culturelles du spectateur. »", trans_he:"היופי אינו בחפץ אלא בקשר הדינמי בין היצירה ובין המבט.", question_fr:"Où réside le beau selon ce texte ?", q_he:"איפה נמצא היופי?", options:["Dans l'objet","Dans la relation entre l'œuvre et le regard","Dans les règles classiques"], correct:1, explanation_he:"« dans la relation dynamique entre l'œuvre et le regard »." },
+      { instruction_he:"קרא וענה", prompt_fr:"« La musique est le seul art qui se consomme dans le temps, imposant au spectateur une durée, une tension narrative qui le soumet à son flux. »", trans_he:"המוזיקה היא האמנות היחידה הנצרכת בזמן, מטילה על הצופה משך ומתח נרטיבי.", question_fr:"Qu'est-ce qui rend la musique unique selon le texte ?", q_he:"מה הופך את המוזיקה לייחודית?", options:["Sa facilité d'accès","Elle se déploie dans le temps et impose une durée","Sa popularité"], correct:1, explanation_he:"« se consomme dans le temps, imposant une durée »." },
+    ],
+  ],
+  /* stations: Débattre · Nuancer · Négocier · Analyser · Convaincre · Spontané */
+  exp: [
+    [ /* 0 — Débattre */
+      { instruction_he:"הבע עמדה עם ניגוד", prompt_fr:"Que penses-tu du télétravail ? Donne ton avis en deux phrases.", trans_he:"מה דעתך על עבודה מרחוק?", model_fr:"Personnellement, je trouve que le télétravail offre une grande flexibilité. Cependant, il peut créer un sentiment d'isolement, c'est pourquoi je préfère un rythme hybride.", keys_fr:["personnellement","je trouve que","cependant","c'est pourquoi"], tip_he:"je trouve que · cependant · c'est pourquoi + עמדה." },
+      { instruction_he:"debate: תמיכה בצד מסוים", prompt_fr:"Défendez l'idée que l'école devrait enseigner la philosophie dès l'école primaire.", trans_he:"הגנו על הרעיון שיש ללמד פילוסופיה כבר בבית ספר יסודי.", model_fr:"Enseigner la philosophie dès le plus jeune âge développe la pensée critique et la capacité à raisonner. De plus, cela habitue les enfants à questionner le monde et à formuler des arguments.", keys_fr:["dès le plus jeune âge","la pensée critique","de plus","habitue à","formuler des arguments"], tip_he:"dès (כבר מ-) · développe · habitue à · cela permet de." },
+      { instruction_he:"debate: ניסוח עמדה מנומקת", prompt_fr:"Pensez-vous que l'art devrait être subventionné par l'État ?", trans_he:"לדעתכם, האם המדינה צריכה לסבסד אמנות?", model_fr:"Je pense que oui. L'art joue un rôle social essentiel en offrant un espace de réflexion collective. Sans soutien public, seuls les artistes issus de milieux aisés pourraient survivre.", keys_fr:["je pense que","joue un rôle essentiel","sans soutien public","milieux aisés"], tip_he:"joue un rôle (ממלא תפקיד) · sans + GN, + conditionnel · issus de." },
+    ],
+    [ /* 1 — Nuancer */
+      { instruction_he:"גוון עמדה: הטכנולוגיה", prompt_fr:"Nuancez : « La technologie détruit le lien social. »", trans_he:"גוונו: «הטכנולוגיה הורסת את הקשר החברתי.»", model_fr:"Certes, les écrans peuvent substituer aux interactions réelles. Mais ils créent aussi de nouveaux liens. Il serait réducteur de condamner la technologie sans distinguer ses usages.", keys_fr:["certes","mais","il serait réducteur de","sans distinguer"], tip_he:"certes... mais · il est vrai que... néanmoins · on peut admettre que... cependant." },
+      { instruction_he:"גוון: ניגוד מבוסס", prompt_fr:"Nuancez : « La mondialisation est une chance pour tous. »", trans_he:"גוונו: «הגלובליזציה היא הזדמנות לכולם.»", model_fr:"Si la mondialisation a permis à des millions de sortir de la pauvreté, elle a aussi creusé les inégalités et fragilisé les cultures locales.", keys_fr:["si ... a permis","elle a aussi","creusé les inégalités","fragilisé"], tip_he:"si (avantage) → elle a aussi (désavantage)." },
+      { instruction_he:"גוון: הוסף פרספקטיבה", prompt_fr:"Ajoutez une nuance à : « Le travail est source d'épanouissement. »", trans_he:"הוסיפו גוון: «העבודה היא מקור לפיתוח אישי.»", model_fr:"Cette affirmation mérite d'être nuancée. Si certains trouvent dans leur travail un épanouissement réel, d'autres le vivent comme une contrainte ou une source de stress.", keys_fr:["mérite d'être nuancée","si certains","d'autres","une contrainte"], tip_he:"mérite d'être nuancé · si certains... d'autres · selon le contexte." },
+    ],
+    [ /* 2 — Négocier */
+      { instruction_he:"ניהול משא ומתן: הצעה מנומסת", prompt_fr:"Proposez une solution de compromis dans une situation de conflit.", trans_he:"הציעו פתרון פשרה במצב קונפליקט.", model_fr:"Je comprends votre point de vue. Cependant, je vous propose une solution intermédiaire : nous pourrions partager les responsabilités de façon équitable.", keys_fr:["je comprends","cependant","je vous propose","une solution intermédiaire","de façon équitable"], tip_he:"je comprends · cependant · je vous propose · une solution intermédiaire." },
+      { instruction_he:"משא ומתן: הצגת תנאים", prompt_fr:"Exposez vos conditions dans une négociation professionnelle.", trans_he:"הציגו את תנאיכם במשא ומתן מקצועי.", model_fr:"Je suis prêt à accepter cette mission, à condition que le délai soit prolongé de deux semaines et que les ressources nécessaires soient fournies.", keys_fr:["je suis prêt à","à condition que","le délai soit prolongé","les ressources soient fournies"], tip_he:"je suis prêt à · à condition que + subjonctif · à moins que." },
+      { instruction_he:"משא ומתן: השגת הסכמה", prompt_fr:"Comment concluriez-vous une négociation réussie ?", trans_he:"כיצד הייתם מסיימים משא ומתן מוצלח?", model_fr:"En définitive, nous avons trouvé un terrain d'entente qui satisfait les deux parties. Je vous remercie de votre flexibilité et j'espère que cette collaboration sera fructueuse.", keys_fr:["en définitive","un terrain d'entente","qui satisfait","je vous remercie","fructueuse"], tip_he:"trouver un terrain d'entente · satisfaire les deux parties · être fructueux." },
+    ],
+    [ /* 3 — Analyser */
+      { instruction_he:"ניתוח: בינה מלאכותית", prompt_fr:"L'intelligence artificielle représente-t-elle une menace ou une opportunité ? Nuancez.", trans_he:"האם בינה מלאכותית מהווה איום או הזדמנות?", model_fr:"Loin d'une opposition binaire, l'IA exige une lecture nuancée. Si ses applications médicales ouvrent des perspectives, le risque de surveillance demeure préoccupant.", keys_fr:["loin d'une opposition","exige une lecture nuancée","ouvrent des perspectives","demeure préoccupant"], tip_he:"loin d'une opposition · exige une lecture nuancée · demeure préoccupant." },
+      { instruction_he:"ניתוח: השפעת הרשתות על הדמוקרטיה", prompt_fr:"Analysez les effets des réseaux sociaux sur la démocratie.", trans_he:"נתחו את השפעות הרשתות החברתיות על הדמוקרטיה.", model_fr:"D'un côté, les réseaux facilitent la mobilisation citoyenne. De l'autre, ils favorisent la désinformation et les chambres d'écho, fragmentant l'espace public.", keys_fr:["d'un côté","de l'autre","facilitent","désinformation","chambres d'écho"], tip_he:"d'un côté · de l'autre · par ailleurs · en outre." },
+      { instruction_he:"ניתוח: ספרות ומציאות", prompt_fr:"Dans quelle mesure la littérature peut-elle changer notre vision du monde ?", trans_he:"באיזו מידה הספרות יכולה לשנות את השקפתנו על העולם?", model_fr:"La littérature, en nous plongeant dans d'autres existences, élargit notre empathie. En lisant Proust ou Camus, on perçoit la réalité sous un angle inédit.", keys_fr:["en nous plongeant","élargit notre empathie","sous un angle inédit","percevoir"], tip_he:"en + gérondif (= על ידי) · élargir (להרחיב) · sous un angle inédit." },
+    ],
+    [ /* 4 — Convaincre */
+      { instruction_he:"שכנע: חשיבות הצרפתית", prompt_fr:"Rédigez une conclusion convaincante sur l'importance des langues étrangères.", trans_he:"כתבו מסקנה משכנעת על חשיבות שפות זרות.", model_fr:"En définitive, apprendre une langue étrangère n'est pas seulement un atout professionnel : c'est une ouverture sur le monde et un enrichissement humain irremplaçable.", keys_fr:["en définitive","n'est pas seulement","c'est une ouverture","enrichissement","irremplaçable"], tip_he:"en définitive · n'est pas seulement... c'est aussi · irremplaçable." },
+      { instruction_he:"שכנע: תגובה להתנגדות", prompt_fr:"Quelqu'un dit : « L'art n'est pas utile. » Comment répondez-vous ?", trans_he:"מישהו אומר: «אמנות אינה שימושית.» כיצד תגיבו?", model_fr:"Je comprends ce point de vue, mais l'utilité n'est pas la seule valeur. L'art nourrit l'esprit et développe la créativité — une compétence essentielle aujourd'hui.", keys_fr:["je comprends","mais","nourrit l'esprit","développe","essentielle"], tip_he:"je comprends... mais · loin de là · bien au contraire." },
+      { instruction_he:"שכנע: הגנה על ערך", prompt_fr:"Défendez l'importance de la lecture dans le monde numérique.", trans_he:"הגנו על חשיבות הקריאה בעולם הדיגיטלי.", model_fr:"À l'heure du tout-numérique, la lecture reste irremplaçable. Elle développe la concentration, enrichit le vocabulaire et stimule l'imagination d'une façon qu'aucun écran ne peut égaler.", keys_fr:["à l'heure de","irremplaçable","développe","enrichit","qu'aucun ... ne peut égaler"], tip_he:"à l'heure de (בעידן של) · irremplaçable · qu'aucun X ne peut égaler." },
+    ],
+    [ /* 5 — Spontané */
+      { instruction_he:"ספונטני: תגובה היפותטית", prompt_fr:"Comment réagirais-tu si un ami annulait à la dernière minute ?", trans_he:"איך היית מגיב אם חבר מבטל ברגע האחרון?", model_fr:"Je serais déçu, mais je comprendrais s'il avait une bonne raison. Je lui proposerais de reporter plutôt que de me fâcher.", keys_fr:["je serais déçu","je comprendrais","je lui proposerais","plutôt que de"], tip_he:"conditionnel: je serais · je comprendrais · je proposerais." },
+      { instruction_he:"ספונטני: מיומנות שתרצה", prompt_fr:"Si tu pouvais maîtriser une compétence instantanément, laquelle choisirais-tu ?", trans_he:"אם יכולת לרכוש מיומנות אחת מיידית, איזו היית בוחר?", model_fr:"Si je pouvais, je choisirais de jouer du piano. Ce serait une source de joie quotidienne et cela me permettrait d'exprimer des émotions autrement.", keys_fr:["si je pouvais","je choisirais","ce serait","cela me permettrait"], tip_he:"Si + imparfait → conditionnel: je choisirais · ce serait · je pourrais." },
+      { instruction_here:"ספונטני: תאר יום אידיאלי", prompt_fr:"Décris ta journée de week-end idéale.", trans_he:"תאר את יום סוף השבוע האידיאלי שלך.", model_fr:"Ma journée idéale commencerait par un petit-déjeuner tranquille. Ensuite, je me promènerais en ville, puis je retrouverais des amis. Le soir, je regarderais un bon film.", keys_fr:["commencerait par","ensuite","puis","le soir"], tip_he:"conditionnel: commencerait · je me promènerais · je retrouverais." },
+    ],
+  ],
+};
+
+/* -------------------- BUILT-IN BANK (B2/C1 — kept for legacy reference, not used) -------------------- */
 const BANK_BC = {
   gra: [
     { instruction_he: "השלם בצורת הפועל הנכונה (סובז'ונקטיף)",
@@ -443,26 +1141,13 @@ const BANK_BC = {
   ],
 };
 
-/* assembled bank — B2/C1 split from BANK_BC */
+/* assembled bank */
 const BANK = {
   A1: BANK_A1,
   A2: BANK_A2,
   B1: BANK_B1,
-  B2: {
-    gra: BANK_BC.gra.filter((_, i) => [5,6,8,9,10,11,12,15].includes(i)),
-    voc: BANK_BC.voc.filter((_, i) => [0,2,3,4,5,6,7,8].includes(i)),
-    com: BANK_BC.com.filter((_, i) => [0,1,2,4,6].includes(i)),
-    exp: BANK_BC.exp.filter((_, i) => [0,2,4,5].includes(i)),
-  },
-  C1: {
-    gra: BANK_BC.gra.filter((_, i) => [0,1,2,3,4,7,13,14].includes(i)),
-    voc: BANK_BC.voc.filter((_, i) => [1,9,10,11,12,13,14].includes(i)),
-    com: [
-      ...BANK_BC.com.filter((_, i) => [3,7,8].includes(i)),
-      { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« Le numérique a profondément reconfiguré notre rapport au temps. L'immédiateté des échanges numériques, si elle abolit les distances, génère paradoxalement une nouvelle forme d'impatience qui érode notre capacité à la réflexion approfondie. »", trans_he:"הדיגיטלי מחדש ביסודו את יחסנו לזמן. המיידיות, אם כי מבטלת מרחקים, מייצרת חוסר סבלנות ששוחק את יכולת ההרהור המעמיק.", question_fr:"Quel est l'effet paradoxal du numérique selon ce texte ?", q_he:"מהו האפקט הפרדוקסלי של הדיגיטלי?", options:["Il rapproche les gens et renforce la réflexion","Il abolit les distances mais génère de l'impatience","Il améliore notre rapport au temps"], correct:1, explanation_he:"הפרדוקס: מבטל מרחקים אבל יוצר חוסר סבלנות ששוחק הרהור מעמיק." },
-    ],
-    exp: BANK_BC.exp.filter((_, i) => [1,3,6,7].includes(i)),
-  },
+  B2: BANK_B2,
+  C1: BANK_C1,
   C2: BANK_C2,
 };
 
@@ -584,6 +1269,38 @@ const STATION_NAMES = {
   },
 };
 const stationsDone = (correct) => Math.min(Math.floor((correct || 0) / PER_STATION), STATIONS_PER);
+
+const LEVEL_COLORS = {
+  // A1 — Candy Pastel: blue, orange, mint, pink
+  A1: { gra: "#74C0FC", voc: "#FF9F43", com: "#55EFC4", exp: "#FD79A8" },
+  // A2 — Tropical: cyan, coral, lime, golden yellow
+  A2: { gra: "#00B4D8", voc: "#FF6B6B", com: "#6BCB77", exp: "#FFD93D" },
+  // B1 — Classic Metro: royal blue, fire red, forest green, violet
+  B1: { gra: "#1971C2", voc: "#E03131", com: "#2F9E44", exp: "#7048E8" },
+  // B2 — Autumn Bold: deep purple, burnt orange, pine, raspberry
+  B2: { gra: "#6741D9", voc: "#D9480F", com: "#2B8A3E", exp: "#C2255C" },
+  // C1 — Jewel: sapphire, ruby, emerald, amethyst
+  C1: { gra: "#0B3D91", voc: "#A50021", com: "#005C29", exp: "#6A0DAD" },
+  // C2 — Nuit Parisienne: indigo, wine, jade, bronze
+  C2: { gra: "#364FC7", voc: "#862E2E", com: "#1A6B3A", exp: "#744210" },
+};
+
+const METRO_STATIONS = {
+  gra: [[120,155],[168,155],[210,188],[322,215],[372,225],[435,250]],
+  voc: [[ 92,322],[155,298],[245,298],[328,330],[408,328],[432,342]],
+  com: [[262, 68],[260,132],[272,230],[295,275],[310,355],[322,438]],
+  exp: [[115,385],[168,360],[248,258],[338,256],[408,202],[430,172]],
+};
+
+const LANDMARKS = [
+  { emoji: "🗼", label: "Tour Eiffel",      x: 152, y: 358, unlock: (d) => d.gra >= 1 },
+  { emoji: "⛪", label: "Sacré-Cœur",       x: 205, y:  80, unlock: (d) => d.com >= 1 },
+  { emoji: "🏛️",  label: "Arc de Triomphe", x:  92, y: 222, unlock: (d) => d.voc >= 2 },
+  { emoji: "🖼️",  label: "Louvre",           x: 230, y: 172, unlock: (d) => d.gra >= 3 || d.com >= 3 },
+  { emoji: "⛩️",  label: "Notre-Dame",       x: 268, y: 368, unlock: (d) => d.voc >= 4 },
+  { emoji: "🎭", label: "Opéra Garnier",    x: 392, y: 262, unlock: (d) => d.exp >= 4 },
+  { emoji: "🏰", label: "Versailles",       x: 362, y: 330, unlock: (d) => d.gra >= 5 && d.voc >= 5 && d.com >= 5 && d.exp >= 5 },
+];
 function weeklyXp(p) {
   const names = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
   const map = {};
@@ -1145,7 +1862,11 @@ function Quest({ onExit, level = "B1" }) {
   const loadExercise = (idx) => {
     setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null);
     const r = ROUNDS[idx];
-    const bank = BANK[level]?.[r.id] || BANK.B2[r.id];
+    const p = progressRef.current || loadProgress();
+    const correct = p.byLevel?.[level]?.[r.id]?.correct || 0;
+    const stationIdx = Math.min(stationsDone(correct), STATIONS_PER - 1);
+    const rawBank = BANK[level]?.[r.id] || BANK.B2[r.id];
+    const bank = Array.isArray(rawBank[0]) ? (rawBank[stationIdx] || rawBank[rawBank.length - 1]) : rawBank;
     const { item, idx: chosen } = pick(bank, lastIdx.current[r.id]);
     lastIdx.current[r.id] = chosen;
     const type = r.id === "com" ? "mc" : r.id === "exp" ? "open" : "input";
@@ -1496,6 +2217,209 @@ function Quest({ onExit, level = "B1" }) {
 /* ==================================================================== */
 /*  DASHBOARD — home screen, reads live progress, links into the Quest  */
 /* ==================================================================== */
+function ParisMetroMap({ p, selectedLevel, sel, onSel }) {
+  const colors = LEVEL_COLORS[selectedLevel] || LEVEL_COLORS.B2;
+  const done = Object.fromEntries(SKILLS.map((s) => [s, stationsDone(p.byLevel?.[selectedLevel]?.[s]?.correct || 0)]));
+  const names = STATION_NAMES[selectedLevel] || STATION_NAMES.B2;
+
+  const selInfo = sel
+    ? (() => {
+        const [sid, i] = sel.split("-");
+        const sk = ROUNDS.find((r) => r.id === sid);
+        return { sk, name: names[sid]?.[+i], idx: +i + 1 };
+      })()
+    : null;
+
+  return (
+    <div>
+      <div style={{
+        borderRadius: "50%",
+        overflow: "hidden",
+        aspectRatio: "1",
+        maxWidth: 600,
+        margin: "0 auto",
+        boxShadow: "0 4px 28px rgba(0,0,0,0.14), 0 0 0 3px #C8BCA8",
+      }}>
+      <svg viewBox="0 0 520 520" style={{ width: "100%", display: "block" }}>
+        <defs>
+          <style>{`
+            @keyframes pulse-ring { 0%{r:13;opacity:.7} 100%{r:21;opacity:0} }
+            .pring{animation:pulse-ring 1.6s ease-out infinite;fill:none;stroke-width:2}
+            @keyframes lm-glow { 0%,100%{opacity:.15} 50%{opacity:.30} }
+            .lm-glow{animation:lm-glow 2.5s ease-in-out infinite}
+          `}</style>
+          <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stopColor="#E8F4FD" />
+            <stop offset="40%"  stopColor="#F5EFE6" />
+            <stop offset="100%" stopColor="#EDE4D3" />
+          </linearGradient>
+          <radialGradient id="blob1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#D4E8FF" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#D4E8FF" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="blob2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFE4D6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#FFE4D6" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="blob3" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#D6F5E8" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#D6F5E8" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="blob4" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EEE0FF" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#EEE0FF" stopOpacity="0" />
+          </radialGradient>
+          <pattern id="dotpat" x="0" y="0" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="11" cy="11" r="1" fill="#C8BFAE" opacity="0.6" />
+          </pattern>
+        </defs>
+
+        {/* Background base */}
+        <rect x="0" y="0" width="520" height="520" fill="url(#bg-grad)" />
+
+        {/* Decorative district blobs */}
+        <ellipse cx="130" cy="140" rx="155" ry="130" fill="url(#blob1)" />
+        <ellipse cx="390" cy="380" rx="150" ry="130" fill="url(#blob2)" />
+        <ellipse cx="270" cy="265" rx="130" ry="115" fill="url(#blob3)" />
+        <ellipse cx="400" cy="100" rx="120" ry="105" fill="url(#blob4)" />
+
+        {/* Dot grid texture */}
+        <rect x="0" y="0" width="520" height="520" fill="url(#dotpat)" />
+
+
+        {/* Seine river */}
+        <path d="M40,358 C100,328 175,368 250,342 C325,316 385,358 455,330 C490,316 510,322 520,315"
+          fill="none" stroke="#7BBCD9" strokeWidth="20" strokeLinecap="round" opacity="0.28" />
+        <path d="M40,358 C100,328 175,368 250,342 C325,316 385,358 455,330 C490,316 510,322 520,315"
+          fill="none" stroke="#A8D8F0" strokeWidth="12" strokeLinecap="round" opacity="0.45" />
+        <path d="M40,358 C100,328 175,368 250,342 C325,316 385,358 455,330 C490,316 510,322 520,315"
+          fill="none" stroke="#C8E8FA" strokeWidth="5" strokeLinecap="round" opacity="0.7" />
+        <text x="148" y="354" fontSize="9" fill="#4A8AAF" fontStyle="italic" fontFamily="Georgia,serif" opacity="0.85">Seine</text>
+
+        {/* Track base (gray under-rail) */}
+        {ROUNDS.map((r) => (
+          <polyline key={`bg-${r.id}`}
+            points={METRO_STATIONS[r.id].map(([x, y]) => `${x},${y}`).join(" ")}
+            fill="none" stroke="#D2CABC" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+        ))}
+
+        {/* Completed portion of each line */}
+        {ROUNDS.map((r) => {
+          const d = done[r.id];
+          if (d < 1) return null;
+          const pts = METRO_STATIONS[r.id].slice(0, d + 1);
+          return (
+            <polyline key={`fill-${r.id}`}
+              points={pts.map(([x, y]) => `${x},${y}`).join(" ")}
+              fill="none" stroke={colors[r.id]} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transition: "stroke 0.4s" }} />
+          );
+        })}
+
+        {/* Landmarks */}
+        {LANDMARKS.map((lm) => {
+          const unlocked = lm.unlock(done);
+          return (
+            <g key={lm.label} style={{ transition: "opacity 0.5s" }}>
+              {/* Glow ring (unlocked only) */}
+              {unlocked && <circle cx={lm.x} cy={lm.y + 14} r={24} fill="#C8A23A" className="lm-glow" />}
+              {/* White backing circle */}
+              <circle cx={lm.x} cy={lm.y + 14} r={18}
+                fill={unlocked ? "#FFFDF5" : "#EDE8DC"}
+                stroke={unlocked ? "#C8A23A" : "#C0B8A8"}
+                strokeWidth={unlocked ? 2.5 : 1.5}
+                opacity={unlocked ? 1 : 0.55} />
+              {/* Emoji icon */}
+              <text x={lm.x} y={lm.y + 20} fontSize="20" textAnchor="middle"
+                style={{ filter: unlocked ? "none" : "grayscale(1) opacity(0.5)" }}>
+                {lm.emoji}
+              </text>
+              {/* Label pill */}
+              <rect x={lm.x - 34} y={lm.y + 36} width={68} height={14} rx={6}
+                fill={unlocked ? INK : "#ADA598"} opacity={unlocked ? 1 : 0.6} />
+              <text x={lm.x} y={lm.y + 46} fontSize="8" textAnchor="middle"
+                fill="#ffffff" fontFamily="'Assistant',sans-serif" fontWeight="800">
+                {lm.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Station dots + labels */}
+        {ROUNDS.map((r) => {
+          const d = done[r.id];
+          const color = colors[r.id];
+          const stNames = names[r.id] || [];
+          return METRO_STATIONS[r.id].map(([x, y], i) => {
+            const isDone = i < d;
+            const isCurrent = i === d;
+            const isSel = sel === `${r.id}-${i}`;
+            const label = stNames[i] || "";
+            return (
+              <g key={`${r.id}-${i}`} onClick={() => onSel(sel === `${r.id}-${i}` ? null : `${r.id}-${i}`)}
+                style={{ cursor: "pointer" }}>
+                {isCurrent && (
+                  <circle cx={x} cy={y} className="pring" stroke={color} />
+                )}
+                <circle cx={x} cy={y}
+                  r={isSel ? 11 : 9}
+                  fill={isDone ? color : isCurrent ? "#fff" : "#EDE7D8"}
+                  stroke={isDone || isCurrent ? color : "#B8B0A0"}
+                  strokeWidth={isSel ? 3 : 2}
+                  style={{ transition: "fill 0.3s,stroke 0.3s,r 0.15s" }} />
+                {isCurrent && <circle cx={x} cy={y} r={4} fill={color} />}
+                {isDone && <text x={x} y={y + 4} fontSize="8" textAnchor="middle" fill="#fff" fontWeight="700">✓</text>}
+                <text
+                  x={0} y={0}
+                  fontSize="10"
+                  textAnchor="middle"
+                  fill={isDone || isCurrent ? color : "#6B6252"}
+                  fontWeight={isSel || isCurrent ? "800" : "600"}
+                  fontFamily="'Fraunces',serif"
+                  fontStyle="italic"
+                  stroke="rgba(255,255,255,0.95)"
+                  strokeWidth="4"
+                  paintOrder="stroke"
+                  transform={`translate(${x},${y + 23}) rotate(-22)`}
+                  style={{ pointerEvents: "none" }}>
+                  {label}
+                </text>
+              </g>
+            );
+          });
+        })}
+
+      </svg>
+      </div>
+
+      {/* Legend pills below the circle */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginTop: 10 }}>
+        {ROUNDS.map((r) => (
+          <span key={r.id} style={{
+            background: colors[r.id],
+            color: "#fff",
+            borderRadius: 999,
+            padding: "4px 13px",
+            fontWeight: 800,
+            fontSize: 12,
+            fontFamily: "'Assistant',sans-serif",
+            letterSpacing: "0.01em",
+          }}>
+            {r.icon} {r.fr}
+          </span>
+        ))}
+      </div>
+
+      {selInfo && (
+        <div className="sel-info" style={{ marginTop: 12 }}>
+          תחנה {selInfo.idx} בקו <b style={{ color: colors[selInfo.sk.id] }}>{selInfo.sk.fr}</b>
+          {" · "}{selInfo.sk.he}: <b>{selInfo.name}</b>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MetroLine({ skill, correct, idx, sel, onSel, level }) {
   const names = STATION_NAMES[level]?.[skill.id] || [];
   const done = stationsDone(correct);
@@ -1532,13 +2456,14 @@ function MetroLine({ skill, correct, idx, sel, onSel, level }) {
 function Dashboard({ onStart, selectedLevel, onLevelChange }) {
   const [p, setP] = useState(null);
   const [sel, setSel] = useState(null);
+  const [mapMode, setMapMode] = useState("metro");
   useEffect(() => { setP(loadProgress()); }, []);
   if (!p) return null;
   const sStat = streakStatus(p);
   const week = weeklyXp(p);
   const maxXp = Math.max(10, ...week.map((w) => w.xp));
   const totalCorrect = SKILLS.reduce((a, s) => a + (p.byLevel?.[selectedLevel]?.[s]?.correct || 0), 0);
-  const selInfo = sel ? (() => { const [sid, i] = sel.split("-"); const sk = ROUNDS.find((r) => r.id === sid); return { sk, name: STATION_NAMES[selectedLevel]?.[sid]?.[+i], idx: +i + 1 }; })() : null;
+  const selInfoLines = sel ? (() => { const [sid, i] = sel.split("-"); const sk = ROUNDS.find((r) => r.id === sid); return { sk, name: STATION_NAMES[selectedLevel]?.[sid]?.[+i], idx: +i + 1 }; })() : null;
 
   return (
     <div dir="rtl" className="dash">
@@ -1583,6 +2508,23 @@ function Dashboard({ onStart, selectedLevel, onLevelChange }) {
         .card { background:#fff; border:2px solid ${INK}; border-radius:20px; padding:clamp(18px,2.6vw,26px); box-shadow:6px 6px 0 ${INK}; margin-bottom:22px; }
         .card-eyebrow { font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#9A917A; margin-bottom:4px; }
         .card-title { font-size:19px; font-weight:800; margin:0 0 18px; }
+        .sel-info { margin-top:10px; padding:10px 14px; border-radius:12px; background:#F3EFE4; border:1.5px dashed ${INK}; font-size:14px; }
+        .sel-info b { font-family:'Fraunces',serif; font-style:italic; }
+        .week { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; height:110px; margin-top:6px; }
+        .bar-col { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; height:100%; justify-content:flex-end; }
+        .bar { width:100%; max-width:30px; background:${INK}; border-radius:6px 6px 0 0; transition:height .8s cubic-bezier(.3,.8,.3,1); min-height:3px; }
+        .bar.top { background:#E8503A; }
+        .bar-d { font-size:12px; font-weight:700; color:#8A8270; }
+        .stat-line { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
+        .stat-box { flex:1; min-width:120px; background:#fff; border:2px solid ${INK}; border-radius:16px; padding:14px 16px; box-shadow:4px 4px 0 ${INK}; }
+        .stat-num { font-family:'Fraunces',serif; font-size:30px; font-weight:600; line-height:1; }
+        .stat-lbl { font-weight:700; color:#8A8270; font-size:13px; margin-top:4px; }
+        .level-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .lvl-btn { font-family:'Assistant'; font-weight:800; font-size:14px; padding:9px 16px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:transform .12s,box-shadow .12s; }
+        .lvl-btn:hover { transform:translateY(-2px); box-shadow:2px 2px 0 ${INK}; }
+        .lvl-btn.active { background:${INK}; color:${PAPER}; box-shadow:3px 3px 0 ${GOLD}; }
+        .view-btn { font-family:'Assistant'; font-weight:700; font-size:13px; padding:7px 15px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:background .15s,color .15s; }
+        .view-btn.active { background:${INK}; color:${PAPER}; }
         .metro-row { margin-bottom:24px; opacity:0; transform:translateX(16px); animation:slidein .5s ease forwards; }
         .metro-row:last-child{ margin-bottom:4px; }
         @keyframes slidein { to{ opacity:1; transform:none; } }
@@ -1600,21 +2542,6 @@ function Dashboard({ onStart, selectedLevel, onLevelChange }) {
         .here-pin { position:absolute; top:-15px; right:50%; transform:translateX(50%); width:8px; height:8px; border-radius:50%; }
         .station-label { position:absolute; top:28px; right:50%; transform:translateX(50%) rotate(-32deg); transform-origin:top right;
           white-space:nowrap; font-size:11px; color:#6B6452; font-family:'Fraunces',serif; font-style:italic; }
-        .sel-info { margin-top:8px; padding:12px 14px; border-radius:12px; background:#F3EFE4; border:1.5px dashed ${INK}; font-size:14px; }
-        .sel-info b { font-family:'Fraunces',serif; font-style:italic; }
-        .week { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; height:110px; margin-top:6px; }
-        .bar-col { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; height:100%; justify-content:flex-end; }
-        .bar { width:100%; max-width:30px; background:${INK}; border-radius:6px 6px 0 0; transition:height .8s cubic-bezier(.3,.8,.3,1); min-height:3px; }
-        .bar.top { background:#E8503A; }
-        .bar-d { font-size:12px; font-weight:700; color:#8A8270; }
-        .stat-line { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
-        .stat-box { flex:1; min-width:120px; background:#fff; border:2px solid ${INK}; border-radius:16px; padding:14px 16px; box-shadow:4px 4px 0 ${INK}; }
-        .stat-num { font-family:'Fraunces',serif; font-size:30px; font-weight:600; line-height:1; }
-        .stat-lbl { font-weight:700; color:#8A8270; font-size:13px; margin-top:4px; }
-        .level-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
-        .lvl-btn { font-family:'Assistant'; font-weight:800; font-size:14px; padding:9px 16px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:transform .12s,box-shadow .12s; }
-        .lvl-btn:hover { transform:translateY(-2px); box-shadow:2px 2px 0 ${INK}; }
-        .lvl-btn.active { background:${INK}; color:${PAPER}; box-shadow:3px 3px 0 ${GOLD}; }
       `}</style>
 
       <div className="d-top">
@@ -1644,13 +2571,27 @@ function Dashboard({ onStart, selectedLevel, onLevelChange }) {
       </div>
 
       <div className="card">
-        <div className="card-eyebrow">Plan du progrès · קווי ההתקדמות</div>
-        <h2 className="card-title">המסע שלך — תחנה לכל 3 תשובות נכונות</h2>
-        {ROUNDS.map((skill, i) => (
-          <MetroLine key={skill.id + selectedLevel} skill={skill} idx={i} correct={p.byLevel?.[selectedLevel]?.[skill.id]?.correct || 0} sel={sel} onSel={setSel} level={selectedLevel} />
-        ))}
-        {selInfo && (
-          <div className="sel-info">תחנה {selInfo.idx} בקו <b style={{ color: selInfo.sk.color }}>{selInfo.sk.fr}</b> · {selInfo.sk.he}: <b>{selInfo.name}</b></div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div className="card-eyebrow" style={{ margin: 0 }}>Plan du progrès · ההתקדמות שלך</div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button className={`view-btn ${mapMode === "metro" ? "active" : ""}`} onClick={() => { setMapMode("metro"); setSel(null); }}>🗺️ פריז</button>
+            <button className={`view-btn ${mapMode === "lines" ? "active" : ""}`} onClick={() => { setMapMode("lines"); setSel(null); }}>≡ קווים</button>
+          </div>
+        </div>
+        <h2 className="card-title">המסע שלך ברמה {selectedLevel} — תחנה לכל 3 תשובות נכונות</h2>
+        {mapMode === "metro" ? (
+          <ParisMetroMap p={p} selectedLevel={selectedLevel} sel={sel} onSel={setSel} />
+        ) : (
+          <>
+            {ROUNDS.map((skill, i) => (
+              <MetroLine key={skill.id + selectedLevel} skill={skill} idx={i}
+                correct={p.byLevel?.[selectedLevel]?.[skill.id]?.correct || 0}
+                sel={sel} onSel={setSel} level={selectedLevel} />
+            ))}
+            {selInfoLines && (
+              <div className="sel-info">תחנה {selInfoLines.idx} בקו <b style={{ color: selInfoLines.sk.color }}>{selInfoLines.sk.fr}</b> · {selInfoLines.sk.he}: <b>{selInfoLines.name}</b></div>
+            )}
+          </>
         )}
       </div>
 
