@@ -2,6 +2,15 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" style={{ verticalAlign: "middle", flexShrink: 0 }}>
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </svg>
+);
+
 export default function AuthScreen() {
   const [mode, setMode] = useState("login"); // "login" | "signup"
   const [email, setEmail] = useState("");
@@ -35,13 +44,26 @@ export default function AuthScreen() {
     }
   };
 
+  const handleGoogle = async () => {
+    setError(""); setLoading(true);
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (err) setError(err.message);
+    setLoading(false);
+  };
+
   return (
+    <>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap');`}</style>
     <div style={styles.bg}>
       <div style={styles.card}>
         {/* Logo */}
         <div style={styles.logoWrap}>
-          <span style={styles.logoEmoji}>🗼</span>
-          <h1 style={styles.logoTitle}>FrenchUp</h1>
+          <h1 style={styles.logoTitle}>
+            French<span style={{ color: "#E8503A", fontStyle: "normal" }}>Up</span>
+          </h1>
           <p style={styles.logoSub}>למד צרפתית עם מטרו פריז</p>
         </div>
 
@@ -92,6 +114,15 @@ export default function AuthScreen() {
           </button>
         </form>
 
+        <div style={styles.divider}>
+          <span style={styles.dividerLine} />
+          <span style={styles.dividerText}>או</span>
+          <span style={styles.dividerLine} />
+        </div>
+        <button type="button" onClick={handleGoogle} disabled={loading} style={styles.googleBtn}>
+          <GoogleIcon /> המשך עם Google
+        </button>
+
         <p style={styles.hint}>
           {mode === "login" ? "אין לך חשבון? " : "כבר רשום? "}
           <span
@@ -103,6 +134,7 @@ export default function AuthScreen() {
         </p>
       </div>
     </div>
+    </>
   );
 }
 
@@ -133,21 +165,18 @@ const styles = {
     textAlign: "center",
     marginBottom: "28px",
   },
-  logoEmoji: {
-    fontSize: "48px",
-    display: "block",
-    marginBottom: "8px",
-  },
   logoTitle: {
-    fontSize: "28px",
-    fontWeight: "900",
+    fontFamily: "'Fraunces', Georgia, serif",
+    fontStyle: "italic",
+    fontWeight: 600,
+    fontSize: "48px",
     color: INK,
     margin: "0 0 4px",
-    letterSpacing: "-0.5px",
+    letterSpacing: "-1px",
   },
   logoSub: {
     fontSize: "14px",
-    color: "#666",
+    color: "#888",
     margin: 0,
   },
   toggle: {
@@ -238,5 +267,24 @@ const styles = {
     color: GOLD,
     fontWeight: "700",
     cursor: "pointer",
+  },
+  divider: { display: "flex", alignItems: "center", gap: "10px", margin: "16px 0 12px" },
+  dividerLine: { flex: 1, height: "1px", background: "#DDD8CC" },
+  dividerText: { fontSize: "12px", color: "#AAA", fontWeight: 600 },
+  googleBtn: {
+    width: "100%",
+    padding: "13px",
+    borderRadius: "12px",
+    border: "2px solid #DDD8CC",
+    background: "#fff",
+    color: INK,
+    fontSize: "15px",
+    fontWeight: "700",
+    fontFamily: "'Assistant', sans-serif",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
   },
 };
