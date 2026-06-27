@@ -1316,6 +1316,9 @@ const LEVEL_COLORS = {
 const LEVEL_DOT_COLORS = {
   A1: "#FF6B6B", A2: "#FF9F43", B1: "#6BCB77", B2: "#00B4D8", C1: "#1971C2", C2: "#6741D9",
 };
+const LEVEL_HE_LABELS = {
+  A1: "מתחיל", A2: "בסיסי", B1: "עצמאי", B2: "מתקדם", C1: "שוטף", C2: "מומחה",
+};
 
 const METRO_STATIONS = {
   gra: [[120,155],[168,155],[210,188],[322,215],[372,225],[435,250]],
@@ -2658,6 +2661,8 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .tl-dot { position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; background:none; border:none; cursor:pointer; padding:0; z-index:1; }
         .tl-circle { width:22px; height:22px; border-radius:50%; border:3px solid #D4CEC0; background:#fff; transition:all .2s; display:block; }
         .tl-lbl { font-family:'Assistant'; font-weight:800; font-size:13px; color:#AAA; transition:color .2s; white-space:nowrap; }
+        .tl-sub { font-family:'Assistant'; font-weight:600; font-size:10px; color:#BBB; white-space:nowrap; margin-top:-6px; transition:color .2s; }
+        .tl-dot.past .tl-sub, .tl-dot.current .tl-sub { opacity:0.75; }
         .tl-dot.current .tl-circle { width:30px; height:30px; margin:-4px; }
         .tl-dot.current .tl-lbl { font-size:14px; font-weight:900; }
         .tl-dot:hover .tl-circle { transform:scale(1.2); }
@@ -2719,6 +2724,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
                     ...(isCurrent ? { boxShadow: `0 0 0 5px ${color}44` } : {}),
                   }} />
                   <span className="tl-lbl" style={{ color: (isPast || isCurrent) ? color : "#AAA" }}>{l}</span>
+                  <span className="tl-sub" style={{ color: (isPast || isCurrent) ? color : "#BBB" }}>{LEVEL_HE_LABELS[l]}</span>
                 </button>
               );
             })}
