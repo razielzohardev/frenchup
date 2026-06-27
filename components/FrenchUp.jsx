@@ -12,6 +12,9 @@ const INK = "#16203A";
 const PAPER = "#F6F2E9";
 const GOLD = "#C8A23A";
 
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const LKEY = "frenchup_level_v1";
+
 const ROUNDS = [
   { id: "gra", he: "דקדוק", fr: "Grammaire", color: "#2563EB", icon: "✍️" },
   { id: "voc", he: "אוצר מילים", fr: "Vocabulaire", color: "#E8503A", icon: "🃏" },
@@ -19,8 +22,125 @@ const ROUNDS = [
   { id: "exp", he: "דיבור", fr: "Expression", color: "#8B5CF6", icon: "💬" },
 ];
 
-/* -------------------- BUILT-IN BANK (B2/C1) -------------------- */
-const BANK = {
+/* -------------------- EXERCISE BANKS -------------------- */
+const BANK_A1 = {
+  gra: [
+    { instruction_he:"השלם בצורת הפועל הנכונה (être)", prompt_fr:"Je ____ (être) étudiant.", trans_he:"אני סטודנט.", accepted:["suis"], solution_fr:"Je suis étudiant.", explanation_he:"הפועל être בגוף ראשון יחיד: je suis.", tip_he:"être: je suis, tu es, il/elle est, nous sommes, vous êtes, ils sont." },
+    { instruction_he:"השלם בצורת הפועל הנכונה (avoir)", prompt_fr:"Elle ____ (avoir) un chat.", trans_he:"יש לה חתול.", accepted:["a"], solution_fr:"Elle a un chat.", explanation_he:"avoir בגוף שלישי יחיד: il/elle a.", tip_he:"avoir: j'ai, tu as, il/elle a, nous avons, vous avez, ils ont." },
+    { instruction_he:"השלם בסיומת הנכונה לרבים", prompt_fr:"Les ____ (chat) sont mignons.", trans_he:"החתולים חמודים.", accepted:["chats"], solution_fr:"Les chats sont mignons.", explanation_he:"רוב שמות העצם מקבלים -s ברבים.", tip_he:"chien→chiens, livre→livres, ami→amis." },
+    { instruction_he:"הוסף שלילה נכונה (ne...pas)", prompt_fr:"Je ____ mange ____ de viande.", trans_he:"אני לא אוכל בשר.", accepted:["ne...pas","ne / pas"], solution_fr:"Je ne mange pas de viande.", explanation_he:"שלילה: ne + פועל + pas. אחרי שלילה: de במקום du/de la/des.", tip_he:"ne...pas עוטף את הפועל: je ne mange pas." },
+    { instruction_he:"השלם בסיומת הנקבה של שם התואר", prompt_fr:"Marie est une étudiante ____. (intelligent→?)", trans_he:"מארי היא סטודנטית חכמה.", accepted:["intelligente"], solution_fr:"Marie est une étudiante intelligente.", explanation_he:"intelligent (זכר) → intelligente (נקבה): מוסיפים -e.", tip_he:"grand→grande, petit→petite, content→contente." },
+    { instruction_he:"השלם במאמר הנכון (le / la / les)", prompt_fr:"____ soleil brille aujourd'hui.", trans_he:"השמש זורחת היום.", accepted:["Le"], solution_fr:"Le soleil brille aujourd'hui.", explanation_he:"soleil הוא זכר → le soleil.", tip_he:"le = זכר יחיד · la = נקבה יחיד · les = רבים." },
+  ],
+  voc: [
+    { instruction_he:"תרגם לצרפתית: «שלום / בוקר טוב»", prompt_fr:"____ ! Comment allez-vous ?", trans_he:"שלום! מה שלומכם?", accepted:["Bonjour","bonjour"], solution_fr:"Bonjour", explanation_he:"Bonjour = שלום/בוקר טוב (רשמי). Salut = היי (לא רשמי).", tip_he:"Bonjour (ביום) · Bonsoir (ערב) · Salut (לא רשמי)." },
+    { instruction_he:"תרגם לצרפתית: «תודה רבה»", prompt_fr:"____ beaucoup !", trans_he:"תודה רבה!", accepted:["Merci","merci"], solution_fr:"Merci beaucoup !", explanation_he:"Merci = תודה. Merci beaucoup = תודה רבה.", tip_he:"De rien = אין על מה · Avec plaisir = בשמחה." },
+    { instruction_he:"תרגם לצרפתית: «אמא»", prompt_fr:"Ma ____ s'appelle Sophie.", trans_he:"אמא שלי נקראת סופי.", accepted:["mère","maman"], solution_fr:"Ma mère / maman", explanation_he:"mère = אמא (רשמי) · maman = אמא (חיבה).", tip_he:"père = אבא · mère = אמא · frère = אח · sœur = אחות." },
+    { instruction_he:"תרגם לצרפתית: «כחול»", prompt_fr:"Le ciel est ____.", trans_he:"השמיים כחולים.", accepted:["bleu","bleue"], solution_fr:"bleu", explanation_he:"bleu = כחול. rouge = אדום, vert = ירוק, blanc = לבן, noir = שחור.", tip_he:"צבעים: rouge, bleu, vert, jaune, blanc, noir, gris, orange." },
+    { instruction_he:"תרגם לצרפתית: «יום שני»", prompt_fr:"Aujourd'hui c'est ____.", trans_he:"היום יום שני.", accepted:["lundi"], solution_fr:"lundi", explanation_he:"ימי השבוע: lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche.", tip_he:"ימי השבוע מתחילים ב-lundi (שני)." },
+    { instruction_he:"תרגם לצרפתית: «אני אוהב»", prompt_fr:"J'____ le chocolat.", trans_he:"אני אוהב שוקולד.", accepted:["aime"], solution_fr:"J'aime", explanation_he:"aimer = לאהוב. J'aime + מאמר: J'aime le chocolat.", tip_he:"J'aime · Je n'aime pas · J'adore (מאוד אוהב)." },
+  ],
+  com: [
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"— Bonjour ! Vous voulez quelque chose ?\n— Oui, un café, s'il vous plaît.\n— Voilà. C'est deux euros.", trans_he:"— שלום! אתה רוצה משהו?\n— כן, קפה, בבקשה.\n— הנה. זה שני יורו.", question_fr:"Combien coûte le café ?", q_he:"כמה עולה הקפה?", options:["Un euro","Deux euros","Trois euros"], correct:1, explanation_he:"« C'est deux euros » = זה עולה שני יורו." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Je m'appelle Lucas. J'ai dix-huit ans. Je suis français. J'habite à Paris avec ma famille.", trans_he:"שמי לוקאס. אני בן 18. אני צרפתי. אני גר בפריז עם משפחתי.", question_fr:"Où habite Lucas ?", q_he:"איפה לוקאס גר?", options:["À Lyon","À Paris","À Marseille"], correct:1, explanation_he:"« J'habite à Paris » = אני גר בפריז." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Le lundi, Marie va à l'école. Le mercredi, elle fait du sport. Le samedi, elle regarde des films.", trans_he:"ביום שני מארי הולכת לבית ספר. ביום רביעי היא עושה ספורט. בשבת היא צופה בסרטים.", question_fr:"Quand est-ce que Marie fait du sport ?", q_he:"מתי מארי עושה ספורט?", options:["Le lundi","Le mercredi","Le samedi"], correct:1, explanation_he:"« Le mercredi, elle fait du sport » = ביום רביעי היא עושה ספורט." },
+  ],
+  exp: [
+    { instruction_he:"הצג את עצמך בשלוש שורות (תשובה חופשית)", prompt_fr:"Présentez-vous : votre prénom, votre âge et votre ville.", trans_he:"הצג את עצמך: שמך, גילך ועירך.", model_fr:"Je m'appelle David. J'ai vingt ans. J'habite à Tel Aviv.", keys_fr:["Je m'appelle","J'ai ... ans","J'habite à"], tip_he:"Je m'appelle (שמי) · J'ai ... ans (אני בן/בת) · J'habite à (אני גר/ה ב-)." },
+    { instruction_he:"תאר את המשפחה שלך (תשובה חופשית)", prompt_fr:"Décris ta famille.", trans_he:"תאר את המשפחה שלך.", model_fr:"Dans ma famille, il y a mon père, ma mère et ma sœur. Mon père s'appelle Ilan et ma mère s'appelle Miriam.", keys_fr:["dans ma famille","il y a","mon père","ma mère","il/elle s'appelle"], tip_he:"il y a = יש · mon père = אבא · ma mère = אמא · mon frère = אחי · ma sœur = אחותי." },
+    { instruction_he:"מה אתה אוהב לעשות? (תשובה חופשית)", prompt_fr:"Qu'est-ce que tu aimes faire ? Donne deux exemples.", trans_he:"מה אתה אוהב לעשות? תן שני דוגמאות.", model_fr:"J'aime écouter de la musique et jouer au football. Je n'aime pas faire la cuisine.", keys_fr:["J'aime","Je n'aime pas","et","aussi"], tip_he:"J'aime + infinitif: J'aime jouer, écouter, regarder, lire." },
+  ],
+};
+
+const BANK_A2 = {
+  gra: [
+    { instruction_he:"השלם בpassé composé (עם avoir)", prompt_fr:"Hier, j'____ (manger) une pizza.", trans_he:"אתמול אכלתי פיצה.", accepted:["ai mangé"], solution_fr:"Hier, j'ai mangé une pizza.", explanation_he:"passé composé עם avoir: j'ai + participe passé. manger → mangé.", tip_he:"manger→mangé · finir→fini · prendre→pris · faire→fait." },
+    { instruction_he:"השלם בpassé composé (עם être)", prompt_fr:"Elle ____ (aller) au cinéma samedi.", trans_he:"היא הלכה לקולנוע בשבת.", accepted:["est allée","est allé"], solution_fr:"Elle est allée au cinéma samedi.", explanation_he:"aller לוקח être. ה-participe מתאים: elle → allée (נקבה).", tip_he:"פעלי תנועה לוקחים être: aller, venir, partir, arriver, sortir, entrer." },
+    { instruction_he:"השלם בfutur proche", prompt_fr:"Ce soir, nous ____ (regarder) un film.", trans_he:"הלילה נצפה בסרט.", accepted:["allons regarder"], solution_fr:"Ce soir, nous allons regarder un film.", explanation_he:"futur proche = aller (מוטה) + infinitif.", tip_he:"je vais · tu vas · il/elle va · nous allons · vous allez · ils vont + infinitif." },
+    { instruction_he:"השלם בסיומת התואר הנכונה (accord)", prompt_fr:"Ma voisine est très ____. (gentil→?)", trans_he:"השכנה שלי מאוד נחמדה.", accepted:["gentille"], solution_fr:"Ma voisine est très gentille.", explanation_he:"gentil (זכר) → gentille (נקבה): מכפילים -l ומוסיפים -e.", tip_he:"gentil→gentille · nul→nulle · pareil→pareille." },
+    { instruction_he:"השלם בתואר הקניין הנכון", prompt_fr:"C'est le sac de Marie. C'est ____ sac.", trans_he:"זה התיק של מארי. זה התיק שלה.", accepted:["son"], solution_fr:"C'est son sac.", explanation_he:"son/sa/ses נקבע לפי המושא, לא הבעלים. sac הוא זכר → son.", tip_he:"son sac (זכר) · sa chambre (נקבה) · ses affaires (רבים)." },
+    { instruction_he:"השלם בimparfait להרגל בעבר", prompt_fr:"Quand j'étais petit, j'____ (aimer) jouer dehors.", trans_he:"כשהייתי קטן אהבתי לשחק בחוץ.", accepted:["aimais"], solution_fr:"Quand j'étais petit, j'aimais jouer dehors.", explanation_he:"imparfait מביע הרגל בעבר. aimer → j'aimais.", tip_he:"imparfait = שורש nous בהווה + -ais/-ait/-ions/-aient." },
+  ],
+  voc: [
+    { instruction_he:"תרגם לצרפתית: «יש לי כסף»", prompt_fr:"J'____ de l'argent.", trans_he:"יש לי כסף.", accepted:["ai"], solution_fr:"J'ai de l'argent.", explanation_he:"avoir = לקיים, להחזיק. j'ai de l'argent = יש לי כסף.", tip_he:"J'ai faim = אני רעב · J'ai soif = אני צמא · J'ai chaud = חם לי." },
+    { instruction_he:"תרגם לצרפתית: «לעשות קניות»", prompt_fr:"J'aime faire ____ le week-end.", trans_he:"אני אוהב לעשות קניות בסוף השבוע.", accepted:["du shopping","les courses","les magasins"], solution_fr:"faire du shopping / les courses", explanation_he:"faire du shopping = לעשות קניות. faire les courses = לקנות מצרכים.", tip_he:"faire du sport · faire du vélo · faire de la natation · faire les courses." },
+    { instruction_he:"תרגם לצרפתית: «מה השעה?»", prompt_fr:"____ est-il ?", trans_he:"מה השעה?", accepted:["Quelle heure","quelle heure"], solution_fr:"Quelle heure est-il ?", explanation_he:"Quelle heure est-il ? = מה השעה? תשובה: Il est trois heures.", tip_he:"Il est midi (12:00) · Il est minuit (00:00) · et demie = וחצי." },
+    { instruction_he:"תרגם לצרפתית: «ראש כואב לי»", prompt_fr:"J'ai ____ à la tête.", trans_he:"ראש כואב לי.", accepted:["mal"], solution_fr:"J'ai mal à la tête.", explanation_he:"avoir mal à = לכאוב. J'ai mal à la tête (ראש), au ventre (בטן).", tip_he:"J'ai mal à la gorge (גרון) · J'ai de la fièvre (חום)." },
+    { instruction_he:"תרגם לצרפתית: «ישר, ואחר כך שמאל»", prompt_fr:"Allez tout ____, puis à ____.", trans_he:"לכו ישר, ואז שמאלה.", accepted:["droit...gauche","droit / gauche"], solution_fr:"tout droit, puis à gauche", explanation_he:"tout droit = ישר · à gauche = שמאלה · à droite = ימינה.", tip_he:"tournez à gauche/droite · continuez tout droit · prenez la deuxième rue." },
+    { instruction_he:"תרגם לצרפתית: «מהר מאוד»", prompt_fr:"Il parle ____.", trans_he:"הוא מדבר מהר מאוד.", accepted:["très vite","trop vite"], solution_fr:"très vite", explanation_he:"vite = מהר. très vite = מהר מאוד. lentement = לאט.", tip_he:"vite (מהר) · lentement (לאט) · bien (טוב) · souvent (לעתים קרובות)." },
+  ],
+  com: [
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Sophie a vingt-deux ans. Elle est infirmière. Elle travaille à l'hôpital du lundi au vendredi. Le week-end, elle fait du yoga et elle lit des livres.", trans_he:"סופי בת 22. היא אחות. היא עובדת בבית חולים מ-שני עד שישי. בסוף שבוע היא עושה יוגה וקוראת ספרים.", question_fr:"Que fait Sophie le week-end ?", q_he:"מה סופי עושה בסוף השבוע?", options:["Elle travaille à l'hôpital","Elle fait du yoga et lit des livres","Elle sort avec des amis"], correct:1, explanation_he:"« le week-end, elle fait du yoga et elle lit des livres »." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Demain, il va faire très chaud : 35 degrés. Il est conseillé de boire beaucoup d'eau et d'éviter le soleil entre 12h et 16h.", trans_he:"מחר יהיה חם מאוד: 35 מעלות. מומלץ לשתות הרבה מים ולהימנע מהשמש בין 12 ל-16.", question_fr:"Que faut-il éviter demain ?", q_he:"ממה כדאי להימנע מחר?", options:["Boire de l'eau","Le soleil l'après-midi","Sortir le matin"], correct:1, explanation_he:"« éviter le soleil entre 12h et 16h » = להימנע מהשמש בשעות אלו." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Le musée est ouvert tous les jours sauf le mardi. L'entrée coûte 8 euros pour les adultes et 4 euros pour les enfants.", trans_he:"המוזיאון פתוח כל יום חוץ מיום שלישי. הכניסה עולה 8 יורו למבוגרים ו-4 יורו לילדים.", question_fr:"Quand le musée est-il fermé ?", q_he:"מתי המוזיאון סגור?", options:["Le lundi","Le mardi","Le dimanche"], correct:1, explanation_he:"« ouvert tous les jours sauf le mardi » = פתוח כל יום חוץ מיום שלישי." },
+  ],
+  exp: [
+    { instruction_he:"ספר מה עשית אתמול (תשובה חופשית)", prompt_fr:"Qu'est-ce que tu as fait hier ? Utilise le passé composé.", trans_he:"מה עשית אתמול? השתמש ב-passé composé.", model_fr:"Hier, je me suis levé à sept heures. J'ai mangé des céréales. Ensuite, je suis allé au travail. Le soir, j'ai regardé un film.", keys_fr:["hier","j'ai + participe","je suis allé(e)","ensuite","le soir"], tip_he:"passé composé: j'ai mangé · j'ai regardé · je suis allé(e) · je suis rentré(e)." },
+    { instruction_he:"תאר את הבית שלך (תשובה חופשית)", prompt_fr:"Décris ton appartement ou ta maison.", trans_he:"תאר את הדירה או הבית שלך.", model_fr:"J'habite dans un appartement au troisième étage. Il y a trois pièces : un salon, une chambre et une cuisine. C'est assez grand et lumineux.", keys_fr:["j'habite dans","il y a","un salon","une chambre","assez"], tip_he:"un salon (סלון) · une chambre (חדר שינה) · une cuisine (מטבח) · une salle de bains (חדר אמבטיה)." },
+    { instruction_he:"תאר את סוף השבוע שלך בדרך כלל (תשובה חופשית)", prompt_fr:"Raconte ce que tu fais normalement le week-end.", trans_he:"ספר מה אתה עושה בדרך כלל בסוף השבוע.", model_fr:"Le samedi matin, je fais les courses au marché. L'après-midi, je retrouve mes amis en ville. Le dimanche, je reste chez moi et je lis.", keys_fr:["le samedi","le dimanche","je fais","l'après-midi","en ville"], tip_he:"présent לתיאור הרגל: je fais, je retrouve, je reste, je lis." },
+  ],
+};
+
+const BANK_B1 = {
+  gra: [
+    { instruction_he:"השלם בimparfait או passé composé הנכון", prompt_fr:"Quand le téléphone a sonné, je ____ (dormir).", trans_he:"כשהטלפון צלצל, ישנתי.", accepted:["dormais"], solution_fr:"Quand le téléphone a sonné, je dormais.", explanation_he:"passé composé לפעולה חדה (a sonné), imparfait לרקע מתמשך (dormais).", tip_he:"imparfait = רקע/מצב · passé composé = פעולה חדה." },
+    { instruction_he:"השלם בכינוי הזיקה הנכון (qui / que)", prompt_fr:"C'est l'ami ____ j'ai rencontré hier.", trans_he:"זה החבר שפגשתי אתמול.", accepted:["que","qu'"], solution_fr:"C'est l'ami que j'ai rencontré hier.", explanation_he:"que = שאותו (מושא ישיר). l'ami הוא המושא של rencontrer → que.", tip_he:"qui = נושא (qui vient) · que = מושא (que je vois)." },
+    { instruction_he:"השלם בכינוי הזיקה הנכון (qui / que)", prompt_fr:"La femme ____ travaille ici est médecin.", trans_he:"האישה שעובדת כאן היא רופאה.", accepted:["qui"], solution_fr:"La femme qui travaille ici est médecin.", explanation_he:"qui = שהיא (נושא). la femme היא הנושא של travaille → qui.", tip_he:"qui = נושא (מה שאחריו הוא פועל)." },
+    { instruction_he:"השלם בפועל רפלקסיבי (présent)", prompt_fr:"Chaque matin, je ____ (se lever) à sept heures.", trans_he:"כל בוקר אני קם בשבע.", accepted:["me lève"], solution_fr:"Chaque matin, je me lève à sept heures.", explanation_he:"se lever = לקום. je me lève, tu te lèves, il se lève.", tip_he:"se lever · se coucher · s'habiller · se laver · se réveiller." },
+    { instruction_he:"השלם בכינוי מושא ישיר", prompt_fr:"Tu vois Marie ? — Oui, je ____ vois tous les jours.", trans_he:"אתה רואה את מארי? — כן, אני רואה אותה כל יום.", accepted:["la"], solution_fr:"Oui, je la vois tous les jours.", explanation_he:"כינוי מושא ישיר לנקבה יחיד = la. בא לפני הפועל.", tip_he:"le (אותו) · la (אותה) · les (אותם/ן)." },
+    { instruction_he:"השלם בכינוי מושא עקיף", prompt_fr:"Tu parles souvent à tes parents ? — Oui, je ____ parle tous les jours.", trans_he:"אתה מדבר עם ההורים שלך? — כן, אני מדבר איתם כל יום.", accepted:["leur"], solution_fr:"Oui, je leur parle tous les jours.", explanation_he:"כינוי מושא עקיף לרבים = leur. parler à qqn → lui/leur.", tip_he:"lui = לו/לה (יחיד) · leur = להם/להן (רבים)." },
+  ],
+  voc: [
+    { instruction_he:"תרגם לצרפתית: «להגיע בזמן»", prompt_fr:"Il est important d'____ à l'heure.", trans_he:"חשוב להגיע בזמן.", accepted:["arriver","arriver à l'heure"], solution_fr:"arriver à l'heure", explanation_he:"arriver à l'heure = להגיע בזמן. être en retard = להיות מאוחר.", tip_he:"à l'heure (בזמן) · en retard (מאוחר) · en avance (מוקדם)." },
+    { instruction_he:"תרגם לצרפתית: «לדעתי זה חשוב»", prompt_fr:"____, c'est très important.", trans_he:"לדעתי, זה מאוד חשוב.", accepted:["À mon avis","a mon avis","Selon moi"], solution_fr:"À mon avis, c'est très important.", explanation_he:"À mon avis = לדעתי. Selon moi = לפי דעתי.", tip_he:"À mon avis · Je pense que · Il me semble que · Selon moi." },
+    { instruction_he:"תרגם לצרפתית: «לטייל / לנסוע»", prompt_fr:"J'adore ____ en Europe.", trans_he:"אני מאוד אוהב לטייל באירופה.", accepted:["voyager"], solution_fr:"voyager", explanation_he:"voyager = לטייל. un voyage = מסע. partir en vacances = לצאת לחופשה.", tip_he:"voyager · faire un voyage · partir en vacances · explorer." },
+    { instruction_he:"תרגם לצרפתית: «ממש עייף»", prompt_fr:"Après le sport, je suis ____.", trans_he:"אחרי ספורט, אני ממש עייף.", accepted:["épuisé","épuisée","très fatigué","très fatiguée","crevé"], solution_fr:"épuisé(e) / crevé(e)", explanation_he:"épuisé = מותש (יותר חזק מ-fatigué). crevé = סלנג לממש מותש.", tip_he:"fatigué (עייף) · épuisé (מותש) · crevé (ממש מותש, סלנג)." },
+    { instruction_he:"תרגם לצרפתית: «לשמור על הסביבה»", prompt_fr:"Il faut ____ l'environnement.", trans_he:"צריך לשמור על הסביבה.", accepted:["protéger","respecter","préserver"], solution_fr:"protéger / préserver l'environnement", explanation_he:"protéger = להגן · préserver = לשמר · l'environnement = הסביבה.", tip_he:"le réchauffement climatique · le recyclage · les énergies renouvelables." },
+    { instruction_he:"תרגם לצרפתית: «אני מסכים איתך»", prompt_fr:"Je suis ____ avec toi.", trans_he:"אני מסכים איתך.", accepted:["d'accord"], solution_fr:"Je suis d'accord avec toi.", explanation_he:"être d'accord (avec) = להסכים. Je ne suis pas d'accord = אני לא מסכים.", tip_he:"d'accord (מסכים) · au contraire (להיפך) · en revanche (לעומת זאת)." },
+  ],
+  com: [
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"De plus en plus de consommateurs se tournent vers les produits biologiques, convaincus qu'ils sont meilleurs pour la santé, malgré un prix souvent plus élevé.", trans_he:"יותר ויותר צרכנים פונים למוצרים אורגניים, משוכנעים שהם בריאים יותר, למרות מחיר גבוה יותר.", question_fr:"Qu'est-ce qui peut freiner l'achat de produits bio ?", q_he:"מה עלול להרתיע מקנייה של מוצרים אורגניים?", options:["Leur goût","Leur prix plus élevé","Leur rareté"], correct:1, explanation_he:"« malgré un prix souvent plus élevé » = למרות מחיר גבוה יותר — זה החיסרון." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Apprendre une langue étrangère demande de la patience : les progrès sont parfois lents, mais la régularité finit toujours par payer.", trans_he:"ללמוד שפה זרה דורש סבלנות: ההתקדמות לפעמים איטית, אך ההתמדה תמיד משתלמת בסוף.", question_fr:"Quel facteur est essentiel selon le texte ?", q_he:"איזה גורם חיוני לפי הטקסט?", options:["Le talent inné","La régularité","La rapidité"], correct:1, explanation_he:"« la régularité finit toujours par payer » = ההתמדה תמיד משתלמת." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"Les réseaux sociaux permettent de rester en contact avec ses proches, mais une utilisation excessive peut nuire à la concentration et au sommeil.", trans_he:"הרשתות החברתיות מאפשרות להישאר בקשר, אך שימוש מופרז עלול לפגוע בריכוז ובשינה.", question_fr:"Quel risque le texte mentionne-t-il ?", q_he:"איזה סיכון מזכיר הטקסט?", options:["Une meilleure concentration","Des troubles du sommeil","Une perte de contacts"], correct:1, explanation_he:"הטקסט מזכיר ש-« peut nuire à la concentration et au sommeil »." },
+  ],
+  exp: [
+    { instruction_he:"ספר על סוף שבוע שהשאיר רושם (תשובה חופשית)", prompt_fr:"Raconte un week-end qui t'a marqué. Utilise le passé composé et l'imparfait.", trans_he:"ספר על סוף שבוע שהשאיר בך רושם. השתמש ב-passé composé וב-imparfait.", model_fr:"Le week-end dernier, je suis allé à la montagne avec des amis. Il faisait un temps magnifique et nous avons fait une longue randonnée. Le soir, nous étions épuisés mais heureux.", keys_fr:["le week-end dernier","je suis allé","il faisait","nous avons fait","nous étions"], tip_he:"passé composé לפעולות (je suis allé) · imparfait לרקע (il faisait, nous étions)." },
+    { instruction_he:"תאר את המנה האהובה עליך (תשובה חופשית)", prompt_fr:"Décris ton plat préféré et explique pourquoi tu l'aimes.", trans_he:"תאר את המנה האהובה עליך והסבר למה אתה אוהב אותה.", model_fr:"Mon plat préféré, c'est sans doute les pâtes à la carbonara. J'apprécie ce plat parce qu'il est à la fois simple et réconfortant. De plus, il me rappelle un voyage en Italie.", keys_fr:["mon plat préféré","j'apprécie parce que","à la fois","de plus","il me rappelle"], tip_he:"קישורים: « à la fois… » · « de plus… » · « parce que… »." },
+    { instruction_he:"הבע עמדה על הרשתות החברתיות (תשובה חופשית)", prompt_fr:"Selon toi, les réseaux sociaux rapprochent-ils ou éloignent-ils les gens ?", trans_he:"לדעתך, הרשתות החברתיות מקרבות או מרחיקות בין אנשים?", model_fr:"À mon avis, les réseaux sociaux rapprochent les gens qui sont loin, mais ils peuvent aussi nous éloigner de ceux qui sont à côté de nous. Tout dépend de la manière dont on les utilise.", keys_fr:["à mon avis","rapprocher","éloigner","tout dépend de","la manière dont"], tip_he:"« D'un côté… de l'autre… » או « Tout dépend de… » להבעת עמדה מאוזנת." },
+  ],
+};
+
+const BANK_C2 = {
+  gra: [
+    { instruction_he:"השלם במבנה הפאסיף", prompt_fr:"Cette chanson ____ (chanter) par des millions de personnes.", trans_he:"השיר הזה נשר על ידי מיליוני אנשים.", accepted:["est chantée","a été chantée"], solution_fr:"Cette chanson est chantée par des millions de personnes.", explanation_he:"פאסיף = être + participe passé. chanson נקבה → chantée.", tip_he:"פאסיף: sujet + être + participe passé + par + agent." },
+    { instruction_he:"השלם בparticipe passé composé (אחרי השלמת הפעולה)", prompt_fr:"____ (finir) son discours, il a quitté la salle.", trans_he:"לאחר שסיים את נאומו, עזב את האולם.", accepted:["Ayant fini"], solution_fr:"Ayant fini son discours, il a quitté la salle.", explanation_he:"participe passé composé = ayant/étant + participe passé. מבטא פעולה שקדמה.", tip_he:"Ayant terminé (לאחר שסיים) · Étant arrivé (לאחר שהגיע)." },
+    { instruction_he:"השלם בne explétif אחרי avant que", prompt_fr:"Partons avant qu'il ne ____ (pleuvoir).", trans_he:"נצא לפני שירד גשם.", accepted:["pleuve"], solution_fr:"Partons avant qu'il ne pleuve.", explanation_he:"avant que + subjonctif. ה-ne explétif הוא מנומס/ספרותי — לא שלילה.", tip_he:"ne explétif אחרי avant que, à moins que, de peur que — לא משמעות שלילית." },
+    { instruction_he:"השלם בsubjonctif אחרי quoi que", prompt_fr:"Quoi qu'il ____ (faire), il ne réussira pas à nous tromper.", trans_he:"יהיה מה שיהיה, הוא לא יצליח לרמות אותנו.", accepted:["fasse"], solution_fr:"Quoi qu'il fasse, il ne réussira pas à nous tromper.", explanation_he:"quoi que = יהיה מה שיהיה, תמיד עם subjonctif. faire → fasse.", tip_he:"quoi que · qui que · où que — כולם עם subjonctif." },
+    { instruction_he:"השלם בhypothèse עבר (si + plus-que-parfait)", prompt_fr:"S'il avait plu, nous ____ (rester) à la maison.", trans_he:"אילו ירד גשם, היינו נשארים בבית.", accepted:["serions restés","serions restées"], solution_fr:"S'il avait plu, nous serions restés à la maison.", explanation_he:"היפוך בעבר: Si + plus-que-parfait → conditionnel passé. rester עם être.", tip_he:"Si + avait/était → conditionnel passé (aurait/serait + participe)." },
+    { instruction_he:"השלם בביטוי ספרותי מתאים", prompt_fr:"C'est un phénomène ____ dans la littérature contemporaine. (בולט, ראוי לציון)", trans_he:"זוהי תופעה בולטת בספרות העכשווית.", accepted:["remarquable","notable","saillant","prépondérant"], solution_fr:"remarquable", explanation_he:"remarquable = ראוי לציון, בולט. notable = חשוב. prépondérant = דומיננטי.", tip_he:"remarquable · prépondérant · incontournable · emblématique · paradigmatique." },
+  ],
+  voc: [
+    { instruction_he:"תרגם לצרפתית: «גיוון תרבותי»", prompt_fr:"La ____ des cultures enrichit notre société.", trans_he:"הגיוון של התרבויות מעשיר את החברה שלנו.", accepted:["diversité"], solution_fr:"la diversité", explanation_he:"diversité = גיוון. pluralité = ריבוי. hétérogénéité = הטרוגניות.", tip_he:"diversité · pluralité · singularité · homogénéité." },
+    { instruction_he:"תרגם לצרפתית: «משתמע מזה, נובע מזה»", prompt_fr:"Il ____ de cette décision une profonde injustice.", trans_he:"מהחלטה זו משתמעת עוולה עמוקה.", accepted:["ressort","résulte","découle"], solution_fr:"il ressort / il résulte / il découle", explanation_he:"il ressort de = משתמע מ-. il résulte de = נובע מ-. il découle de = נובע (ספרותי).", tip_he:"il s'ensuit que · il en résulte que · il ressort de cela que." },
+    { instruction_he:"תרגם לצרפתית: «להתעמק בנושא»", prompt_fr:"Il convient d'____ cette question.", trans_he:"ראוי להתעמק בשאלה זו.", accepted:["approfondir","creuser"], solution_fr:"approfondir", explanation_he:"approfondir = להעמיק. creuser (סלנג) = לחפור, לחקור לעומק.", tip_he:"approfondir · élucider (להבהיר) · décortiquer (לפרק לגורמים)." },
+    { instruction_he:"תרגם לצרפתית: «הנחת מוצא»", prompt_fr:"Ce raisonnement repose sur une ____ erronée.", trans_he:"הנימוק מבוסס על הנחת מוצא שגויה.", accepted:["prémisse","présupposition","postulat"], solution_fr:"prémisse / postulat", explanation_he:"prémisse = הנחת יסוד (בהגיון). postulat = אקסיומה. présupposé = הנחה סמויה.", tip_he:"prémisse · postulat · présupposé · axiome · paradigme." },
+    { instruction_he:"תרגם לצרפתית: «המרפסת משקיפה על הים»", prompt_fr:"Ce balcon ____ sur la mer.", trans_he:"המרפסת הזו משקיפה על הים.", accepted:["donne","s'ouvre","domine"], solution_fr:"donne sur", explanation_he:"donner sur = להשקיף על, לפנות אל. la fenêtre donne sur la rue.", tip_he:"donner sur · faire face à · surplomber (להשקיף על מגובה)." },
+    { instruction_he:"תרגם לצרפתית: «הסופר מדגיש»", prompt_fr:"L'auteur ____ l'importance du dialogue.", trans_he:"הסופר מדגיש את החשיבות של הדיאלוג.", accepted:["souligne","met en avant","insiste sur","met l'accent sur"], solution_fr:"souligne / met en avant", explanation_he:"souligner = להדגיש (ספרותי). mettre en avant = להעמיד בחזית.", tip_he:"souligner · mettre en relief · accentuer · insister sur." },
+  ],
+  com: [
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« L'essence même de la démocratie réside non dans l'unanimité des opinions, mais dans la capacité d'une société à tolérer, voire à valoriser, la divergence des points de vue. »", trans_he:"מהות הדמוקרטיה אינה בפה אחד, אלא ביכולת של חברה לסבול ואף להעריך שונות בדעות.", question_fr:"Selon ce texte, qu'est-ce qui caractérise une démocratie ?", q_he:"לפי הטקסט, מה מאפיין דמוקרטיה?", options:["L'accord unanime des citoyens","La tolérance envers la divergence des opinions","L'absence de tout débat politique"], correct:1, explanation_he:"« capacité à tolérer la divergence des points de vue » = היכולת לסבול שונות בדעות." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« Si la modernité a affranchi l'individu des contraintes collectives, elle l'a simultanément privé des cadres symboliques qui donnaient sens à son existence. Ce paradoxe fonde le malaise contemporain. »", trans_he:"אם המודרניות שחררה את הפרט ממאסרים קולקטיביים, היא שללה ממנו את המסגרות הסמליות שנתנו משמעות לקיומו. פרדוקס זה מהווה בסיס לאי-הנוחות הקונטמפורנית.", question_fr:"Quel est le paradoxe évoqué dans ce texte ?", q_he:"מהו הפרדוקס בטקסט?", options:["La liberté moderne crée à la fois émancipation et perte de sens","La modernité a renforcé les liens collectifs","Les contraintes collectives donnent un sens à la vie"], correct:0, explanation_he:"הפרדוקס: המודרניות שחררה (חיובי) אבל שללה את המסגרות הסמליות (שלילי)." },
+    { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« La traduction n'est jamais neutre : elle est toujours un acte d'interprétation, voire de création, car le traducteur ne transporte pas seulement des mots, mais des mondes. »", trans_he:"תרגום אינו ניטרלי: הוא תמיד מעשה פרשנות, ואף יצירה, כי המתרגם מעביר לא רק מילים אלא עולמות.", question_fr:"Selon l'auteur, que fait réellement le traducteur ?", q_he:"מה עושה המתרגם בפועל?", options:["Il copie des mots d'une langue à une autre","Il interprète et crée en transférant des univers culturels","Il reste strictement fidèle à l'original"], correct:1, explanation_he:"« acte d'interprétation, voire de création... transporte des mondes » = מפרש, יוצר, מעביר עולמות." },
+  ],
+  exp: [
+    { instruction_he:"הצג טיעון פילוסופי מאוזן (תשובה חופשית)", prompt_fr:"Dans quelle mesure le progrès technique améliore-t-il la condition humaine ? Développez en deux paragraphes.", trans_he:"באיזו מידה ההתקדמות הטכנולוגית משפרת את המצב האנושי? פתחו בשני פסקאות.", model_fr:"D'une part, le progrès technique a indéniablement transformé nos conditions de vie en réduisant la souffrance physique. D'autre part, cette évolution soulève des interrogations profondes quant à la déshumanisation des rapports sociaux.", keys_fr:["d'une part... d'autre part","indéniablement","soulève des interrogations","quant à","déshumanisation"], tip_he:"מבנה dialectique: thèse → antithèse. d'une part... d'autre part · certes... cependant." },
+    { instruction_he:"פרשנות ציטוט (תשובה חופשית)", prompt_fr:"Commentez brièvement cette citation de Camus : « Je me révolte, donc nous sommes. »", trans_he:"הגיבו בקצרה על ציטוט זה של קאמי: «אני מורד, לכן אנחנו קיימים.»", model_fr:"Camus renverse ici le cogito cartésien pour affirmer que la révolte n'est pas un acte individuel, mais le fondement même du lien social. En se révoltant contre l'injustice, l'individu transcende son moi et crée une solidarité avec autrui.", keys_fr:["renverse","le cogito cartésien","la révolte","transcende","solidarité","autrui"], tip_he:"ניתוח ציטוט: התייחסות לטקסט קיים → פרשנות המשמעות." },
+    { instruction_he:"עמדה מנומקת עם גוונים (תשובה חופשית)", prompt_fr:"L'intelligence artificielle représente-t-elle une menace ou une opportunité pour l'humanité ? Nuancez votre réponse.", trans_he:"האם בינה מלאכותית מהווה איום או הזדמנות לאנושות? הדגישו גוונים בתשובתכם.", model_fr:"Loin de se réduire à une opposition binaire, la question de l'IA exige une lecture nuancée. Si ses applications médicales ouvrent des perspectives inédites, le risque d'instrumentalisation à des fins de surveillance demeure préoccupant.", keys_fr:["loin de se réduire à","exige une lecture nuancée","ouvrent des perspectives","demeure préoccupant","instrumentalisation"], tip_he:"C2: « il serait réducteur de » · « la réalité est plus complexe » · « il convient de distinguer »." },
+  ],
+};
+
+/* -------------------- BUILT-IN BANK (B2/C1 → split by level) -------------------- */
+const BANK_BC = {
   gra: [
     { instruction_he: "השלם בצורת הפועל הנכונה (סובז'ונקטיף)",
       prompt_fr: "Il faut que tu ____ (finir) ce rapport avant midi.",
@@ -323,6 +443,29 @@ const BANK = {
   ],
 };
 
+/* assembled bank — B2/C1 split from BANK_BC */
+const BANK = {
+  A1: BANK_A1,
+  A2: BANK_A2,
+  B1: BANK_B1,
+  B2: {
+    gra: BANK_BC.gra.filter((_, i) => [5,6,8,9,10,11,12,15].includes(i)),
+    voc: BANK_BC.voc.filter((_, i) => [0,2,3,4,5,6,7,8].includes(i)),
+    com: BANK_BC.com.filter((_, i) => [0,1,2,4,6].includes(i)),
+    exp: BANK_BC.exp.filter((_, i) => [0,2,4,5].includes(i)),
+  },
+  C1: {
+    gra: BANK_BC.gra.filter((_, i) => [0,1,2,3,4,7,13,14].includes(i)),
+    voc: BANK_BC.voc.filter((_, i) => [1,9,10,11,12,13,14].includes(i)),
+    com: [
+      ...BANK_BC.com.filter((_, i) => [3,7,8].includes(i)),
+      { instruction_he:"קרא וענה: בחר את התשובה הנכונה", prompt_fr:"« Le numérique a profondément reconfiguré notre rapport au temps. L'immédiateté des échanges numériques, si elle abolit les distances, génère paradoxalement une nouvelle forme d'impatience qui érode notre capacité à la réflexion approfondie. »", trans_he:"הדיגיטלי מחדש ביסודו את יחסנו לזמן. המיידיות, אם כי מבטלת מרחקים, מייצרת חוסר סבלנות ששוחק את יכולת ההרהור המעמיק.", question_fr:"Quel est l'effet paradoxal du numérique selon ce texte ?", q_he:"מהו האפקט הפרדוקסלי של הדיגיטלי?", options:["Il rapproche les gens et renforce la réflexion","Il abolit les distances mais génère de l'impatience","Il améliore notre rapport au temps"], correct:1, explanation_he:"הפרדוקס: מבטל מרחקים אבל יוצר חוסר סבלנות ששוחק הרהור מעמיק." },
+    ],
+    exp: BANK_BC.exp.filter((_, i) => [1,3,6,7].includes(i)),
+  },
+  C2: BANK_C2,
+};
+
 const pick = (arr, avoid) => {
   const pool = arr.length > 1 && avoid != null ? arr.filter((_, i) => i !== avoid) : arr;
   const item = pool[Math.floor(Math.random() * pool.length)];
@@ -333,25 +476,37 @@ const pick = (arr, avoid) => {
    All persistence goes through `store`. To move to a cloud backend later,
    swap ONLY the two methods in `store` for API calls — nothing else changes. */
 const SKILLS = ["gra", "voc", "com", "exp"];
-const PKEY = "frenchup_progress_v1";
+const PKEY = "frenchup_progress_v2";
+const PKEY_V1 = "frenchup_progress_v1";
 const _mem = new Map();
 const _hasLS = () => { try { return typeof window !== "undefined" && !!window.localStorage; } catch { return false; } };
 const store = {
   get(k) { try { if (_hasLS()) { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } } catch (e) {} return _mem.has(k) ? _mem.get(k) : null; },
   set(k, v) { try { if (_hasLS()) { localStorage.setItem(k, JSON.stringify(v)); return; } } catch (e) {} _mem.set(k, v); },
 };
+const freshSkillMap = () => Object.fromEntries(SKILLS.map((s) => [s, { xp: 0, correct: 0 }]));
 const freshProgress = () => ({
   xp: 0, streak: { count: 0, lastDay: null },
-  bySkill: Object.fromEntries(SKILLS.map((s) => [s, { xp: 0, correct: 0 }])),
+  bySkill: freshSkillMap(),
+  byLevel: Object.fromEntries(LEVELS.map((l) => [l, freshSkillMap()])),
   history: [], mistakes: {}, badges: [],
 });
 function loadProgress() {
-  const p = store.get(PKEY);
-  if (!p) return freshProgress();
+  let p = store.get(PKEY);
+  if (!p) {
+    const v1 = store.get(PKEY_V1);
+    if (v1) {
+      p = { ...freshProgress(), ...v1, byLevel: freshProgress().byLevel };
+      SKILLS.forEach((s) => { if (v1.bySkill?.[s]) p.byLevel.B2[s] = { ...v1.bySkill[s] }; });
+    } else return freshProgress();
+  }
   const base = freshProgress();
-  return { ...base, ...p,
-    streak: { ...base.streak, ...(p.streak || {}) },
-    bySkill: { ...base.bySkill, ...(p.bySkill || {}) },
+  const byLevel = Object.fromEntries(LEVELS.map((l) => [l, {
+    ...base.byLevel[l],
+    ...Object.fromEntries(SKILLS.map((s) => [s, { ...base.byLevel[l][s], ...(p.byLevel?.[l]?.[s] || {}) }])),
+  }]));
+  return { ...base, ...p, streak: { ...base.streak, ...(p.streak || {}) },
+    bySkill: { ...base.bySkill, ...(p.bySkill || {}) }, byLevel,
     mistakes: p.mistakes || {}, history: p.history || [], badges: p.badges || [] };
 }
 const saveProgress = (p) => { store.set(PKEY, p); return p; };
@@ -364,11 +519,15 @@ function streakStatus(p) {
   if (lastDay === y) return { count, active: false };
   return { count: 0, active: false };
 }
-function recordAnswer(p, { skill, correct, xp, solution }) {
+function recordAnswer(p, { skill, correct, xp, solution, level }) {
   p.xp = Math.max(0, p.xp + (xp || 0));
   if (p.bySkill[skill]) {
     p.bySkill[skill].xp = Math.max(0, (p.bySkill[skill].xp || 0) + (xp || 0));
     if (correct) p.bySkill[skill].correct = (p.bySkill[skill].correct || 0) + 1;
+  }
+  if (level && p.byLevel?.[level]?.[skill]) {
+    p.byLevel[level][skill].xp = Math.max(0, (p.byLevel[level][skill].xp || 0) + (xp || 0));
+    if (correct) p.byLevel[level][skill].correct = (p.byLevel[level][skill].correct || 0) + 1;
   }
   if (!correct && solution) p.mistakes[solution] = (p.mistakes[solution] || 0) + 1;
   return p;
@@ -387,10 +546,42 @@ function recordSession(p, { sessionXp, correct, total }) {
 const STATIONS_PER = 6;       // stations per skill line
 const PER_STATION = 3;        // correct answers needed to advance one station
 const STATION_NAMES = {
-  gra: ["Subjonctif", "Conditionnel", "Disc. indirect", "Concordance", "Gérondif", "Style"],
-  voc: ["Émotions", "Travail", "Actualités", "Culture", "Argot", "Littéraire"],
-  com: ["Dialogues", "Podcasts", "Le journal", "Cinéma", "Débats", "Accents"],
-  exp: ["Présenter", "Opinion", "Débattre", "Négocier", "Nuances", "Spontané"],
+  A1: {
+    gra: ["être/avoir", "Articles", "Pluriel", "Négation", "Adjectifs", "Questions"],
+    voc: ["Salutations", "Famille", "Couleurs", "Chiffres", "Jours", "Objets"],
+    com: ["Au café", "À l'école", "La famille", "Au magasin", "Dans la rue", "À la maison"],
+    exp: ["Se présenter", "Ma famille", "J'aime…", "Ma journée", "Mon école", "Mon pays"],
+  },
+  A2: {
+    gra: ["Passé composé", "Avoir/Être", "Futur proche", "Adjectifs", "Possessifs", "Imparfait"],
+    voc: ["Alimentation", "Transport", "Santé", "Vêtements", "Sport", "Météo"],
+    com: ["Panneaux", "Horaires", "Menus", "SMS & mails", "Annonces", "Articles courts"],
+    exp: ["Hier…", "Mon appart", "Mon week-end", "Mes goûts", "Ma routine", "Mon quartier"],
+  },
+  B1: {
+    gra: ["Imparfait/PC", "Qui / Que", "Pronoms COD", "Pronoms COI", "Réfléchis", "Comparatifs"],
+    voc: ["Voyages", "Santé", "Environnement", "Médias", "Travail", "Relations"],
+    com: ["Faits divers", "Blogs", "Publicités", "Interviews", "Critiques", "Reportages"],
+    exp: ["Opinion", "Événement", "Description", "Comparaison", "Conseil", "Récit"],
+  },
+  B2: {
+    gra: ["Dont / Y / En", "Gérondif", "Plus-que-parfait", "Conditionnel", "Accord PP", "Prépositions"],
+    voc: ["Travail", "Émotions", "Expressions", "Nuances", "Registres", "Idiomes"],
+    com: ["Presse", "Chroniques", "Débats TV", "Essais", "Discours", "Analyses"],
+    exp: ["Société", "Culture", "Argumentation", "Nuancer", "Convaincre", "Improviser"],
+  },
+  C1: {
+    gra: ["Subjonctif", "Conditionnel passé", "Disc. indirect", "Concordance", "Subj. passé", "Style avancé"],
+    voc: ["Abstrait", "Professionnel", "Académique", "Registres", "Idiomes avancés", "Littéraire"],
+    com: ["Débats", "Littérature", "Philosophie", "Politique", "Sciences", "Arts"],
+    exp: ["Débattre", "Nuancer", "Négocier", "Analyser", "Convaincre", "Spontané"],
+  },
+  C2: {
+    gra: ["Passif", "Participe composé", "Ne explétif", "Quoi que…", "Hypothèses", "Style littéraire"],
+    voc: ["Diversité", "Philosophie", "Rhétorique", "Littéraire", "Académique", "Épistémologie"],
+    com: ["Philosophie", "Littérature", "Sociologie", "Politique", "Esthétique", "Épistémologie"],
+    exp: ["Dissertation", "Commentaire", "Thèse/Antithèse", "Analyse", "Nuance", "Maîtrise"],
+  },
 };
 const stationsDone = (correct) => Math.min(Math.floor((correct || 0) / PER_STATION), STATIONS_PER);
 function weeklyXp(p) {
@@ -566,6 +757,310 @@ function TtsStatus() {
   );
 }
 
+/* -------------------- PARISIAN BACKGROUND MUSIC -------------------- */
+const NOTE_FREQ = {
+  A2: 110.00, B2: 123.47, C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, B3: 246.94,
+  C4: 261.63, CS4: 277.18, D4: 293.66, E4: 329.63, F4: 349.23, FS4: 369.99, G4: 392.00, GS4: 415.30, A4: 440.00, B4: 493.88,
+  C5: 523.25, CS5: 554.37, D5: 587.33, E5: 659.25, F5: 698.46, FS5: 739.99, G5: 783.99, GS5: 830.61, A5: 880.00, B5: 987.77,
+};
+const PARIS_MELODY = [
+  ["E5", 0, 1.35, 0.72], ["D5", 1.55, 0.55, 0.5], ["C5", 2.18, 0.72, 0.58],
+  ["B4", 3, 0.95, 0.5], ["C5", 4.1, 0.62, 0.54], ["A4", 5.02, 0.9, 0.44],
+  ["D5", 6, 1.18, 0.68], ["F5", 7.4, 0.48, 0.44], ["E5", 8.02, 0.82, 0.54],
+  ["C5", 9.1, 0.58, 0.48], ["B4", 9.86, 0.5, 0.4], ["A4", 10.6, 1.25, 0.56],
+  ["C5", 12, 0.72, 0.5], ["E5", 12.86, 0.76, 0.6], ["A5", 13.82, 1.1, 0.7],
+  ["G5", 15.2, 0.58, 0.5], ["F5", 16.05, 0.82, 0.56], ["E5", 17.05, 1.1, 0.54],
+  ["D5", 18, 0.72, 0.46], ["CS5", 18.86, 0.55, 0.4], ["D5", 19.5, 0.9, 0.52],
+  ["F5", 20.65, 0.68, 0.54], ["E5", 21.62, 0.75, 0.48], ["A4", 22.72, 1.1, 0.5],
+  ["B4", 24, 0.72, 0.52], ["C5", 24.92, 0.72, 0.55], ["D5", 25.8, 1.0, 0.58],
+  ["E5", 27.05, 1.2, 0.62], ["G5", 28.45, 0.44, 0.42], ["F5", 29.05, 0.8, 0.5],
+  ["E5", 30, 1.05, 0.54], ["D5", 31.25, 0.58, 0.42], ["C5", 32.1, 0.88, 0.52],
+  ["B4", 33.18, 0.58, 0.4], ["GS4", 34.0, 0.7, 0.38], ["A4", 35.0, 1.0, 0.52],
+  ["C5", 36, 0.76, 0.48], ["B4", 36.95, 0.66, 0.42], ["A4", 37.85, 1.1, 0.5],
+  ["F5", 39.1, 0.82, 0.58], ["E5", 40.18, 0.7, 0.48], ["D5", 41.05, 0.9, 0.46],
+  ["C5", 42.2, 0.7, 0.44], ["B4", 43.05, 0.64, 0.4], ["A4", 44, 1.8, 0.56],
+];
+const PARIS_CHORDS = [
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "E3", notes: ["E4", "GS4", "B4"] },
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "E3", notes: ["D4", "GS4", "B4"] },
+  { root: "F3", notes: ["E4", "A4", "C5"] },
+  { root: "D3", notes: ["F4", "A4", "CS5"] },
+  { root: "E3", notes: ["D4", "GS4", "B4"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "C3", notes: ["E4", "G4", "C5"] },
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "F3", notes: ["E4", "A4", "C5"] },
+  { root: "B2", notes: ["D4", "F4", "B4"] },
+  { root: "E3", notes: ["D4", "GS4", "B4"] },
+  { root: "A2", notes: ["C4", "E4", "A4"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+];
+const SEINE_MELODY = [
+  ["C5", 0, 1.4, 0.5], ["E5", 1.7, 0.9, 0.58], ["D5", 3.0, 1.1, 0.46],
+  ["B4", 4.35, 0.7, 0.38], ["C5", 5.3, 1.4, 0.5], ["A4", 7.0, 1.2, 0.42],
+  ["F4", 9.0, 0.8, 0.36], ["A4", 10.1, 0.75, 0.44], ["C5", 11.05, 1.35, 0.54],
+  ["E5", 13.0, 1.0, 0.55], ["G5", 14.35, 0.62, 0.5], ["F5", 15.25, 1.25, 0.48],
+  ["E5", 17.0, 0.86, 0.46], ["D5", 18.2, 0.86, 0.4], ["C5", 19.4, 1.5, 0.52],
+  ["B4", 22.0, 0.78, 0.36], ["C5", 23.1, 0.9, 0.48], ["E5", 24.35, 1.2, 0.54],
+  ["D5", 26.0, 0.9, 0.42], ["A4", 27.25, 1.35, 0.44], ["C5", 30.0, 1.8, 0.5],
+];
+const SEINE_CHORDS = [
+  { root: "C3", notes: ["E4", "G4", "C5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "F3", notes: ["E4", "A4", "C5"] },
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "C3", notes: ["E4", "G4", "C5"] },
+  { root: "C3", notes: ["G4", "C5", "E5"] },
+  { root: "F3", notes: ["A4", "C5", "F5"] },
+  { root: "C3", notes: ["E4", "G4", "C5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "C3", notes: ["E4", "G4", "C5"] },
+];
+const MONTMARTRE_MELODY = [
+  ["A4", 0, 0.7, 0.62], ["C5", 0.9, 0.45, 0.48], ["E5", 1.5, 0.5, 0.56], ["A5", 2.15, 0.85, 0.68],
+  ["G5", 3.15, 0.65, 0.52], ["E5", 4.0, 0.5, 0.48], ["C5", 4.65, 0.55, 0.44], ["A4", 5.35, 0.9, 0.5],
+  ["D5", 6.0, 0.72, 0.58], ["F5", 6.95, 0.42, 0.46], ["A5", 7.5, 0.5, 0.56], ["G5", 8.1, 0.9, 0.6],
+  ["E5", 9.2, 0.58, 0.48], ["D5", 10.0, 0.6, 0.44], ["C5", 10.82, 1.05, 0.52],
+  ["E5", 12.0, 0.62, 0.52], ["F5", 12.8, 0.52, 0.48], ["E5", 13.45, 0.52, 0.5], ["D5", 14.1, 0.72, 0.42],
+  ["C5", 15.0, 0.8, 0.48], ["A4", 16.05, 0.55, 0.42], ["B4", 16.75, 0.55, 0.44], ["C5", 17.5, 1.1, 0.54],
+  ["F5", 18.7, 0.62, 0.54], ["E5", 19.5, 0.62, 0.48], ["D5", 20.3, 0.72, 0.44], ["A4", 21.35, 1.25, 0.5],
+];
+const MONTMARTRE_CHORDS = [
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "E3", notes: ["D4", "GS4", "B4"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "F3", notes: ["A4", "C5", "F5"] },
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "E3", notes: ["D4", "GS4", "B4"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+];
+const RIVE_GAUCHE_MELODY = [
+  ["D5", 0, 1.6, 0.48], ["F5", 2.05, 0.95, 0.54], ["E5", 3.45, 1.3, 0.46],
+  ["C5", 5.2, 1.4, 0.42], ["A4", 7.1, 1.25, 0.38], ["D5", 9.2, 1.6, 0.5],
+  ["C5", 11.3, 0.8, 0.4], ["B4", 12.45, 0.8, 0.36], ["A4", 13.6, 1.8, 0.42],
+  ["F4", 16.0, 0.9, 0.35], ["A4", 17.15, 1.15, 0.42], ["D5", 18.65, 1.45, 0.5],
+  ["E5", 21.0, 1.0, 0.44], ["F5", 22.35, 1.1, 0.48], ["A4", 24.1, 1.85, 0.4],
+];
+const RIVE_GAUCHE_CHORDS = [
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "A2", notes: ["E4", "A4", "CS5"] },
+  { root: "B2", notes: ["D4", "F4", "B4"] },
+  { root: "F3", notes: ["A4", "C5", "F5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "C3", notes: ["E4", "G4", "C5"] },
+  { root: "A2", notes: ["E4", "A4", "CS5"] },
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "D3", notes: ["A4", "D5", "F5"] },
+];
+const MUSIC_THEMES = [
+  { id: "salon", name: "Salon de Paris", mood: "פסנתר ואקורדיון קאמרי", melody: PARIS_MELODY, chords: PARIS_CHORDS, beat: 0.58, loopBeats: 48, master: 0.24, wet: 0.34, filter: 6200, piano: 0.095, accordion: 0.026 },
+  { id: "seine", name: "Clair de Seine", mood: "נוקטורן רגוע על הנהר", melody: SEINE_MELODY, chords: SEINE_CHORDS, beat: 0.68, loopBeats: 36, master: 0.22, wet: 0.44, filter: 5400, piano: 0.105, accordion: 0.012 },
+  { id: "montmartre", name: "Valse de Montmartre", mood: "ואלס אקורדיון חי יותר", melody: MONTMARTRE_MELODY, chords: MONTMARTRE_CHORDS, beat: 0.48, loopBeats: 24, master: 0.23, wet: 0.3, filter: 6600, piano: 0.08, accordion: 0.042 },
+  { id: "rive", name: "Nocturne Rive Gauche", mood: "לילה צרפתי איטי ועדין", melody: RIVE_GAUCHE_MELODY, chords: RIVE_GAUCHE_CHORDS, beat: 0.74, loopBeats: 27, master: 0.2, wet: 0.48, filter: 5000, piano: 0.1, accordion: 0.008 },
+];
+
+function humanTime(i) {
+  return ((((i * 37) % 17) - 8) / 1000) * 1.8;
+}
+
+function makeRoomImpulse(ctx) {
+  const duration = 2.8;
+  const length = Math.floor(ctx.sampleRate * duration);
+  const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      const t = i / length;
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 3.1) * 0.42;
+    }
+  }
+  return impulse;
+}
+
+function playTone(ctx, dest, freq, start, duration, {
+  type = "triangle", gain = 0.12, detune = 0, attack = 0.025, release = 0.2, pan = 0,
+} = {}) {
+  const osc = ctx.createOscillator();
+  const amp = ctx.createGain();
+  const panner = ctx.createStereoPanner?.();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  osc.detune.setValueAtTime(detune, start);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), start + attack);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + duration + release);
+  osc.connect(amp);
+  if (panner) {
+    panner.pan.setValueAtTime(pan, start);
+    amp.connect(panner);
+    panner.connect(dest);
+  } else {
+    amp.connect(dest);
+  }
+  osc.start(start);
+  osc.stop(start + duration + release + 0.05);
+}
+
+function playPiano(ctx, dest, freq, start, duration, gain = 0.08, pan = 0) {
+  playTone(ctx, dest, freq, start, duration, { type: "sine", gain: gain * 0.95, attack: 0.012, release: 0.42, pan });
+  playTone(ctx, dest, freq * 2.003, start + 0.004, duration * 0.72, { type: "triangle", gain: gain * 0.22, attack: 0.008, release: 0.28, pan });
+  playTone(ctx, dest, freq * 3.002, start + 0.006, duration * 0.38, { type: "sine", gain: gain * 0.08, attack: 0.006, release: 0.18, pan });
+}
+
+function playAccordion(ctx, dest, freq, start, duration, gain = 0.045, pan = 0.18) {
+  [-11, 9, 23].forEach((detune, i) => {
+    playTone(ctx, dest, freq, start + i * 0.006, duration, {
+      type: "sawtooth", gain: gain * (i === 2 ? 0.22 : 0.34), detune, attack: 0.08, release: 0.36, pan,
+    });
+  });
+}
+
+function scheduleParisLoop(ctx, dest, startAt, theme) {
+  const beat = theme.beat;
+  const loopBeats = theme.loopBeats;
+  theme.melody.forEach(([note, beatAt, beats, vel], i) => {
+    const start = startAt + beatAt * beat + humanTime(i);
+    const dur = beats * beat * 1.18;
+    const freq = NOTE_FREQ[note];
+    playPiano(ctx, dest, freq, start, dur, theme.piano * vel, -0.08);
+    if (beats > 0.85) playAccordion(ctx, dest, freq, start + 0.035, dur * 0.86, theme.accordion * vel, 0.16);
+  });
+  theme.chords.forEach((chord, bar) => {
+    const base = startAt + bar * 3 * beat + humanTime(bar + 100);
+    const mood = bar % 4 === 3 ? 0.84 : 1;
+    playPiano(ctx, dest, NOTE_FREQ[chord.root], base, beat * 1.55, theme.piano * 1.25 * mood, -0.24);
+    chord.notes.forEach((note, i) => {
+      playPiano(ctx, dest, NOTE_FREQ[note], base + (0.78 + i * 0.46) * beat + humanTime(bar * 5 + i), beat * 1.85, theme.piano * 0.4 * mood, -0.04 + i * 0.06);
+      if (bar % 2 === 0 && i !== 1) playAccordion(ctx, dest, NOTE_FREQ[note], base + (1.05 + i * 0.4) * beat, beat * 1.25, theme.accordion * 0.54 * mood, 0.22);
+    });
+  });
+  return loopBeats * beat;
+}
+
+function ParisMusicButton() {
+  const [playing, setPlaying] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [themeId, setThemeId] = useState("salon");
+  const audioRef = useRef(null);
+  const timerRef = useRef(null);
+  const theme = MUSIC_THEMES.find((t) => t.id === themeId) || MUSIC_THEMES[0];
+
+  const stopMusic = () => {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+    const pack = audioRef.current;
+    audioRef.current = null;
+    if (!pack) return;
+    const now = pack.ctx.currentTime;
+    pack.master.gain.cancelScheduledValues(now);
+    pack.master.gain.setTargetAtTime(0.0001, now, 0.08);
+    setTimeout(() => pack.ctx.close().catch(() => {}), 250);
+  };
+
+  const startMusic = async (nextTheme = theme) => {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const input = ctx.createGain();
+    const dry = ctx.createGain();
+    const wet = ctx.createGain();
+    const reverb = ctx.createConvolver();
+    const compressor = ctx.createDynamicsCompressor();
+    const master = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = nextTheme.filter;
+    filter.Q.value = 0.7;
+    dry.gain.value = 0.82;
+    wet.gain.value = nextTheme.wet;
+    reverb.buffer = makeRoomImpulse(ctx);
+    compressor.threshold.value = -22;
+    compressor.knee.value = 24;
+    compressor.ratio.value = 2.4;
+    compressor.attack.value = 0.018;
+    compressor.release.value = 0.24;
+    master.gain.value = 0.0001;
+    input.connect(filter);
+    filter.connect(dry);
+    filter.connect(reverb);
+    reverb.connect(wet);
+    dry.connect(compressor);
+    wet.connect(compressor);
+    compressor.connect(master);
+    master.connect(ctx.destination);
+    audioRef.current = { ctx, master };
+    await ctx.resume();
+    const startAt = ctx.currentTime + 0.08;
+    const loopSec = scheduleParisLoop(ctx, input, startAt, nextTheme);
+    master.gain.setTargetAtTime(nextTheme.master, ctx.currentTime, 0.32);
+    let nextStart = startAt + loopSec;
+    timerRef.current = setInterval(() => {
+      scheduleParisLoop(ctx, input, nextStart, nextTheme);
+      nextStart += loopSec;
+    }, (loopSec - 0.8) * 1000);
+  };
+
+  const chooseTheme = async (nextTheme) => {
+    setThemeId(nextTheme.id);
+    setOpen(false);
+    if (!playing) return;
+    stopMusic();
+    try {
+      await startMusic(nextTheme);
+      setPlaying(true);
+    } catch (e) {
+      stopMusic();
+      setPlaying(false);
+    }
+  };
+
+  const toggle = async () => {
+    if (playing) {
+      stopMusic();
+      setPlaying(false);
+      return;
+    }
+    try {
+      await startMusic();
+      setPlaying(true);
+    } catch (e) {
+      stopMusic();
+      setPlaying(false);
+    }
+  };
+
+  useEffect(() => stopMusic, []);
+
+  return (
+    <div className="music-player">
+      <button className={`music-btn ${playing ? "on" : ""}`} onClick={toggle}
+        aria-label={playing ? "כבה מוזיקת רקע" : "הפעל מוזיקת רקע"} title={playing ? "כבה מוזיקה" : "הפעל מוזיקה"}>
+        ♪
+      </button>
+      <button className="music-name" onClick={() => setOpen((v) => !v)} aria-label="בחר מנגינה" title="בחר מנגינה">
+        <span>{theme.name}</span>
+        <small>{theme.mood}</small>
+      </button>
+      {open && (
+        <div className="music-menu">
+          {MUSIC_THEMES.map((t) => (
+            <button key={t.id} className={`music-option ${t.id === theme.id ? "active" : ""}`} onClick={() => chooseTheme(t)}>
+              <span>{t.name}</span>
+              <small>{t.mood}</small>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* -------------------- local grading (-15 on wrong) -------------------- */
 const strip = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const norm = (s) => strip((s || "").toLowerCase().trim().replace(/[.,!?;:«»"'’()]/g, "").replace(/\s+/g, " "));
@@ -593,17 +1088,17 @@ async function probeCheck() {
   catch { CHECK_AVAILABLE = false; }
   return CHECK_AVAILABLE;
 }
-async function evaluateOpen(ex, answer) {
+async function evaluateOpen(ex, answer, level = "B1") {
   const res = await fetch("/api/check", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt_fr: ex.prompt_fr, instruction_he: ex.instruction_he, answer }),
+    body: JSON.stringify({ prompt_fr: ex.prompt_fr, instruction_he: ex.instruction_he, answer, level }),
   });
   if (!res.ok) throw new Error("check " + res.status);
   const d = await res.json();
   if (d.error) throw new Error(d.error);
   const score = Math.max(0, Math.min(100, Number(d.score) || 0));
   const correct = score >= 70 && d.answers_question !== false;
-  const xp = score >= 85 ? 50 : score >= 60 ? 30 : -15;
+  const xp = correct ? (score >= 85 ? 50 : 30) : -15;
   return {
     open: true, correct, xp, score,
     criteria: [
@@ -619,7 +1114,7 @@ async function evaluateOpen(ex, answer) {
 }
 
 /* ==================================================================== */
-function Quest({ onExit }) {
+function Quest({ onExit, level = "B1" }) {
   const [phase, setPhase] = useState("intro");
   const [round, setRound] = useState(0);
   const [ex, setEx] = useState(null);
@@ -635,6 +1130,7 @@ function Quest({ onExit }) {
   const lastIdx = useRef({});
   const progressRef = useRef(null);
   const inputRef = useRef(null);
+  const nextBtnRef = useRef(null);
   const cur = ROUNDS[round];
 
   // load saved progress on mount
@@ -649,20 +1145,35 @@ function Quest({ onExit }) {
   const loadExercise = (idx) => {
     setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null);
     const r = ROUNDS[idx];
-    const { item, idx: chosen } = pick(BANK[r.id], lastIdx.current[r.id]);
+    const bank = BANK[level]?.[r.id] || BANK.B2[r.id];
+    const { item, idx: chosen } = pick(bank, lastIdx.current[r.id]);
     lastIdx.current[r.id] = chosen;
     const type = r.id === "com" ? "mc" : r.id === "exp" ? "open" : "input";
-    setEx({ ...item, type, skill: r });
+    let exercise = { ...item, type, skill: r };
+    if (type === "mc") {
+      const indexed = item.options.map((o, i) => ({ o, i }));
+      for (let i = indexed.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+      }
+      exercise = { ...exercise, options: indexed.map((x) => x.o), correct: indexed.findIndex((x) => x.i === item.correct) };
+    }
+    setEx(exercise);
   };
 
   const start = () => { setPhase("playing"); setRound(0); setSessionXp(0); setResults([]); loadExercise(0); };
   useEffect(() => { if (ex && ex.type !== "mc" && inputRef.current) inputRef.current.focus(); }, [ex]);
+  useEffect(() => {
+    if (!feedback) return;
+    const t = setTimeout(() => nextBtnRef.current?.focus(), 150);
+    return () => clearTimeout(t);
+  }, [feedback]);
   const fmtXp = (n) => (n >= 0 ? "+" + n : "" + n);
 
   const applyFeedback = (fb) => {
     setFeedback(fb);
     const p = progressRef.current || loadProgress();
-    recordAnswer(p, { skill: cur.id, correct: fb.correct, xp: fb.xp || 0, solution: ex.solution_fr });
+    recordAnswer(p, { skill: cur.id, correct: fb.correct, xp: fb.xp || 0, solution: ex.solution_fr, level });
     saveProgress(p);
     progressRef.current = p;
     setTotalXp(p.xp);
@@ -676,10 +1187,14 @@ function Quest({ onExit }) {
     if (ex.type !== "open") { if (!answer.trim()) return; applyFeedback(gradeInput(ex, answer)); return; }
     // open: AI evaluation when available, else fall back to model answer
     if (!answer.trim()) return;
+    if (!/[a-zA-ZÀ-ÿ]/.test(answer))
+      return applyFeedback({ correct: false, xp: -15, correction_fr: ex.model_fr, tip_he: ex.tip_he, explanation_he: "התשובה חייבת להיות בצרפתית — לא זוהו אותיות לטיניות." });
+    if (answer.trim().split(/\s+/).length < 10)
+      return applyFeedback({ correct: false, xp: -15, correction_fr: ex.model_fr, tip_he: ex.tip_he, explanation_he: `התשובה קצרה מדי — נדרשות לפחות 10 מילים. נסה להרחיב.` });
     if (!checkOn) { applyFeedback(gradeOpen(ex)); return; }
     setChecking(true);
     try {
-      const fb = await evaluateOpen(ex, answer);
+      const fb = await evaluateOpen(ex, answer, level);
       applyFeedback(fb);
     } catch (e) {
       applyFeedback(gradeOpen(ex)); // graceful fallback
@@ -710,6 +1225,21 @@ function Quest({ onExit }) {
         .quest { font-family:'Assistant',system-ui,sans-serif; color:${INK};
           background: radial-gradient(circle at 15% 0%, #FBF7EE, ${PAPER} 45%), ${PAPER};
           min-height:100vh; padding: clamp(16px,3vw,40px); max-width:760px; margin:0 auto; }
+        .music-player { position:fixed; left:18px; bottom:18px; z-index:30; display:flex; align-items:center; gap:8px; direction:ltr; }
+        .music-btn { width:46px; height:46px; border-radius:50%; flex:none;
+          border:2px solid ${INK}; background:#fff; color:${INK}; font-family:'Fraunces',serif; font-size:25px; cursor:pointer;
+          display:grid; place-items:center; box-shadow:4px 4px 0 ${INK}; transition:transform .12s,box-shadow .12s,background .12s; }
+        .music-btn:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 ${INK}; }
+        .music-btn:active { transform:translate(1px,1px); box-shadow:2px 2px 0 ${INK}; }
+        .music-btn.on { background:${GOLD}; }
+        .music-name { min-width:170px; max-width:min(260px,calc(100vw - 88px)); text-align:left; border:2px solid ${INK}; border-radius:14px;
+          background:#fff; color:${INK}; padding:8px 12px; cursor:pointer; box-shadow:4px 4px 0 ${INK}; font-family:'Assistant'; }
+        .music-name span, .music-option span { display:block; font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .music-name small, .music-option small { display:block; font-size:11.5px; font-weight:700; color:#7C7463; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .music-menu { position:absolute; left:0; bottom:58px; width:min(310px,calc(100vw - 36px)); background:#fff; border:2px solid ${INK};
+          border-radius:16px; padding:8px; box-shadow:6px 6px 0 ${INK}; display:flex; flex-direction:column; gap:6px; }
+        .music-option { text-align:left; border:1.5px solid #DDD4BF; border-radius:11px; background:#F8F4EA; padding:9px 11px; color:${INK}; cursor:pointer; }
+        .music-option:hover, .music-option.active { border-color:${INK}; background:${GOLD}; }
         .fr { font-family:'Fraunces',Georgia,serif; font-style:italic; }
         .nums { font-family:'Fraunces',serif; font-variant-numeric:tabular-nums; }
         .topline { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
@@ -722,6 +1252,7 @@ function Quest({ onExit }) {
           font-size:20px; line-height:1; cursor:pointer; box-shadow:2px 2px 0 ${INK}; flex:none; }
         .home-btn:hover { transform:translate(-1px,-1px); box-shadow:3px 3px 0 ${INK}; }
         .home-btn:active { transform:translate(1px,1px); box-shadow:1px 1px 0 ${INK}; }
+        .lvl-badge { background:${GOLD}; color:${INK}; border-radius:8px; padding:5px 10px; font-weight:800; font-size:13px; }
         .topline-right .xp-pill { margin-inline-start:0; }
         .streak-pill { background:#fff; border:2px solid ${INK}; color:${INK}; border-radius:999px;
           padding:6px 13px; font-weight:800; font-size:14px; display:flex; gap:6px; align-items:center; box-shadow:3px 3px 0 #E8503A; }
@@ -806,6 +1337,7 @@ function Quest({ onExit }) {
         <button className="home-btn" onClick={onExit} aria-label="חזרה לדף הבית">⌂</button>
         <span className="brand">French<b>Up</b></span>
         <div className="topline-right">
+          <span className="lvl-badge">{level}</span>
           {streak > 0 && <span className="streak-pill">🔥 <span className="nums">{streak}</span></span>}
           <span className="xp-pill">⭐ <span className="nums">{totalXp}</span> XP</span>
         </div>
@@ -919,7 +1451,7 @@ function Quest({ onExit }) {
                       {feedback.tip_he && <div className="fb-tip"><b>טיפ:</b> {feedback.tip_he}</div>}
                     </div>
                     <div className="btn-row">
-                      <button className="btn btn-primary" onClick={next}>{round + 1 >= ROUNDS.length ? "סיים אתגר 🎉" : "הסבב הבא ←"}</button>
+                      <button ref={nextBtnRef} className="btn btn-primary" onClick={next}>{round + 1 >= ROUNDS.length ? "סיים אתגר 🎉" : "הסבב הבא ←"}</button>
                     </div>
                   </>
                 )}
@@ -964,8 +1496,8 @@ function Quest({ onExit }) {
 /* ==================================================================== */
 /*  DASHBOARD — home screen, reads live progress, links into the Quest  */
 /* ==================================================================== */
-function MetroLine({ skill, correct, idx, sel, onSel }) {
-  const names = STATION_NAMES[skill.id];
+function MetroLine({ skill, correct, idx, sel, onSel, level }) {
+  const names = STATION_NAMES[level]?.[skill.id] || [];
   const done = stationsDone(correct);
   const pct = Math.round((done / STATIONS_PER) * 100);
   return (
@@ -997,7 +1529,7 @@ function MetroLine({ skill, correct, idx, sel, onSel }) {
   );
 }
 
-function Dashboard({ onStart }) {
+function Dashboard({ onStart, selectedLevel, onLevelChange }) {
   const [p, setP] = useState(null);
   const [sel, setSel] = useState(null);
   useEffect(() => { setP(loadProgress()); }, []);
@@ -1005,8 +1537,8 @@ function Dashboard({ onStart }) {
   const sStat = streakStatus(p);
   const week = weeklyXp(p);
   const maxXp = Math.max(10, ...week.map((w) => w.xp));
-  const totalCorrect = SKILLS.reduce((a, s) => a + (p.bySkill[s]?.correct || 0), 0);
-  const selInfo = sel ? (() => { const [sid, i] = sel.split("-"); const sk = ROUNDS.find((r) => r.id === sid); return { sk, name: STATION_NAMES[sid][+i], idx: +i + 1 }; })() : null;
+  const totalCorrect = SKILLS.reduce((a, s) => a + (p.byLevel?.[selectedLevel]?.[s]?.correct || 0), 0);
+  const selInfo = sel ? (() => { const [sid, i] = sel.split("-"); const sk = ROUNDS.find((r) => r.id === sid); return { sk, name: STATION_NAMES[selectedLevel]?.[sid]?.[+i], idx: +i + 1 }; })() : null;
 
   return (
     <div dir="rtl" className="dash">
@@ -1016,6 +1548,21 @@ function Dashboard({ onStart }) {
         .dash { font-family:'Assistant',system-ui,sans-serif; color:${INK};
           background: radial-gradient(circle at 12% 0%, #FBF7EE, ${PAPER} 45%), ${PAPER};
           min-height:100vh; padding: clamp(16px,3vw,40px); max-width:820px; margin:0 auto; }
+        .music-player { position:fixed; left:18px; bottom:18px; z-index:30; display:flex; align-items:center; gap:8px; direction:ltr; }
+        .music-btn { width:46px; height:46px; border-radius:50%; flex:none;
+          border:2px solid ${INK}; background:#fff; color:${INK}; font-family:'Fraunces',serif; font-size:25px; cursor:pointer;
+          display:grid; place-items:center; box-shadow:4px 4px 0 ${INK}; transition:transform .12s,box-shadow .12s,background .12s; }
+        .music-btn:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 ${INK}; }
+        .music-btn:active { transform:translate(1px,1px); box-shadow:2px 2px 0 ${INK}; }
+        .music-btn.on { background:${GOLD}; }
+        .music-name { min-width:170px; max-width:min(260px,calc(100vw - 88px)); text-align:left; border:2px solid ${INK}; border-radius:14px;
+          background:#fff; color:${INK}; padding:8px 12px; cursor:pointer; box-shadow:4px 4px 0 ${INK}; font-family:'Assistant'; }
+        .music-name span, .music-option span { display:block; font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .music-name small, .music-option small { display:block; font-size:11.5px; font-weight:700; color:#7C7463; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .music-menu { position:absolute; left:0; bottom:58px; width:min(310px,calc(100vw - 36px)); background:#fff; border:2px solid ${INK};
+          border-radius:16px; padding:8px; box-shadow:6px 6px 0 ${INK}; display:flex; flex-direction:column; gap:6px; }
+        .music-option { text-align:left; border:1.5px solid #DDD4BF; border-radius:11px; background:#F8F4EA; padding:9px 11px; color:${INK}; cursor:pointer; }
+        .music-option:hover, .music-option.active { border-color:${INK}; background:${GOLD}; }
         .fr { font-family:'Fraunces',serif; font-style:italic; }
         .nums { font-family:'Fraunces',serif; font-variant-numeric:tabular-nums; }
         .d-top { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
@@ -1064,6 +1611,10 @@ function Dashboard({ onStart }) {
         .stat-box { flex:1; min-width:120px; background:#fff; border:2px solid ${INK}; border-radius:16px; padding:14px 16px; box-shadow:4px 4px 0 ${INK}; }
         .stat-num { font-family:'Fraunces',serif; font-size:30px; font-weight:600; line-height:1; }
         .stat-lbl { font-weight:700; color:#8A8270; font-size:13px; margin-top:4px; }
+        .level-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .lvl-btn { font-family:'Assistant'; font-weight:800; font-size:14px; padding:9px 16px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:transform .12s,box-shadow .12s; }
+        .lvl-btn:hover { transform:translateY(-2px); box-shadow:2px 2px 0 ${INK}; }
+        .lvl-btn.active { background:${INK}; color:${PAPER}; box-shadow:3px 3px 0 ${GOLD}; }
       `}</style>
 
       <div className="d-top">
@@ -1074,10 +1625,16 @@ function Dashboard({ onStart }) {
         </div>
       </div>
 
+      <div className="level-tabs">
+        {LEVELS.map((l) => (
+          <button key={l} className={`lvl-btn ${selectedLevel === l ? "active" : ""}`} onClick={() => { onLevelChange(l); setSel(null); }}>{l}</button>
+        ))}
+      </div>
+
       <div className="hero">
-        <div className="hero-eye">בונז'ור 👋 · אתגר היום</div>
-        <h1>{sStat.active ? "כבר התאמנת היום — אפשר עוד סבב!" : "מוכן לאתגר היומי?"}</h1>
-        <button className="hero-cta" onClick={onStart}>התחל אתגר יומי ←</button>
+        <div className="hero-eye">בונז'ור 👋 · רמה {selectedLevel}</div>
+        <h1>{sStat.active ? `כבר התאמנת היום ברמה ${selectedLevel} — עוד סבב?` : `מוכן לאתגר ${selectedLevel}?`}</h1>
+        <button className="hero-cta" onClick={onStart}>התחל אתגר ←</button>
       </div>
 
       <div className="stat-line">
@@ -1090,7 +1647,7 @@ function Dashboard({ onStart }) {
         <div className="card-eyebrow">Plan du progrès · קווי ההתקדמות</div>
         <h2 className="card-title">המסע שלך — תחנה לכל 3 תשובות נכונות</h2>
         {ROUNDS.map((skill, i) => (
-          <MetroLine key={skill.id} skill={skill} idx={i} correct={p.bySkill[skill.id]?.correct || 0} sel={sel} onSel={setSel} />
+          <MetroLine key={skill.id + selectedLevel} skill={skill} idx={i} correct={p.byLevel?.[selectedLevel]?.[skill.id]?.correct || 0} sel={sel} onSel={setSel} level={selectedLevel} />
         ))}
         {selInfo && (
           <div className="sel-info">תחנה {selInfo.idx} בקו <b style={{ color: selInfo.sk.color }}>{selInfo.sk.fr}</b> · {selInfo.sk.he}: <b>{selInfo.name}</b></div>
@@ -1119,7 +1676,14 @@ function Dashboard({ onStart }) {
 export default function App() {
   const [view, setView] = useState("dashboard");
   const [tick, setTick] = useState(0);
-  return view === "dashboard"
-    ? <Dashboard key={tick} onStart={() => setView("quest")} />
-    : <Quest onExit={() => { setTick((t) => t + 1); setView("dashboard"); }} />;
+  const [selectedLevel, setSelectedLevel] = useState(() => store.get(LKEY) || "B1");
+  const handleLevelChange = (l) => { setSelectedLevel(l); store.set(LKEY, l); };
+  return (
+    <>
+      <ParisMusicButton />
+      {view === "dashboard"
+        ? <Dashboard key={tick} selectedLevel={selectedLevel} onLevelChange={handleLevelChange} onStart={() => setView("quest")} />
+        : <Quest level={selectedLevel} onExit={() => { setTick((t) => t + 1); setView("dashboard"); }} />}
+    </>
+  );
 }

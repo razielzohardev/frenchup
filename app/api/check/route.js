@@ -24,15 +24,17 @@ export async function POST(req) {
   const prompt_fr = (body?.prompt_fr || "").toString().slice(0, 600);
   const instruction_he = (body?.instruction_he || "").toString().slice(0, 300);
   const answer = (body?.answer || "").toString().slice(0, 800);
+  const level = (body?.level || "B1").toString().slice(0, 2);
   if (!answer.trim()) return Response.json({ error: "empty" }, { status: 400 });
 
-  const system = `אתה מורה לצרפתית שמעריך תשובה חופשית של תלמיד דובר עברית ברמת B2/C1.
+  const system = `אתה מורה לצרפתית שמעריך תשובה חופשית של תלמיד דובר עברית ברמת ${level}.
 החזר אך ורק JSON תקין, בלי markdown, במבנה המדויק:
 {"grammar_ok":true/false,"meaning_ok":true/false,"answers_question":true/false,"conditions_ok":true/false,"score":0-100,"corrected_fr":"גרסה מתוקנת ומשופרת של התשובה בצרפתית תקנית","feedback_he":"משוב ספציפי בעברית: מה היה טוב, אילו שגיאות דקדוק או משמעות יש, והאם ענה לשאלה ועמד בתנאים","tip_he":"טיפ קצר וממוקד אחד"}
 - grammar_ok: האם התשובה תקינה דקדוקית (זמנים, התאמות, מילות יחס).
 - meaning_ok: האם המשמעות ברורה והגיונית.
 - answers_question: האם התשובה באמת עונה על מה שנשאל.
 - conditions_ok: האם עמד בתנאים שצוינו (למשל שימוש בזמן מסוים כמו conditionnel, או מספר משפטים).
+חשוב מאוד: אם התשובה אינה בצרפתית, מכילה גיבריש, אותיות אקראיות, מילים חסרות משמעות, או שאין בה ניסיון ממשי לענות על השאלה — החזר score:0, answers_question:false, grammar_ok:false, meaning_ok:false, ופרט ב-feedback_he שהתשובה אינה בצרפתית תקינה.
 היה מדויק וכן, אך גם מעודד. אם יש שגיאות, ציין אותן בבירור ב-feedback_he.`;
 
   const user = `השאלה בצרפתית: ${prompt_fr}
