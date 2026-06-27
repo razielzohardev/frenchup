@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 
 /* ============================================================
-   FrenchUp — Daily Quest (Next.js)
+   FrenchUp — Daily Quest  (Next.js)
    B2/C1 quest with local grading, tap-to-translate, -15 XP on
    wrong answers. Audio uses a NEURAL voice via /api/tts
    (ElevenLabs), with automatic fallback to the device voice.
