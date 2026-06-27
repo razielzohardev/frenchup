@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 /* ============================================================
    FrenchUp — Daily Quest  (Next.js)
@@ -1151,21 +1152,23 @@ const BANK = {
   C2: BANK_C2,
 };
 
-const pick = (arr, avoid) => {
-  const pool = arr.length > 1 && avoid != null ? arr.filter((_, i) => i !== avoid) : arr;
+const pick = (arr, avoid, masteredSet = new Set()) => {
+  let pool = arr.filter((_, i) => !masteredSet.has(i));
+  if (pool.length === 0) pool = [...arr]; // all mastered — allow full rotation
+  if (pool.length > 1 && avoid != null) pool = pool.filter((x) => arr.indexOf(x) !== avoid);
+  if (pool.length === 0) pool = arr.filter((_, i) => !masteredSet.has(i));
   const item = pool[Math.floor(Math.random() * pool.length)];
   return { item, idx: arr.indexOf(item) };
 };
 
-/* -------------------- progress service (localStorage now, cloud later) --------------------
-   All persistence goes through `store`. To move to a cloud backend later,
-   swap ONLY the two methods in `store` for API calls — nothing else changes. */
+/* -------------------- progress service (Supabase cloud + localStorage fallback) --------------------
+   All persistence goes through `cloudStore`. localStorage used as fallback when no userId. */
 const SKILLS = ["gra", "voc", "com", "exp"];
 const PKEY = "frenchup_progress_v2";
 const PKEY_V1 = "frenchup_progress_v1";
 const _mem = new Map();
 const _hasLS = () => { try { return typeof window !== "undefined" && !!window.localStorage; } catch { return false; } };
-const store = {
+const localStore = {
   get(k) { try { if (_hasLS()) { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } } catch (e) {} return _mem.has(k) ? _mem.get(k) : null; },
   set(k, v) { try { if (_hasLS()) { localStorage.setItem(k, JSON.stringify(v)); return; } } catch (e) {} _mem.set(k, v); },
 };
@@ -1174,17 +1177,10 @@ const freshProgress = () => ({
   xp: 0, streak: { count: 0, lastDay: null },
   bySkill: freshSkillMap(),
   byLevel: Object.fromEntries(LEVELS.map((l) => [l, freshSkillMap()])),
-  history: [], mistakes: {}, badges: [],
+  history: [], mistakes: {}, badges: [], mastered: {},
 });
-function loadProgress() {
-  let p = store.get(PKEY);
-  if (!p) {
-    const v1 = store.get(PKEY_V1);
-    if (v1) {
-      p = { ...freshProgress(), ...v1, byLevel: freshProgress().byLevel };
-      SKILLS.forEach((s) => { if (v1.bySkill?.[s]) p.byLevel.B2[s] = { ...v1.bySkill[s] }; });
-    } else return freshProgress();
-  }
+function mergeProgress(p) {
+  if (!p) return freshProgress();
   const base = freshProgress();
   const byLevel = Object.fromEntries(LEVELS.map((l) => [l, {
     ...base.byLevel[l],
@@ -1192,9 +1188,34 @@ function loadProgress() {
   }]));
   return { ...base, ...p, streak: { ...base.streak, ...(p.streak || {}) },
     bySkill: { ...base.bySkill, ...(p.bySkill || {}) }, byLevel,
-    mistakes: p.mistakes || {}, history: p.history || [], badges: p.badges || [] };
+    mistakes: p.mistakes || {}, history: p.history || [], badges: p.badges || [],
+    mastered: p.mastered || {} };
 }
-const saveProgress = (p) => { store.set(PKEY, p); return p; };
+async function loadProgressCloud(userId) {
+  if (!userId) {
+    const p = localStore.get(PKEY) || localStore.get(PKEY_V1);
+    return mergeProgress(p);
+  }
+  try {
+    const { data } = await supabase.from("progress").select("data").eq("user_id", userId).single();
+    return mergeProgress(data?.data);
+  } catch { return freshProgress(); }
+}
+function loadProgress(userId) {
+  // sync fallback for non-async callers (uses localStorage)
+  if (!userId) {
+    const p = localStore.get(PKEY) || localStore.get(PKEY_V1);
+    return mergeProgress(p);
+  }
+  return freshProgress(); // will be replaced by async load on mount
+}
+async function saveProgress(p, userId) {
+  if (!userId) { localStore.set(PKEY, p); return p; }
+  try {
+    await supabase.from("progress").upsert({ user_id: userId, data: p, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+  } catch (e) { localStore.set(PKEY, p); } // fallback
+  return p;
+}
 const dayKey = (d = new Date()) => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; };
 const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); };
 function streakStatus(p) {
@@ -1204,7 +1225,7 @@ function streakStatus(p) {
   if (lastDay === y) return { count, active: false };
   return { count: 0, active: false };
 }
-function recordAnswer(p, { skill, correct, xp, solution, level }) {
+function recordAnswer(p, { skill, correct, xp, solution, level, masteryKey }) {
   p.xp = Math.max(0, p.xp + (xp || 0));
   if (p.bySkill[skill]) {
     p.bySkill[skill].xp = Math.max(0, (p.bySkill[skill].xp || 0) + (xp || 0));
@@ -1215,6 +1236,11 @@ function recordAnswer(p, { skill, correct, xp, solution, level }) {
     if (correct) p.byLevel[level][skill].correct = (p.byLevel[level][skill].correct || 0) + 1;
   }
   if (!correct && solution) p.mistakes[solution] = (p.mistakes[solution] || 0) + 1;
+  if (masteryKey) {
+    if (!p.mastered) p.mastered = {};
+    if (correct) p.mastered[masteryKey] = true;
+    else delete p.mastered[masteryKey];
+  }
   return p;
 }
 function recordSession(p, { sessionXp, correct, total }) {
@@ -1831,7 +1857,7 @@ async function evaluateOpen(ex, answer, level = "B1") {
 }
 
 /* ==================================================================== */
-function Quest({ onExit, level = "B1" }) {
+function Quest({ onExit, level = "B1", userId }) {
   const [phase, setPhase] = useState("intro");
   const [round, setRound] = useState(0);
   const [ex, setEx] = useState(null);
@@ -1852,25 +1878,33 @@ function Quest({ onExit, level = "B1" }) {
 
   // load saved progress on mount
   useEffect(() => {
-    const p = loadProgress();
-    progressRef.current = p;
-    setTotalXp(p.xp);
-    setStreak(streakStatus(p).count);
+    loadProgressCloud(userId).then((p) => {
+      progressRef.current = p;
+      setTotalXp(p.xp);
+      setStreak(streakStatus(p).count);
+    });
     (CHECK_AVAILABLE === null ? probeCheck() : Promise.resolve(CHECK_AVAILABLE)).then(setCheckOn);
-  }, []);
+  }, [userId]);
 
   const loadExercise = (idx) => {
     setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null);
     const r = ROUNDS[idx];
-    const p = progressRef.current || loadProgress();
+    const p = progressRef.current || loadProgress(userId);
     const correct = p.byLevel?.[level]?.[r.id]?.correct || 0;
     const stationIdx = Math.min(stationsDone(correct), STATIONS_PER - 1);
     const rawBank = BANK[level]?.[r.id] || BANK.B2[r.id];
     const bank = Array.isArray(rawBank[0]) ? (rawBank[stationIdx] || rawBank[rawBank.length - 1]) : rawBank;
-    const { item, idx: chosen } = pick(bank, lastIdx.current[r.id]);
+    const prefix = `${level}:${r.id}:${stationIdx}:`;
+    const masteredSet = new Set(
+      Object.keys(p.mastered || {})
+        .filter((k) => k.startsWith(prefix))
+        .map((k) => +k.slice(prefix.length))
+    );
+    const { item, idx: chosen } = pick(bank, lastIdx.current[r.id], masteredSet);
     lastIdx.current[r.id] = chosen;
+    const masteryKey = `${level}:${r.id}:${stationIdx}:${chosen}`;
     const type = r.id === "com" ? "mc" : r.id === "exp" ? "open" : "input";
-    let exercise = { ...item, type, skill: r };
+    let exercise = { ...item, type, skill: r, masteryKey, stationIdx };
     if (type === "mc") {
       const indexed = item.options.map((o, i) => ({ o, i }));
       for (let i = indexed.length - 1; i > 0; i--) {
@@ -1893,9 +1927,9 @@ function Quest({ onExit, level = "B1" }) {
 
   const applyFeedback = (fb) => {
     setFeedback(fb);
-    const p = progressRef.current || loadProgress();
-    recordAnswer(p, { skill: cur.id, correct: fb.correct, xp: fb.xp || 0, solution: ex.solution_fr, level });
-    saveProgress(p);
+    const p = progressRef.current || loadProgress(userId);
+    recordAnswer(p, { skill: cur.id, correct: fb.correct, xp: fb.xp || 0, solution: ex.solution_fr, level, masteryKey: ex.masteryKey });
+    saveProgress(p, userId);
     progressRef.current = p;
     setTotalXp(p.xp);
     setSessionXp((x) => x + (fb.xp || 0));
@@ -1926,10 +1960,10 @@ function Quest({ onExit, level = "B1" }) {
 
   const next = () => {
     if (round + 1 >= ROUNDS.length) {
-      const p = progressRef.current || loadProgress();
+      const p = progressRef.current || loadProgress(userId);
       const correctCount = results.filter((r) => r.correct).length;
       recordSession(p, { sessionXp, correct: correctCount, total: results.length });
-      saveProgress(p);
+      saveProgress(p, userId);
       progressRef.current = p;
       setStreak(streakStatus(p).count);
       setPhase("done");
@@ -2453,11 +2487,11 @@ function MetroLine({ skill, correct, idx, sel, onSel, level }) {
   );
 }
 
-function Dashboard({ onStart, selectedLevel, onLevelChange }) {
+function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
   const [p, setP] = useState(null);
   const [sel, setSel] = useState(null);
   const [mapMode, setMapMode] = useState("metro");
-  useEffect(() => { setP(loadProgress()); }, []);
+  useEffect(() => { loadProgressCloud(userId).then(setP); }, [userId]);
   if (!p) return null;
   const sStat = streakStatus(p);
   const week = weeklyXp(p);
@@ -2614,17 +2648,26 @@ function Dashboard({ onStart, selectedLevel, onLevelChange }) {
 /* ==================================================================== */
 /*  APP — single page, internal transitions between dashboard & quest   */
 /* ==================================================================== */
-export default function App() {
+export default function App({ userId }) {
   const [view, setView] = useState("dashboard");
   const [tick, setTick] = useState(0);
-  const [selectedLevel, setSelectedLevel] = useState(() => store.get(LKEY) || "B1");
-  const handleLevelChange = (l) => { setSelectedLevel(l); store.set(LKEY, l); };
+  const [selectedLevel, setSelectedLevel] = useState(() => localStore.get(LKEY) || "B1");
+  const handleLevelChange = (l) => { setSelectedLevel(l); localStore.set(LKEY, l); };
+  const handleLogout = async () => { await supabase.auth.signOut(); };
   return (
     <>
       <ParisMusicButton />
+      <button onClick={handleLogout} style={{
+        position: "fixed", top: 12, left: 12, zIndex: 999,
+        background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)",
+        color: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 12,
+        fontFamily: "'Assistant',sans-serif", fontWeight: 700, cursor: "pointer",
+      }}>
+        התנתק
+      </button>
       {view === "dashboard"
-        ? <Dashboard key={tick} selectedLevel={selectedLevel} onLevelChange={handleLevelChange} onStart={() => setView("quest")} />
-        : <Quest level={selectedLevel} onExit={() => { setTick((t) => t + 1); setView("dashboard"); }} />}
+        ? <Dashboard key={tick} selectedLevel={selectedLevel} onLevelChange={handleLevelChange} onStart={() => setView("quest")} userId={userId} />
+        : <Quest level={selectedLevel} userId={userId} onExit={() => { setTick((t) => t + 1); setView("dashboard"); }} />}
     </>
   );
 }
