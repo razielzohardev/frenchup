@@ -1177,7 +1177,7 @@ const freshProgress = () => ({
   xp: 0, streak: { count: 0, lastDay: null },
   bySkill: freshSkillMap(),
   byLevel: Object.fromEntries(LEVELS.map((l) => [l, freshSkillMap()])),
-  history: [], mistakes: {}, badges: [], mastered: {},
+  history: [], mistakes: {}, badges: [], mastered: {}, displayName: "",
 });
 function mergeProgress(p) {
   if (!p) return freshProgress();
@@ -1189,7 +1189,7 @@ function mergeProgress(p) {
   return { ...base, ...p, streak: { ...base.streak, ...(p.streak || {}) },
     bySkill: { ...base.bySkill, ...(p.bySkill || {}) }, byLevel,
     mistakes: p.mistakes || {}, history: p.history || [], badges: p.badges || [],
-    mastered: p.mastered || {} };
+    mastered: p.mastered || {}, displayName: p.displayName || "" };
 }
 async function loadProgressCloud(userId) {
   if (!userId) {
@@ -2487,11 +2487,53 @@ function MetroLine({ skill, correct, idx, sel, onSel, level }) {
   );
 }
 
+function NameModal({ onSave }) {
+  const [name, setName] = useState("");
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(26,26,46,0.72)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
+      <div style={{ background:"#F5F0E8", borderRadius:20, padding:"40px 36px", width:"100%", maxWidth:380, textAlign:"right", direction:"rtl", boxShadow:"0 20px 60px rgba(0,0,0,0.4)" }}>
+        <p style={{ fontSize:13, color:"#8A8270", marginBottom:6, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Bienvenue · ברוך הבא</p>
+        <h2 style={{ fontFamily:"'Fraunces',Georgia,serif", fontStyle:"italic", fontWeight:600, fontSize:30, color:"#1A1A2E", margin:"0 0 20px", lineHeight:1.2 }}>
+          איך קוראים לך?
+        </h2>
+        <input
+          autoFocus
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && name.trim() && onSave(name.trim())}
+          placeholder="שמך..."
+          dir="rtl"
+          style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"2px solid #DDD8CC", fontSize:16, fontFamily:"'Assistant',sans-serif", marginBottom:14, background:"#fff", outline:"none" }}
+        />
+        <button
+          onClick={() => name.trim() && onSave(name.trim())}
+          disabled={!name.trim()}
+          style={{ width:"100%", padding:14, borderRadius:12, border:"none", background:"#C8A23A", color:"#fff", fontSize:16, fontWeight:800, fontFamily:"'Assistant',sans-serif", cursor: name.trim() ? "pointer" : "default", opacity: name.trim() ? 1 : 0.5 }}
+        >
+          בואו נתחיל ←
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
   const [p, setP] = useState(null);
   const [sel, setSel] = useState(null);
   const [mapMode, setMapMode] = useState("metro");
-  useEffect(() => { loadProgressCloud(userId).then(setP); }, [userId]);
+  const [showNameModal, setShowNameModal] = useState(false);
+  useEffect(() => {
+    loadProgressCloud(userId).then((loaded) => {
+      setP(loaded);
+      if (!loaded.displayName) setShowNameModal(true);
+    });
+  }, [userId]);
+  const handleNameSave = async (name) => {
+    const updated = { ...p, displayName: name };
+    setP(updated);
+    setShowNameModal(false);
+    await saveProgress(updated, userId);
+  };
   if (!p) return null;
   const sStat = streakStatus(p);
   const week = weeklyXp(p);
@@ -2500,6 +2542,8 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
   const selInfoLines = sel ? (() => { const [sid, i] = sel.split("-"); const sk = ROUNDS.find((r) => r.id === sid); return { sk, name: STATION_NAMES[selectedLevel]?.[sid]?.[+i], idx: +i + 1 }; })() : null;
 
   return (
+    <>
+    {showNameModal && <NameModal onSave={handleNameSave} />}
     <div dir="rtl" className="dash">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500;1,9..144,600&display=swap');
@@ -2553,7 +2597,9 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .stat-box { flex:1; min-width:120px; background:#fff; border:2px solid ${INK}; border-radius:16px; padding:14px 16px; box-shadow:4px 4px 0 ${INK}; }
         .stat-num { font-family:'Fraunces',serif; font-size:30px; font-weight:600; line-height:1; }
         .stat-lbl { font-weight:700; color:#8A8270; font-size:13px; margin-top:4px; }
-        .level-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .level-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; justify-content:center; }
+        .level-label { text-align:center; margin-bottom:10px; font-size:11px; font-weight:700; letter-spacing:.14em; color:#8A8270; text-transform:uppercase; }
+        .level-label b { font-family:'Fraunces',serif; font-style:italic; font-size:13px; color:${INK}; letter-spacing:0; text-transform:none; }
         .lvl-btn { font-family:'Assistant'; font-weight:800; font-size:14px; padding:9px 16px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:transform .12s,box-shadow .12s; }
         .lvl-btn:hover { transform:translateY(-2px); box-shadow:2px 2px 0 ${INK}; }
         .lvl-btn.active { background:${INK}; color:${PAPER}; box-shadow:3px 3px 0 ${GOLD}; }
@@ -2586,14 +2632,17 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         </div>
       </div>
 
-      <div className="level-tabs">
-        {LEVELS.map((l) => (
-          <button key={l} className={`lvl-btn ${selectedLevel === l ? "active" : ""}`} onClick={() => { onLevelChange(l); setSel(null); }}>{l}</button>
-        ))}
+      <div>
+        <p className="level-label"><b>NIVEAU</b> · רמת לימוד</p>
+        <div className="level-tabs">
+          {LEVELS.map((l) => (
+            <button key={l} className={`lvl-btn ${selectedLevel === l ? "active" : ""}`} onClick={() => { onLevelChange(l); setSel(null); }}>{l}</button>
+          ))}
+        </div>
       </div>
 
       <div className="hero">
-        <div className="hero-eye">בונז'ור 👋 · רמה {selectedLevel}</div>
+        <div className="hero-eye">בונז'ור{p.displayName ? `, ${p.displayName}` : ""} 👋 · רמה {selectedLevel}</div>
         <h1>{sStat.active ? `כבר התאמנת היום ברמה ${selectedLevel} — עוד סבב?` : `מוכן לאתגר ${selectedLevel}?`}</h1>
         <button className="hero-cta" onClick={onStart}>התחל אתגר ←</button>
       </div>
@@ -2642,6 +2691,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
