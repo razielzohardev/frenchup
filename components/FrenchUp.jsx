@@ -1341,8 +1341,13 @@ function weeklyXp(p) {
   const map = {};
   (p.history || []).forEach((h) => { const k = dayKey(new Date(h.date)); map[k] = (map[k] || 0) + (h.xp || 0); });
   const out = [];
-  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push({ d: names[d.getDay()], xp: Math.max(0, map[dayKey(d)] || 0) }); }
-  return out;
+  const today = new Date();
+  const sunday = new Date(today);
+  sunday.setDate(today.getDate() - today.getDay());
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday); d.setDate(sunday.getDate() + i);
+    return { d: names[d.getDay()], xp: Math.max(0, map[dayKey(d)] || 0) };
+  });
 }
 
 /* -------------------- AUDIO: neural (cloud) + device fallback -------------------- */
@@ -2798,18 +2803,9 @@ export default function App({ userId }) {
   const [tick, setTick] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState(() => localStore.get(LKEY) || "B1");
   const handleLevelChange = (l) => { setSelectedLevel(l); localStore.set(LKEY, l); };
-  const handleLogout = async () => { await supabase.auth.signOut(); };
   return (
     <>
       <ParisMusicButton />
-      <button onClick={handleLogout} style={{
-        position: "fixed", top: 12, left: 12, zIndex: 999,
-        background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)",
-        color: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 12,
-        fontFamily: "'Assistant',sans-serif", fontWeight: 700, cursor: "pointer",
-      }}>
-        התנתק
-      </button>
       {view === "dashboard"
         ? <Dashboard key={tick} selectedLevel={selectedLevel} onLevelChange={handleLevelChange} onStart={() => setView("quest")} userId={userId} />
         : <Quest level={selectedLevel} userId={userId} onExit={() => { setTick((t) => t + 1); setView("dashboard"); }} />}
