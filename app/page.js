@@ -27,7 +27,7 @@ function WelcomeScreen({ user }) {
         .ws-logo-in    { animation: fadeUp .5s cubic-bezier(.3,.8,.3,1) both; }
         .ws-sub        { animation: fadeUp .5s .12s cubic-bezier(.3,.8,.3,1) both; }
         .ws-name       { animation: fadeUp .5s .25s cubic-bezier(.3,.8,.3,1) both; }
-        .ws-bar        { animation: fillBar 2s linear both; }
+        .ws-bar        { animation: fillBar 5s linear both; }
       `}</style>
 
       <h1 className={user ? "ws-logo-in" : "ws-logo-pulse"} style={{
@@ -75,7 +75,7 @@ export default function Page() {
         const elapsed = Date.now() - pageLoadRef.current;
         // OAuth: elapsed includes loading time → show remaining of 2s window
         // Email/password: user was on auth screen a while → elapsed > 5s → fresh 2s
-        const remaining = elapsed < 5000 ? Math.max(0, 2000 - elapsed) : 2000;
+        const remaining = elapsed < 10000 ? Math.max(0, 5000 - elapsed) : 5000;
         setTimeout(() => setWelcomeUser(null), remaining);
       }
       prevSessionRef.current = s;
