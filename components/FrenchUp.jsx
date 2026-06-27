@@ -1177,7 +1177,7 @@ const freshProgress = () => ({
   xp: 0, streak: { count: 0, lastDay: null },
   bySkill: freshSkillMap(),
   byLevel: Object.fromEntries(LEVELS.map((l) => [l, freshSkillMap()])),
-  history: [], mistakes: {}, badges: [], mastered: {}, displayName: "",
+  history: [], mistakes: {}, badges: [], mastered: {}, displayName: "", lastPracticed: {},
 });
 function mergeProgress(p) {
   if (!p) return freshProgress();
@@ -1189,7 +1189,8 @@ function mergeProgress(p) {
   return { ...base, ...p, streak: { ...base.streak, ...(p.streak || {}) },
     bySkill: { ...base.bySkill, ...(p.bySkill || {}) }, byLevel,
     mistakes: p.mistakes || {}, history: p.history || [], badges: p.badges || [],
-    mastered: p.mastered || {}, displayName: p.displayName || "" };
+    mastered: p.mastered || {}, displayName: p.displayName || "",
+    lastPracticed: p.lastPracticed || {} };
 }
 async function loadProgressCloud(userId) {
   if (!userId) {
@@ -1243,11 +1244,12 @@ function recordAnswer(p, { skill, correct, xp, solution, level, masteryKey }) {
   }
   return p;
 }
-function recordSession(p, { sessionXp, correct, total }) {
+function recordSession(p, { sessionXp, correct, total, level }) {
   const t = dayKey(), y = yesterdayKey();
   const s = p.streak || { count: 0, lastDay: null };
   if (s.lastDay !== t) { s.count = s.lastDay === y ? s.count + 1 : 1; s.lastDay = t; }
   p.streak = s;
+  if (level) p.lastPracticed = { ...p.lastPracticed, [level]: t };
   p.history.unshift({ date: new Date().toISOString(), xp: sessionXp, correct, total });
   p.history = p.history.slice(0, 60);
   return p;
@@ -1506,106 +1508,141 @@ const NOTE_FREQ = {
   C4: 261.63, CS4: 277.18, D4: 293.66, E4: 329.63, F4: 349.23, FS4: 369.99, G4: 392.00, GS4: 415.30, A4: 440.00, B4: 493.88,
   C5: 523.25, CS5: 554.37, D5: 587.33, E5: 659.25, F5: 698.46, FS5: 739.99, G5: 783.99, GS5: 830.61, A5: 880.00, B5: 987.77,
 };
+// La Vie en Rose — Édith Piaf (G major)
 const PARIS_MELODY = [
-  ["E5", 0, 1.35, 0.72], ["D5", 1.55, 0.55, 0.5], ["C5", 2.18, 0.72, 0.58],
-  ["B4", 3, 0.95, 0.5], ["C5", 4.1, 0.62, 0.54], ["A4", 5.02, 0.9, 0.44],
-  ["D5", 6, 1.18, 0.68], ["F5", 7.4, 0.48, 0.44], ["E5", 8.02, 0.82, 0.54],
-  ["C5", 9.1, 0.58, 0.48], ["B4", 9.86, 0.5, 0.4], ["A4", 10.6, 1.25, 0.56],
-  ["C5", 12, 0.72, 0.5], ["E5", 12.86, 0.76, 0.6], ["A5", 13.82, 1.1, 0.7],
-  ["G5", 15.2, 0.58, 0.5], ["F5", 16.05, 0.82, 0.56], ["E5", 17.05, 1.1, 0.54],
-  ["D5", 18, 0.72, 0.46], ["CS5", 18.86, 0.55, 0.4], ["D5", 19.5, 0.9, 0.52],
-  ["F5", 20.65, 0.68, 0.54], ["E5", 21.62, 0.75, 0.48], ["A4", 22.72, 1.1, 0.5],
-  ["B4", 24, 0.72, 0.52], ["C5", 24.92, 0.72, 0.55], ["D5", 25.8, 1.0, 0.58],
-  ["E5", 27.05, 1.2, 0.62], ["G5", 28.45, 0.44, 0.42], ["F5", 29.05, 0.8, 0.5],
-  ["E5", 30, 1.05, 0.54], ["D5", 31.25, 0.58, 0.42], ["C5", 32.1, 0.88, 0.52],
-  ["B4", 33.18, 0.58, 0.4], ["GS4", 34.0, 0.7, 0.38], ["A4", 35.0, 1.0, 0.52],
-  ["C5", 36, 0.76, 0.48], ["B4", 36.95, 0.66, 0.42], ["A4", 37.85, 1.1, 0.5],
-  ["F5", 39.1, 0.82, 0.58], ["E5", 40.18, 0.7, 0.48], ["D5", 41.05, 0.9, 0.46],
-  ["C5", 42.2, 0.7, 0.44], ["B4", 43.05, 0.64, 0.4], ["A4", 44, 1.8, 0.56],
+  ["G4", 0, 1.6, 0.58],
+  ["B4", 1.8, 0.45, 0.52], ["C5", 2.35, 0.5, 0.56], ["B4", 2.95, 0.4, 0.48],
+  ["A4", 3.45, 0.4, 0.44], ["G4", 3.95, 0.5, 0.42], ["E4", 4.55, 0.45, 0.38], ["D4", 5.1, 0.45, 0.36],
+  ["G4", 5.7, 1.8, 0.44],
+  ["B4", 8, 1.2, 0.58],
+  ["D5", 9.4, 0.45, 0.5], ["E5", 9.95, 0.5, 0.56], ["D5", 10.55, 0.4, 0.48],
+  ["C5", 11.05, 0.4, 0.44], ["B4", 11.55, 0.4, 0.42], ["A4", 12.05, 0.5, 0.48],
+  ["G4", 12.7, 2.0, 0.44],
+  // Chorus "La vie en rose"
+  ["D5", 16, 1.8, 0.7],
+  ["D5", 18.0, 0.35, 0.5], ["E5", 18.45, 0.4, 0.54], ["D5", 18.95, 0.35, 0.48],
+  ["C5", 19.4, 0.35, 0.44], ["B4", 19.85, 0.35, 0.42], ["A4", 20.3, 0.45, 0.5],
+  ["G4", 20.9, 2.2, 0.58],
+  ["A4", 24.0, 0.35, 0.44], ["B4", 24.45, 0.35, 0.46], ["C5", 24.9, 0.4, 0.5],
+  ["D5", 25.4, 0.45, 0.54], ["E5", 25.95, 1.3, 0.66],
+  ["D5", 27.45, 0.4, 0.5], ["C5", 27.95, 0.35, 0.44], ["B4", 28.4, 0.35, 0.42],
+  ["A4", 28.85, 0.45, 0.48], ["G4", 29.45, 1.7, 0.44],
+  // Final chorus
+  ["D5", 32, 1.8, 0.72],
+  ["D5", 34.0, 0.35, 0.54], ["E5", 34.45, 0.4, 0.58], ["D5", 34.95, 0.35, 0.52],
+  ["C5", 35.4, 0.35, 0.48], ["B4", 35.85, 0.35, 0.44], ["A4", 36.3, 0.45, 0.52],
+  ["G4", 36.9, 1.8, 0.56],
+  ["B4", 39.4, 0.5, 0.48], ["D5", 40.1, 0.5, 0.46], ["G5", 40.8, 1.2, 0.54],
+  ["FS5", 42.2, 0.4, 0.44], ["E5", 42.75, 0.4, 0.46], ["D5", 43.3, 0.4, 0.42], ["G4", 44.0, 1.8, 0.5],
 ];
 const PARIS_CHORDS = [
-  { root: "A2", notes: ["E4", "A4", "C5"] },
-  { root: "E3", notes: ["E4", "GS4", "B4"] },
-  { root: "D3", notes: ["F4", "A4", "D5"] },
-  { root: "E3", notes: ["D4", "GS4", "B4"] },
-  { root: "F3", notes: ["E4", "A4", "C5"] },
-  { root: "D3", notes: ["F4", "A4", "CS5"] },
-  { root: "E3", notes: ["D4", "GS4", "B4"] },
-  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "G3", notes: ["B4", "D5", "G5"] },
+  { root: "D3", notes: ["FS4", "A4", "D5"] },
+  { root: "D3", notes: ["A4", "C5", "FS4"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "E3", notes: ["E4", "G4", "B4"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "D3", notes: ["FS4", "A4", "C5"] },
   { root: "G3", notes: ["D4", "G4", "B4"] },
   { root: "C3", notes: ["E4", "G4", "C5"] },
-  { root: "D3", notes: ["F4", "A4", "D5"] },
-  { root: "F3", notes: ["E4", "A4", "C5"] },
-  { root: "B2", notes: ["D4", "F4", "B4"] },
-  { root: "E3", notes: ["D4", "GS4", "B4"] },
-  { root: "A2", notes: ["C4", "E4", "A4"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "D3", notes: ["FS4", "A4", "C5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "E3", notes: ["E4", "G4", "B4"] },
   { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "D3", notes: ["FS4", "A4", "C5"] },
 ];
+// Sous le Ciel de Paris — Juliette Gréco (C major)
 const SEINE_MELODY = [
-  ["C5", 0, 1.4, 0.5], ["E5", 1.7, 0.9, 0.58], ["D5", 3.0, 1.1, 0.46],
-  ["B4", 4.35, 0.7, 0.38], ["C5", 5.3, 1.4, 0.5], ["A4", 7.0, 1.2, 0.42],
-  ["F4", 9.0, 0.8, 0.36], ["A4", 10.1, 0.75, 0.44], ["C5", 11.05, 1.35, 0.54],
-  ["E5", 13.0, 1.0, 0.55], ["G5", 14.35, 0.62, 0.5], ["F5", 15.25, 1.25, 0.48],
-  ["E5", 17.0, 0.86, 0.46], ["D5", 18.2, 0.86, 0.4], ["C5", 19.4, 1.5, 0.52],
-  ["B4", 22.0, 0.78, 0.36], ["C5", 23.1, 0.9, 0.48], ["E5", 24.35, 1.2, 0.54],
-  ["D5", 26.0, 0.9, 0.42], ["A4", 27.25, 1.35, 0.44], ["C5", 30.0, 1.8, 0.5],
+  ["C5", 0, 1.8, 0.52],
+  ["B4", 2.0, 0.4, 0.44], ["A4", 2.5, 0.4, 0.42], ["G4", 3.0, 0.45, 0.44],
+  ["E4", 3.55, 0.4, 0.38], ["D4", 4.05, 0.4, 0.36], ["C4", 4.55, 1.5, 0.44],
+  ["G4", 6.3, 0.4, 0.44], ["A4", 6.8, 0.4, 0.46], ["C5", 7.35, 1.5, 0.52],
+  ["E5", 9.2, 1.8, 0.58],
+  ["D5", 11.3, 0.4, 0.48], ["C5", 11.8, 0.4, 0.46], ["B4", 12.3, 0.4, 0.42],
+  ["A4", 12.85, 1.4, 0.46],
+  ["G4", 14.6, 0.4, 0.42], ["A4", 15.1, 0.4, 0.44], ["C5", 15.65, 0.5, 0.5],
+  ["E5", 16.35, 1.2, 0.56], ["G5", 17.8, 1.0, 0.54],
+  ["F5", 19.0, 0.45, 0.48], ["E5", 19.55, 0.45, 0.46], ["D5", 20.1, 0.45, 0.44],
+  ["C5", 20.65, 1.7, 0.5],
+  ["A4", 22.6, 0.4, 0.44], ["B4", 23.1, 0.4, 0.46], ["C5", 23.65, 0.5, 0.52],
+  ["E5", 24.35, 1.4, 0.56],
+  ["D5", 26.0, 0.4, 0.46], ["C5", 26.5, 0.4, 0.44], ["B4", 27.0, 0.4, 0.42],
+  ["A4", 27.55, 1.3, 0.46],
+  ["G4", 29.2, 0.4, 0.42], ["A4", 29.75, 0.4, 0.44], ["C5", 30.3, 2.2, 0.52],
+  ["G4", 33.5, 1.5, 0.4],
 ];
 const SEINE_CHORDS = [
   { root: "C3", notes: ["E4", "G4", "C5"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "C3", notes: ["G4", "C5", "E5"] },
   { root: "G3", notes: ["D4", "G4", "B4"] },
   { root: "A2", notes: ["E4", "A4", "C5"] },
-  { root: "F3", notes: ["E4", "A4", "C5"] },
-  { root: "D3", notes: ["F4", "A4", "D5"] },
-  { root: "G3", notes: ["D4", "G4", "B4"] },
-  { root: "C3", notes: ["E4", "G4", "C5"] },
-  { root: "C3", notes: ["G4", "C5", "E5"] },
   { root: "F3", notes: ["A4", "C5", "F5"] },
   { root: "C3", notes: ["E4", "G4", "C5"] },
-  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "G3", notes: ["D4", "F4", "B4"] },
   { root: "C3", notes: ["E4", "G4", "C5"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "D3", notes: ["F4", "A4", "D5"] },
+  { root: "G3", notes: ["D4", "F4", "B4"] },
 ];
+// La Valse d'Amélie — Yann Tiersen (A minor waltz)
 const MONTMARTRE_MELODY = [
-  ["A4", 0, 0.7, 0.62], ["C5", 0.9, 0.45, 0.48], ["E5", 1.5, 0.5, 0.56], ["A5", 2.15, 0.85, 0.68],
-  ["G5", 3.15, 0.65, 0.52], ["E5", 4.0, 0.5, 0.48], ["C5", 4.65, 0.55, 0.44], ["A4", 5.35, 0.9, 0.5],
-  ["D5", 6.0, 0.72, 0.58], ["F5", 6.95, 0.42, 0.46], ["A5", 7.5, 0.5, 0.56], ["G5", 8.1, 0.9, 0.6],
-  ["E5", 9.2, 0.58, 0.48], ["D5", 10.0, 0.6, 0.44], ["C5", 10.82, 1.05, 0.52],
-  ["E5", 12.0, 0.62, 0.52], ["F5", 12.8, 0.52, 0.48], ["E5", 13.45, 0.52, 0.5], ["D5", 14.1, 0.72, 0.42],
-  ["C5", 15.0, 0.8, 0.48], ["A4", 16.05, 0.55, 0.42], ["B4", 16.75, 0.55, 0.44], ["C5", 17.5, 1.1, 0.54],
-  ["F5", 18.7, 0.62, 0.54], ["E5", 19.5, 0.62, 0.48], ["D5", 20.3, 0.72, 0.44], ["A4", 21.35, 1.25, 0.5],
+  ["A4", 0, 0.5, 0.62],
+  ["C5", 0.6, 0.75, 0.68], ["B4", 1.45, 0.4, 0.52], ["A4", 1.95, 0.4, 0.48],
+  ["G4", 2.45, 0.4, 0.44], ["F4", 2.95, 0.4, 0.4], ["E4", 3.45, 1.2, 0.56],
+  ["A4", 5.0, 0.45, 0.52],
+  ["C5", 5.55, 0.55, 0.56], ["E5", 6.2, 1.0, 0.62],
+  ["D5", 7.35, 0.4, 0.5], ["C5", 7.85, 0.4, 0.48], ["B4", 8.35, 0.4, 0.42],
+  ["A4", 8.9, 1.0, 0.52],
+  ["G4", 10.3, 0.45, 0.46], ["A4", 10.85, 0.45, 0.5], ["C5", 11.45, 0.7, 0.54],
+  ["E5", 12.25, 1.0, 0.6], ["G5", 13.4, 0.55, 0.56],
+  ["E5", 14.05, 0.4, 0.5], ["D5", 14.55, 0.4, 0.46],
+  ["C5", 15.05, 0.4, 0.44], ["B4", 15.55, 0.45, 0.4], ["A4", 16.1, 1.0, 0.5],
+  ["A4", 18, 0.5, 0.6],
+  ["C5", 18.6, 0.7, 0.64], ["B4", 19.4, 0.4, 0.5], ["A4", 19.9, 0.4, 0.46],
+  ["G4", 20.4, 0.35, 0.42], ["F4", 20.85, 0.35, 0.38], ["E4", 21.3, 0.55, 0.52],
+  ["A4", 22.0, 0.4, 0.46], ["C5", 22.5, 0.4, 0.5], ["E5", 23.05, 0.8, 0.56],
 ];
 const MONTMARTRE_CHORDS = [
   { root: "A2", notes: ["E4", "A4", "C5"] },
-  { root: "D3", notes: ["F4", "A4", "D5"] },
-  { root: "E3", notes: ["D4", "GS4", "B4"] },
-  { root: "A2", notes: ["E4", "A4", "C5"] },
   { root: "F3", notes: ["A4", "C5", "F5"] },
-  { root: "D3", notes: ["F4", "A4", "D5"] },
-  { root: "E3", notes: ["D4", "GS4", "B4"] },
   { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "E3", notes: ["E4", "GS4", "B4"] },
+  { root: "A2", notes: ["C5", "E5", "A5"] },
+  { root: "F3", notes: ["A4", "C5", "F5"] },
+  { root: "A2", notes: ["E4", "A4", "C5"] },
+  { root: "E3", notes: ["E4", "GS4", "B4"] },
 ];
+// Gymnopédie No.1 — Erik Satie (D major, very slow)
 const RIVE_GAUCHE_MELODY = [
-  ["D5", 0, 1.6, 0.48], ["F5", 2.05, 0.95, 0.54], ["E5", 3.45, 1.3, 0.46],
-  ["C5", 5.2, 1.4, 0.42], ["A4", 7.1, 1.25, 0.38], ["D5", 9.2, 1.6, 0.5],
-  ["C5", 11.3, 0.8, 0.4], ["B4", 12.45, 0.8, 0.36], ["A4", 13.6, 1.8, 0.42],
-  ["F4", 16.0, 0.9, 0.35], ["A4", 17.15, 1.15, 0.42], ["D5", 18.65, 1.45, 0.5],
-  ["E5", 21.0, 1.0, 0.44], ["F5", 22.35, 1.1, 0.48], ["A4", 24.1, 1.85, 0.4],
+  ["D4", 0, 2.6, 0.44],
+  ["E4", 2.8, 0.8, 0.42], ["FS4", 3.7, 0.8, 0.42], ["G4", 4.65, 0.8, 0.44],
+  ["A4", 5.6, 2.5, 0.46],
+  ["B4", 8.4, 0.8, 0.44], ["A4", 9.35, 0.8, 0.4], ["G4", 10.4, 0.8, 0.38],
+  ["FS4", 11.45, 2.0, 0.44],
+  ["D5", 14.5, 2.5, 0.48],
+  ["B4", 17.2, 0.8, 0.44], ["A4", 18.2, 0.8, 0.4], ["G4", 19.25, 0.8, 0.38],
+  ["FS4", 20.35, 0.7, 0.36], ["E4", 21.15, 0.7, 0.38], ["D4", 22.05, 2.4, 0.44],
+  ["FS4", 25.4, 0.7, 0.38], ["A4", 26.2, 0.7, 0.42],
 ];
 const RIVE_GAUCHE_CHORDS = [
-  { root: "D3", notes: ["F4", "A4", "D5"] },
-  { root: "A2", notes: ["E4", "A4", "CS5"] },
-  { root: "B2", notes: ["D4", "F4", "B4"] },
-  { root: "F3", notes: ["A4", "C5", "F5"] },
   { root: "G3", notes: ["D4", "G4", "B4"] },
-  { root: "C3", notes: ["E4", "G4", "C5"] },
-  { root: "A2", notes: ["E4", "A4", "CS5"] },
-  { root: "D3", notes: ["F4", "A4", "D5"] },
-  { root: "D3", notes: ["A4", "D5", "F5"] },
+  { root: "D3", notes: ["FS4", "A4", "D5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "D3", notes: ["FS4", "A4", "D5"] },
+  { root: "G3", notes: ["B4", "D5", "G5"] },
+  { root: "D3", notes: ["FS4", "A4", "D5"] },
+  { root: "G3", notes: ["D4", "G4", "B4"] },
+  { root: "D3", notes: ["FS4", "A4", "D5"] },
+  { root: "E3", notes: ["E4", "G4", "B4"] },
 ];
 const MUSIC_THEMES = [
-  { id: "salon", name: "Salon de Paris", mood: "פסנתר ואקורדיון קאמרי", melody: PARIS_MELODY, chords: PARIS_CHORDS, beat: 0.58, loopBeats: 48, master: 0.24, wet: 0.34, filter: 6200, piano: 0.095, accordion: 0.026 },
-  { id: "seine", name: "Clair de Seine", mood: "נוקטורן רגוע על הנהר", melody: SEINE_MELODY, chords: SEINE_CHORDS, beat: 0.68, loopBeats: 36, master: 0.22, wet: 0.44, filter: 5400, piano: 0.105, accordion: 0.012 },
-  { id: "montmartre", name: "Valse de Montmartre", mood: "ואלס אקורדיון חי יותר", melody: MONTMARTRE_MELODY, chords: MONTMARTRE_CHORDS, beat: 0.48, loopBeats: 24, master: 0.23, wet: 0.3, filter: 6600, piano: 0.08, accordion: 0.042 },
-  { id: "rive", name: "Nocturne Rive Gauche", mood: "לילה צרפתי איטי ועדין", melody: RIVE_GAUCHE_MELODY, chords: RIVE_GAUCHE_CHORDS, beat: 0.74, loopBeats: 27, master: 0.2, wet: 0.48, filter: 5000, piano: 0.1, accordion: 0.008 },
+  { id: "salon", name: "Salon de Paris", mood: "פסנתר ואקורדיון קאמרי", melody: PARIS_MELODY, chords: PARIS_CHORDS, beat: 0.58, loopBeats: 48, master: 0.24, wet: 0.32, filter: 6200, piano: 0.095, accordion: 0.028 },
+  { id: "seine", name: "Clair de Seine", mood: "נוקטורן רגוע על הנהר", melody: SEINE_MELODY, chords: SEINE_CHORDS, beat: 0.66, loopBeats: 36, master: 0.20, wet: 0.48, filter: 5000, piano: 0.11, accordion: 0.010 },
+  { id: "montmartre", name: "Valse de Montmartre", mood: "ואלס אקורדיון חי יותר", melody: MONTMARTRE_MELODY, chords: MONTMARTRE_CHORDS, beat: 0.38, loopBeats: 24, master: 0.22, wet: 0.28, filter: 6800, piano: 0.085, accordion: 0.048 },
+  { id: "rive", name: "Nocturne Rive Gauche", mood: "לילה צרפתי איטי ועדין", melody: RIVE_GAUCHE_MELODY, chords: RIVE_GAUCHE_CHORDS, beat: 0.85, loopBeats: 27, master: 0.18, wet: 0.55, filter: 4800, piano: 0.11, accordion: 0.006 },
 ];
 
 function humanTime(i) {
@@ -1962,7 +1999,7 @@ function Quest({ onExit, level = "B1", userId }) {
     if (round + 1 >= ROUNDS.length) {
       const p = progressRef.current || loadProgress(userId);
       const correctCount = results.filter((r) => r.correct).length;
-      recordSession(p, { sessionXp, correct: correctCount, total: results.length });
+      recordSession(p, { sessionXp, correct: correctCount, total: results.length, level });
       saveProgress(p, userId);
       progressRef.current = p;
       setStreak(streakStatus(p).count);
@@ -2522,6 +2559,8 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
   const [sel, setSel] = useState(null);
   const [mapMode, setMapMode] = useState("metro");
   const [showNameModal, setShowNameModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const handleLogout = async () => { await supabase.auth.signOut(); };
   useEffect(() => {
     loadProgressCloud(userId).then((loaded) => {
       setP(loaded);
@@ -2536,6 +2575,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
   };
   if (!p) return null;
   const sStat = streakStatus(p);
+  const practicedToday = p.lastPracticed?.[selectedLevel] === dayKey();
   const week = weeklyXp(p);
   const maxXp = Math.max(10, ...week.map((w) => w.xp));
   const totalCorrect = SKILLS.reduce((a, s) => a + (p.byLevel?.[selectedLevel]?.[s]?.correct || 0), 0);
@@ -2572,6 +2612,14 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .d-brand { font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:28px; }
         .d-brand b{ color:#E8503A; font-style:normal; }
         .d-right { margin-inline-start:auto; display:flex; gap:10px; align-items:center; }
+        .menu-wrap { position:relative; }
+        .menu-btn { width:36px; height:36px; border-radius:10px; border:2px solid ${INK}; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:${INK}; transition:all .15s; font-family:'Assistant',sans-serif; }
+        .menu-btn:hover { background:${INK}; color:#fff; }
+        .menu-drop { position:absolute; left:0; top:44px; background:#fff; border-radius:12px; padding:6px; box-shadow:0 8px 30px rgba(0,0,0,.18),3px 3px 0 ${INK}; min-width:150px; z-index:100; border:2px solid ${INK}; }
+        .menu-item { width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; text-align:right; font-family:'Assistant',sans-serif; font-size:14px; font-weight:700; color:${INK}; border-radius:8px; display:flex; align-items:center; gap:8px; direction:rtl; }
+        .menu-item:hover { background:${PAPER}; }
+        .menu-item.danger { color:#E53E3E; }
+        .menu-item.danger:hover { background:#FFF5F5; }
         .d-streak { background:#fff; border:2px solid ${INK}; border-radius:999px; padding:6px 13px; font-weight:800; font-size:14px; display:flex; gap:6px; align-items:center; box-shadow:3px 3px 0 #E8503A; }
         .d-xp { background:${INK}; color:${PAPER}; border-radius:999px; padding:7px 15px; font-weight:700; font-size:14px; display:flex; gap:7px; align-items:center; box-shadow:3px 3px 0 ${GOLD}; }
         .hero { background:linear-gradient(115deg, ${INK}, #20305A); color:${PAPER}; border:2px solid ${INK}; border-radius:20px;
@@ -2597,12 +2645,20 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .stat-box { flex:1; min-width:120px; background:#fff; border:2px solid ${INK}; border-radius:16px; padding:14px 16px; box-shadow:4px 4px 0 ${INK}; }
         .stat-num { font-family:'Fraunces',serif; font-size:30px; font-weight:600; line-height:1; }
         .stat-lbl { font-weight:700; color:#8A8270; font-size:13px; margin-top:4px; }
-        .level-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; justify-content:center; }
         .level-label { text-align:center; margin-bottom:10px; font-size:11px; font-weight:700; letter-spacing:.14em; color:#8A8270; text-transform:uppercase; }
         .level-label b { font-family:'Fraunces',serif; font-style:italic; font-size:13px; color:${INK}; letter-spacing:0; text-transform:none; }
-        .lvl-btn { font-family:'Assistant'; font-weight:800; font-size:14px; padding:9px 16px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:transform .12s,box-shadow .12s; }
-        .lvl-btn:hover { transform:translateY(-2px); box-shadow:2px 2px 0 ${INK}; }
-        .lvl-btn.active { background:${INK}; color:${PAPER}; box-shadow:3px 3px 0 ${GOLD}; }
+        .tl-wrap { margin-bottom:20px; }
+        .tl-track { position:relative; display:flex; justify-content:space-between; align-items:flex-start; padding:10px 8px 32px; direction:ltr; }
+        .tl-rail { position:absolute; top:19px; left:8px; right:8px; height:4px; background:#E2DAC6; border-radius:4px; }
+        .tl-fill { position:absolute; top:19px; left:8px; height:4px; background:${INK}; border-radius:4px; transition:width .5s cubic-bezier(.3,.8,.3,1); }
+        .tl-dot { position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; background:none; border:none; cursor:pointer; padding:0; z-index:1; }
+        .tl-circle { width:18px; height:18px; border-radius:50%; border:3px solid #D4CEC0; background:#fff; transition:all .2s; display:block; }
+        .tl-lbl { font-family:'Assistant'; font-weight:800; font-size:12px; color:#AAA; transition:color .2s; white-space:nowrap; }
+        .tl-dot.past .tl-circle { background:${INK}; border-color:${INK}; }
+        .tl-dot.past .tl-lbl { color:#6B6452; }
+        .tl-dot.current .tl-circle { width:24px; height:24px; background:${INK}; border-color:${INK}; box-shadow:0 0 0 4px ${GOLD}; margin:-3px; }
+        .tl-dot.current .tl-lbl { color:${INK}; font-size:13px; font-weight:900; }
+        .tl-dot:hover .tl-circle { transform:scale(1.2); }
         .view-btn { font-family:'Assistant'; font-weight:700; font-size:13px; padding:7px 15px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:background .15s,color .15s; }
         .view-btn.active { background:${INK}; color:${PAPER}; }
         .metro-row { margin-bottom:24px; opacity:0; transform:translateX(16px); animation:slidein .5s ease forwards; }
@@ -2629,21 +2685,40 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         <div className="d-right">
           <span className="d-streak">🔥 <span className="nums">{sStat.count}</span></span>
           <span className="d-xp">⭐ <span className="nums">{p.xp}</span> XP</span>
+          <div className="menu-wrap">
+            <button className="menu-btn" onClick={() => setShowMenu((m) => !m)}>⋮</button>
+            {showMenu && (
+              <div className="menu-drop">
+                <button className="menu-item danger" onClick={handleLogout}>🚪 התנתק</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div>
-        <p className="level-label"><b>NIVEAU</b> · רמת לימוד</p>
-        <div className="level-tabs">
-          {LEVELS.map((l) => (
-            <button key={l} className={`lvl-btn ${selectedLevel === l ? "active" : ""}`} onClick={() => { onLevelChange(l); setSel(null); }}>{l}</button>
-          ))}
+      <div className="tl-wrap">
+          <p className="level-label"><b>NIVEAU</b> · רמת לימוד</p>
+          <div className="tl-track">
+            <div className="tl-rail" />
+            <div className="tl-fill" style={{ width: `${(LEVELS.indexOf(selectedLevel) / (LEVELS.length - 1)) * 100}%` }} />
+            {LEVELS.map((l) => {
+              const idx = LEVELS.indexOf(l);
+              const selIdx = LEVELS.indexOf(selectedLevel);
+              return (
+                <button key={l}
+                  className={`tl-dot ${idx < selIdx ? "past" : ""} ${l === selectedLevel ? "current" : ""}`}
+                  onClick={() => { onLevelChange(l); setSel(null); }}>
+                  <span className="tl-circle" />
+                  <span className="tl-lbl">{l}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
       <div className="hero">
         <div className="hero-eye">בונז'ור{p.displayName ? `, ${p.displayName}` : ""} 👋 · רמה {selectedLevel}</div>
-        <h1>{sStat.active ? `כבר התאמנת היום ברמה ${selectedLevel} — עוד סבב?` : `מוכן לאתגר ${selectedLevel}?`}</h1>
+        <h1>{practicedToday ? `כבר התאמנת היום ברמה ${selectedLevel} — עוד סבב?` : `מוכן לאתגר ${selectedLevel}?`}</h1>
         <button className="hero-cta" onClick={onStart}>התחל אתגר ←</button>
       </div>
 
