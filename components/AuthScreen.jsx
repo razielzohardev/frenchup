@@ -64,7 +64,7 @@ export default function AuthScreen() {
           <h1 style={styles.logoTitle}>
             French<span style={{ color: "#E8503A", fontStyle: "normal" }}>Up</span>
           </h1>
-          <p style={styles.logoSub}>למד צרפתית עם מטרו פריז</p>
+          <p style={styles.logoSub}>למד צרפתית כמו פריזאי אמיתי</p>
         </div>
 
         {/* Mode toggle */}
