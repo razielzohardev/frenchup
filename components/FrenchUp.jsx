@@ -1646,10 +1646,10 @@ const RIVE_GAUCHE_CHORDS = [
   { root: "E3", notes: ["E4", "G4", "B4"] },
 ];
 const MUSIC_THEMES = [
-  { id: "salon", name: "Salon de Paris", mood: "פסנתר ואקורדיון קאמרי", melody: PARIS_MELODY, chords: PARIS_CHORDS, beat: 0.58, loopBeats: 48, master: 0.24, wet: 0.32, filter: 6200, piano: 0.095, accordion: 0.028 },
-  { id: "seine", name: "Clair de Seine", mood: "נוקטורן רגוע על הנהר", melody: SEINE_MELODY, chords: SEINE_CHORDS, beat: 0.66, loopBeats: 36, master: 0.20, wet: 0.48, filter: 5000, piano: 0.11, accordion: 0.010 },
-  { id: "montmartre", name: "Valse de Montmartre", mood: "ואלס אקורדיון חי יותר", melody: MONTMARTRE_MELODY, chords: MONTMARTRE_CHORDS, beat: 0.38, loopBeats: 24, master: 0.22, wet: 0.28, filter: 6800, piano: 0.085, accordion: 0.048 },
-  { id: "rive", name: "Nocturne Rive Gauche", mood: "לילה צרפתי איטי ועדין", melody: RIVE_GAUCHE_MELODY, chords: RIVE_GAUCHE_CHORDS, beat: 0.85, loopBeats: 27, master: 0.18, wet: 0.55, filter: 4800, piano: 0.11, accordion: 0.006 },
+  { id: "salon", name: "La Vie en Rose", mood: "פסנתר ואקורדיון קאמרי", melody: PARIS_MELODY, chords: PARIS_CHORDS, beat: 0.58, loopBeats: 48, master: 0.24, wet: 0.32, filter: 6200, piano: 0.095, accordion: 0.028 },
+  { id: "seine", name: "Sous le Ciel de Paris", mood: "נוקטורן רגוע על הנהר", melody: SEINE_MELODY, chords: SEINE_CHORDS, beat: 0.66, loopBeats: 36, master: 0.20, wet: 0.48, filter: 5000, piano: 0.11, accordion: 0.010 },
+  { id: "montmartre", name: "La Valse d'Amélie", mood: "ואלס אקורדיון חי יותר", melody: MONTMARTRE_MELODY, chords: MONTMARTRE_CHORDS, beat: 0.38, loopBeats: 24, master: 0.22, wet: 0.28, filter: 6800, piano: 0.085, accordion: 0.048 },
+  { id: "rive", name: "Gymnopédie No.1", mood: "לילה צרפתי איטי ועדין", melody: RIVE_GAUCHE_MELODY, chords: RIVE_GAUCHE_CHORDS, beat: 0.85, loopBeats: 27, master: 0.18, wet: 0.55, filter: 4800, piano: 0.11, accordion: 0.006 },
 ];
 
 function humanTime(i) {
