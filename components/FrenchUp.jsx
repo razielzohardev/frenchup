@@ -2648,6 +2648,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .bar { width:100%; max-width:30px; background:${INK}; border-radius:6px 6px 0 0; transition:height .8s cubic-bezier(.3,.8,.3,1); min-height:3px; }
         .bar.top { background:#E8503A; }
         .bar-d { font-size:12px; font-weight:700; color:#8A8270; }
+        .bar-val { font-size:11px; font-weight:800; line-height:1; }
         .stat-line { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
         .stat-box { flex:1; min-width:120px; background:#fff; border:2px solid ${INK}; border-radius:16px; padding:14px 16px; box-shadow:4px 4px 0 ${INK}; }
         .stat-num { font-family:'Fraunces',serif; font-size:30px; font-weight:600; line-height:1; }
@@ -2772,12 +2773,16 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         <div className="card-eyebrow">Cette semaine · השבוע</div>
         <h2 className="card-title">XP ב-7 הימים האחרונים</h2>
         <div className="week">
-          {week.map((w, i) => (
-            <div className="bar-col" key={i}>
-              <div className={`bar ${w.xp === maxXp && w.xp > 0 ? "top" : ""}`} style={{ height: `${(w.xp / maxXp) * 100}%` }} title={`${w.xp} XP`} />
-              <span className="bar-d">{w.d}</span>
-            </div>
-          ))}
+          {week.map((w, i) => {
+            const isTop = w.xp === maxXp && w.xp > 0;
+            return (
+              <div className="bar-col" key={i}>
+                {w.xp > 0 && <span className="bar-val" style={{ color: isTop ? "#E8503A" : INK }}>{w.xp}</span>}
+                <div className={`bar ${isTop ? "top" : ""}`} style={{ height: `${(w.xp / maxXp) * 100}%` }} title={`${w.xp} XP`} />
+                <span className="bar-d">{w.d}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
