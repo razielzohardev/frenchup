@@ -1313,6 +1313,10 @@ const LEVEL_COLORS = {
   C2: { gra: "#364FC7", voc: "#862E2E", com: "#1A6B3A", exp: "#744210" },
 };
 
+const LEVEL_DOT_COLORS = {
+  A1: "#FF6B6B", A2: "#FF9F43", B1: "#6BCB77", B2: "#00B4D8", C1: "#1971C2", C2: "#6741D9",
+};
+
 const METRO_STATIONS = {
   gra: [[120,155],[168,155],[210,188],[322,215],[372,225],[435,250]],
   voc: [[ 92,322],[155,298],[245,298],[328,330],[408,328],[432,342]],
@@ -2652,12 +2656,10 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .tl-rail { position:absolute; top:19px; left:8px; right:8px; height:4px; background:#E2DAC6; border-radius:4px; }
         .tl-fill { position:absolute; top:19px; left:8px; height:4px; background:${INK}; border-radius:4px; transition:width .5s cubic-bezier(.3,.8,.3,1); }
         .tl-dot { position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; background:none; border:none; cursor:pointer; padding:0; z-index:1; }
-        .tl-circle { width:18px; height:18px; border-radius:50%; border:3px solid #D4CEC0; background:#fff; transition:all .2s; display:block; }
-        .tl-lbl { font-family:'Assistant'; font-weight:800; font-size:12px; color:#AAA; transition:color .2s; white-space:nowrap; }
-        .tl-dot.past .tl-circle { background:${INK}; border-color:${INK}; }
-        .tl-dot.past .tl-lbl { color:#6B6452; }
-        .tl-dot.current .tl-circle { width:24px; height:24px; background:${INK}; border-color:${INK}; box-shadow:0 0 0 4px ${GOLD}; margin:-3px; }
-        .tl-dot.current .tl-lbl { color:${INK}; font-size:13px; font-weight:900; }
+        .tl-circle { width:22px; height:22px; border-radius:50%; border:3px solid #D4CEC0; background:#fff; transition:all .2s; display:block; }
+        .tl-lbl { font-family:'Assistant'; font-weight:800; font-size:13px; color:#AAA; transition:color .2s; white-space:nowrap; }
+        .tl-dot.current .tl-circle { width:30px; height:30px; margin:-4px; }
+        .tl-dot.current .tl-lbl { font-size:14px; font-weight:900; }
         .tl-dot:hover .tl-circle { transform:scale(1.2); }
         .view-btn { font-family:'Assistant'; font-weight:700; font-size:13px; padding:7px 15px; border:2px solid ${INK}; border-radius:10px; cursor:pointer; background:#fff; color:${INK}; transition:background .15s,color .15s; }
         .view-btn.active { background:${INK}; color:${PAPER}; }
@@ -2700,16 +2702,23 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
           <p className="level-label"><b>NIVEAU</b> · רמת לימוד</p>
           <div className="tl-track">
             <div className="tl-rail" />
-            <div className="tl-fill" style={{ width: `${(LEVELS.indexOf(selectedLevel) / (LEVELS.length - 1)) * 100}%` }} />
+            <div className="tl-fill" style={{ width: `${(LEVELS.indexOf(selectedLevel) / (LEVELS.length - 1)) * 100}%`, background: LEVEL_DOT_COLORS[selectedLevel] }} />
             {LEVELS.map((l) => {
               const idx = LEVELS.indexOf(l);
               const selIdx = LEVELS.indexOf(selectedLevel);
+              const color = LEVEL_DOT_COLORS[l];
+              const isPast = idx < selIdx;
+              const isCurrent = l === selectedLevel;
               return (
                 <button key={l}
-                  className={`tl-dot ${idx < selIdx ? "past" : ""} ${l === selectedLevel ? "current" : ""}`}
+                  className={`tl-dot ${isPast ? "past" : ""} ${isCurrent ? "current" : ""}`}
                   onClick={() => { onLevelChange(l); setSel(null); }}>
-                  <span className="tl-circle" />
-                  <span className="tl-lbl">{l}</span>
+                  <span className="tl-circle" style={{
+                    borderColor: color,
+                    background: (isPast || isCurrent) ? color : "#fff",
+                    ...(isCurrent ? { boxShadow: `0 0 0 5px ${color}44` } : {}),
+                  }} />
+                  <span className="tl-lbl" style={{ color: (isPast || isCurrent) ? color : "#AAA" }}>{l}</span>
                 </button>
               );
             })}
