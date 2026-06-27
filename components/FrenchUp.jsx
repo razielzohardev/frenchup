@@ -2651,7 +2651,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .stat-lbl { font-weight:700; color:#8A8270; font-size:13px; margin-top:4px; }
         .level-label { text-align:center; margin-bottom:10px; font-size:11px; font-weight:700; letter-spacing:.14em; color:#8A8270; text-transform:uppercase; }
         .level-label b { font-family:'Fraunces',serif; font-style:italic; font-size:13px; color:${INK}; letter-spacing:0; text-transform:none; }
-        .tl-wrap { margin-bottom:20px; }
+        .tl-wrap { margin-top:28px; margin-bottom:20px; }
         .tl-track { position:relative; display:flex; justify-content:space-between; align-items:flex-start; padding:10px 8px 32px; direction:ltr; }
         .tl-rail { position:absolute; top:19px; left:8px; right:8px; height:4px; background:#E2DAC6; border-radius:4px; }
         .tl-fill { position:absolute; top:19px; left:8px; height:4px; background:${INK}; border-radius:4px; transition:width .5s cubic-bezier(.3,.8,.3,1); }
