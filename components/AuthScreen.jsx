@@ -82,7 +82,7 @@ export default function AuthScreen() {
         {/* Language toggle */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
           <button onClick={() => setLang(lang === "he" ? "en" : "he")} style={styles.langBtn}>
-            {lang === "he" ? "EN" : "עב"}
+            🌍
           </button>
         </div>
 

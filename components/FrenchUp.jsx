@@ -1518,6 +1518,7 @@ function VoicePicker() {
 }
 
 function TtsStatus() {
+  const { lang } = useLang();
   const [mode, setMode] = useState("checking");
   useEffect(() => {
     let alive = true;
@@ -1528,13 +1529,14 @@ function TtsStatus() {
     }).catch(() => { if (alive) { TTS_MODE = "device"; setMode("device"); loadVoices(); } });
     return () => { alive = false; };
   }, []);
-  if (mode === "checking") return <p className="vq">בודק קול…</p>;
-  if (mode === "cloud") return <p className="vq ok">✓ קול נוירוני (ElevenLabs) פעיל — נשמע אנושי לחלוטין.</p>;
+  if (mode === "checking") return <p className="vq">{lang === "en" ? "Checking voice…" : "בודק קול…"}</p>;
+  if (mode === "cloud") return <p className="vq ok">✓ {lang === "en" ? "Neural voice (ElevenLabs) active — sounds fully human." : "קול נוירוני (ElevenLabs) פעיל — נשמע אנושי לחלוטין."}</p>;
   return (
     <div>
       <p className="vq warn">
-        השרת ל-TTS עדיין לא מוגדר (חסר <b>ELEVENLABS_API_KEY</b> ב-Vercel) — בינתיים בשימוש קול המכשיר.
-        הוסף את המפתח ב-Vercel והאתר יעבור אוטומטית לקול הנוירוני.
+        {lang === "en"
+          ? <>The TTS server is not configured (missing <b>ELEVENLABS_API_KEY</b> in Vercel) — using device voice for now. Add the key in Vercel and the site will switch automatically to the neural voice.</>
+          : <>השרת ל-TTS עדיין לא מוגדר (חסר <b>ELEVENLABS_API_KEY</b> ב-Vercel) — בינתיים בשימוש קול המכשיר. הוסף את המפתח ב-Vercel והאתר יעבור אוטומטית לקול הנוירוני.</>}
       </p>
       <VoicePicker />
     </div>
@@ -1901,6 +1903,7 @@ function gradeMC(ex, selIdx) {
 }
 function gradeOpen(ex) {
   return { correct: true, xp: 40, selfCheck: true, correction_fr: ex.model_fr,
+    correction_he: ex.model_he, correction_en: ex.model_en,
     explanation_he: "תשובה חופשית — השווה לדוגמה למעלה. ביטויי מפתח שכדאי לשלב: " + ex.keys_fr.join(" · "),
     explanation_en: "Free answer — compare with the model above. Key phrases to include: " + ex.keys_fr.join(" · "),
     tip_he: ex.tip_he, tip_en: ex.tip_en };
@@ -2192,7 +2195,7 @@ function Quest({ onExit, level = "B1", userId }) {
                 <span>{lang === "en" ? r.en : r.he} <span className="fr" style={{ color: "#8A8270" }}>· {r.fr}</span></span></li>
             ))}
           </ul>
-          <button className="btn btn-primary" onClick={start}>{ui.start_challenge} ←</button>
+          <button className="btn btn-primary" onClick={start}>{ui.start_challenge} {lang === "he" ? "←" : "→"}</button>
           {streak > 0 && <p className="streak-banner">🔥 {ui.streak_banner.replace("{streak}", streak)}</p>}
           <TtsStatus />
         </div>
@@ -2535,6 +2538,7 @@ function ParisMetroMap({ p, selectedLevel, sel, onSel }) {
 }
 
 function MetroLine({ skill, correct, idx, sel, onSel, level }) {
+  const { lang } = useLang();
   const names = STATION_NAMES[level]?.[skill.id] || [];
   const done = stationsDone(correct);
   const pct = Math.round((done / STATIONS_PER) * 100);
@@ -2542,7 +2546,7 @@ function MetroLine({ skill, correct, idx, sel, onSel, level }) {
     <div className="metro-row" style={{ animationDelay: `${0.1 + idx * 0.08}s` }}>
       <div className="metro-head">
         <span className="metro-dot" style={{ background: skill.color }} />
-        <span className="metro-he">{skill.he}</span>
+        <span className="metro-he">{lang === "en" ? skill.en : skill.he}</span>
         <span className="metro-fr">{skill.fr}</span>
         <span className="metro-pct" style={{ color: skill.color }}>{pct}%</span>
       </div>
@@ -2592,7 +2596,7 @@ function NameModal({ onSave }) {
           disabled={!name.trim()}
           style={{ width:"100%", padding:14, borderRadius:12, border:"none", background:"#C8A23A", color:"#fff", fontSize:16, fontWeight:800, fontFamily:"'Assistant',sans-serif", cursor: name.trim() ? "pointer" : "default", opacity: name.trim() ? 1 : 0.5 }}
         >
-          {ui.lets_start} ←
+          {ui.lets_start} {lang === "he" ? "←" : "→"}
         </button>
       </div>
     </div>
@@ -2662,7 +2666,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .menu-btn { width:36px; height:36px; border-radius:10px; border:2px solid ${INK}; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:${INK}; transition:all .15s; font-family:'Assistant',sans-serif; }
         .menu-btn:hover { background:${INK}; color:#fff; }
         .menu-drop { position:absolute; left:0; top:44px; background:#fff; border-radius:12px; padding:6px; box-shadow:0 8px 30px rgba(0,0,0,.18),3px 3px 0 ${INK}; min-width:150px; z-index:100; border:2px solid ${INK}; }
-        .menu-item { width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; text-align:right; font-family:'Assistant',sans-serif; font-size:14px; font-weight:700; color:${INK}; border-radius:8px; display:flex; align-items:center; gap:8px; direction:rtl; }
+        .menu-item { width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; text-align:start; font-family:'Assistant',sans-serif; font-size:14px; font-weight:700; color:${INK}; border-radius:8px; display:flex; align-items:center; gap:8px; direction:inherit; }
         .menu-item:hover { background:${PAPER}; }
         .menu-item.danger { color:#E53E3E; }
         .menu-item.danger:hover { background:#FFF5F5; }
@@ -2718,7 +2722,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         .metro-pct { margin-inline-start:auto; font-family:'Fraunces',serif; font-weight:600; font-size:16px; }
         .metro-track { position:relative; padding:4px 12px 30px; }
         .rail-base { position:absolute; top:11px; right:12px; left:12px; height:6px; background:#E2DAC6; border-radius:6px; }
-        .rail-fill { position:absolute; top:11px; right:12px; height:6px; border-radius:6px; transition:width 1s cubic-bezier(.3,.8,.3,1) .2s; }
+        .rail-fill { position:absolute; top:11px; inset-inline-start:12px; height:6px; border-radius:6px; transition:width 1s cubic-bezier(.3,.8,.3,1) .2s; }
         .stations { position:relative; display:flex; justify-content:space-between; }
         .station { position:relative; width:22px; height:22px; border-radius:50%; border:3px solid; cursor:pointer; padding:0; transition:transform .15s; }
         .station:hover{ transform:scale(1.2); } .station.here{ width:26px; height:26px; margin-top:-2px; } .station.sel{ transform:scale(1.3); }
@@ -2777,7 +2781,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
       <div className="hero">
         <div className="hero-eye">{ui.hero_greeting}{p.displayName ? `, ${p.displayName}` : ""} 👋 · {ui.level_short} {selectedLevel}</div>
         <h1>{practicedToday ? ui.hero_practiced_today.replace("{level}", selectedLevel) : ui.hero_ready.replace("{level}", selectedLevel)}</h1>
-        <button className="hero-cta" onClick={onStart}>{ui.start_challenge} ←</button>
+        <button className="hero-cta" onClick={onStart}>{ui.start_challenge} {lang === "he" ? "←" : "→"}</button>
       </div>
 
       <div className="stat-line">
