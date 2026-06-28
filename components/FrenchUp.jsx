@@ -1911,6 +1911,7 @@ function Quest({ onExit, level = "B1", userId }) {
   const [round, setRound] = useState(0);
   const [ex, setEx] = useState(null);
   const [answer, setAnswer] = useState("");
+  const [showAllAccents, setShowAllAccents] = useState(false);
   const [selIdx, setSelIdx] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [checking, setChecking] = useState(false);
@@ -1983,6 +1984,27 @@ function Quest({ onExit, level = "B1", userId }) {
     setTotalXp(p.xp);
     setSessionXp((x) => x + (fb.xp || 0));
     setResults((r) => [...r, { round: cur, correct: fb.correct, xp: fb.xp || 0, self: fb.selfCheck }]);
+  };
+
+  const COMMON_ACCENTS = ["à","é","è","ê","ë","î","ï","ô","ù","û","ü","ç","œ"];
+  const ALL_ACCENTS = [
+    "à","â","ä","á","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç","œ","æ",
+    "À","Â","Ä","Á","É","È","Ê","Ë","Î","Ï","Ô","Ö","Ù","Û","Ü","Ç","Œ","Æ"
+  ];
+
+  const addAccent = (ch) => {
+    if (!inputRef.current) return;
+    const el = inputRef.current;
+    const start = typeof el.selectionStart === "number" ? el.selectionStart : answer.length;
+    const end = typeof el.selectionEnd === "number" ? el.selectionEnd : answer.length;
+    const nextAnswer = answer.slice(0, start) + ch + answer.slice(end);
+    setAnswer(nextAnswer);
+    setTimeout(() => {
+      el.focus();
+      if (typeof el.setSelectionRange === "function") {
+        el.setSelectionRange(start + 1, start + 1);
+      }
+    }, 0);
   };
 
   const submit = async () => {
@@ -2088,6 +2110,12 @@ function Quest({ onExit, level = "B1", userId }) {
         textarea, input.ans { width:100%; font-family:'Fraunces',serif; font-size:18px; direction:ltr; text-align:left;
           border:2px solid ${INK}; border-radius:12px; padding:14px 16px; resize:vertical; background:#fff; color:${INK}; outline:none; }
         textarea:focus, input.ans:focus { box-shadow:0 0 0 3px ${GOLD}55; }
+        .accent-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+        .accent-row-full { margin-top:-4px; padding-bottom:8px; }
+        .accent-btn, .accent-toggle { border:1px solid #D8CDAF; border-radius:10px; background:#fff; color:${INK}; padding:8px 10px; font-size:15px; cursor:pointer; transition:transform .12s, background .12s, border-color .12s; }
+        .accent-btn:hover, .accent-toggle:hover { transform:translateY(-1px); border-color:${INK}; background:#FBF7EE; }
+        .accent-btn:active, .accent-toggle:active { transform:translateY(1px); }
+        .accent-toggle { margin-left:auto; font-weight:700; }
         .opts { display:flex; flex-direction:column; gap:10px; }
         .opt { display:flex; align-items:center; gap:10px; text-align:right; direction:ltr; font-family:'Fraunces',serif; font-size:16px;
           padding:13px 16px; border:2px solid ${INK}; border-radius:12px; background:#fff; cursor:pointer; transition:transform .1s; }
@@ -2211,9 +2239,27 @@ function Quest({ onExit, level = "B1", userId }) {
                 )}
 
                 {ex.type !== "mc" && !feedback && (
-                  ex.type === "open"
-                    ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="כתוב את תשובתך בצרפתית..." />
-                    : <input ref={inputRef} className="ans" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder="התשובה שלך בצרפתית..." />
+                  <>
+                    <div className="accent-row" role="toolbar" aria-label="תוויה צרפתית">
+                      {COMMON_ACCENTS.map((ch) => (
+                        <button key={ch} type="button" className="accent-btn" onClick={() => addAccent(ch)}>{ch}</button>
+                      ))}
+                      <button type="button" className="accent-toggle" onClick={() => setShowAllAccents((v) => !v)}>
+                        {showAllAccents ? "פחות סימנים" : "עוד סימנים"}
+                      </button>
+                    </div>
+                    {showAllAccents && (
+                      <div className="accent-row accent-row-full" role="toolbar" aria-label="סימנים צרפתיים נוספים">
+                        {ALL_ACCENTS.map((ch) => (
+                          <button key={ch} type="button" className="accent-btn" onClick={() => addAccent(ch)}>{ch}</button>
+                        ))}
+                      </div>
+                    )}
+                    {ex.type === "open"
+                      ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="כתוב את תשובתך בצרפתית..." />
+                      : <input ref={inputRef} className="ans" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder="התשובה שלך בצרפתית..." />
+                    }
+                  </>
                 )}
 
                 {!feedback && (
