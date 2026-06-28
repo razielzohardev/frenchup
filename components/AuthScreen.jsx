@@ -12,7 +12,7 @@ const GoogleIcon = () => (
 );
 
 export default function AuthScreen() {
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [mode, setMode] = useState("login"); // "login" | "signup" | "reset"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,6 +44,22 @@ export default function AuthScreen() {
     }
   };
 
+  const handleReset = async (e) => {
+    e.preventDefault();
+    setError(""); setSuccess(""); setLoading(true);
+    try {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (err) throw err;
+      setSuccess("נשלח מייל לאיפוס הסיסמה — בדוק את תיבת הדואר שלך.");
+    } catch (err) {
+      setError(err.message || "אירעה שגיאה, נסה שוב.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogle = async () => {
     setError(""); setLoading(true);
     const { error: err } = await supabase.auth.signInWithOAuth({
@@ -67,71 +83,114 @@ export default function AuthScreen() {
           <p style={styles.logoSub}>למד צרפתית כמו פריזאי אמיתי</p>
         </div>
 
-        {/* Mode toggle */}
-        <div style={styles.toggle}>
-          <button
-            style={{ ...styles.toggleBtn, ...(mode === "login" ? styles.toggleActive : {}) }}
-            onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-          >
-            התחברות
-          </button>
-          <button
-            style={{ ...styles.toggleBtn, ...(mode === "signup" ? styles.toggleActive : {}) }}
-            onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
-          >
-            הרשמה
-          </button>
-        </div>
+        {/* Mode toggle — hidden in reset mode */}
+        {mode !== "reset" && (
+          <div style={styles.toggle}>
+            <button
+              style={{ ...styles.toggleBtn, ...(mode === "login" ? styles.toggleActive : {}) }}
+              onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+            >
+              התחברות
+            </button>
+            <button
+              style={{ ...styles.toggleBtn, ...(mode === "signup" ? styles.toggleActive : {}) }}
+              onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
+            >
+              הרשמה
+            </button>
+          </div>
+        )}
 
-        {/* Form */}
-        <form onSubmit={handle} style={styles.form}>
-          <label style={styles.label}>אימייל</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
-            required
-            style={styles.input}
-            dir="ltr"
-          />
-          <label style={styles.label}>סיסמה</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="לפחות 6 תווים"
-            required
-            style={styles.input}
-            dir="ltr"
-          />
+        {/* Reset password form */}
+        {mode === "reset" ? (
+          <form onSubmit={handleReset} style={styles.form}>
+            <p style={{ fontSize: "14px", color: "#666", margin: "0 0 16px", lineHeight: 1.5 }}>
+              הכנס את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה.
+            </p>
+            <label style={styles.label}>אימייל</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              style={styles.input}
+              dir="ltr"
+            />
+            {error && <p style={styles.error}>{error}</p>}
+            {success && <p style={styles.successMsg}>{success}</p>}
+            <button type="submit" disabled={loading} style={styles.btn}>
+              {loading ? "..." : "שלח קישור לאיפוס"}
+            </button>
+            <p style={{ ...styles.hint, marginTop: 16 }}>
+              <span style={styles.link} onClick={() => { setMode("login"); setError(""); setSuccess(""); }}>
+                חזרה להתחברות
+              </span>
+            </p>
+          </form>
+        ) : (
+          /* Login / Signup form */
+          <form onSubmit={handle} style={styles.form}>
+            <label style={styles.label}>אימייל</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              style={styles.input}
+              dir="ltr"
+            />
+            <label style={styles.label}>סיסמה</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="לפחות 6 תווים"
+              required
+              style={styles.input}
+              dir="ltr"
+            />
+            {mode === "login" && (
+              <span
+                style={{ fontSize: "12px", color: GOLD, fontWeight: 700, cursor: "pointer", textAlign: "left", marginTop: -4 }}
+                onClick={() => { setMode("reset"); setError(""); setSuccess(""); }}
+              >
+                שכחתי סיסמה
+              </span>
+            )}
 
-          {error && <p style={styles.error}>{error}</p>}
-          {success && <p style={styles.successMsg}>{success}</p>}
+            {error && <p style={styles.error}>{error}</p>}
+            {success && <p style={styles.successMsg}>{success}</p>}
 
-          <button type="submit" disabled={loading} style={styles.btn}>
-            {loading ? "..." : mode === "login" ? "התחבר" : "צור חשבון"}
-          </button>
-        </form>
+            <button type="submit" disabled={loading} style={styles.btn}>
+              {loading ? "..." : mode === "login" ? "התחבר" : "צור חשבון"}
+            </button>
+          </form>
+        )}
 
-        <div style={styles.divider}>
-          <span style={styles.dividerLine} />
-          <span style={styles.dividerText}>או</span>
-          <span style={styles.dividerLine} />
-        </div>
-        <button type="button" onClick={handleGoogle} disabled={loading} style={styles.googleBtn}>
-          <GoogleIcon /> המשך עם Google
-        </button>
+        {mode !== "reset" && (
+          <>
+            <div style={styles.divider}>
+              <span style={styles.dividerLine} />
+              <span style={styles.dividerText}>או</span>
+              <span style={styles.dividerLine} />
+            </div>
+            <button type="button" onClick={handleGoogle} disabled={loading} style={styles.googleBtn}>
+              <GoogleIcon /> המשך עם Google
+            </button>
 
-        <p style={styles.hint}>
-          {mode === "login" ? "אין לך חשבון? " : "כבר רשום? "}
-          <span
-            style={styles.link}
-            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setSuccess(""); }}
-          >
-            {mode === "login" ? "הירשם עכשיו" : "התחבר"}
-          </span>
-        </p>
+            <p style={styles.hint}>
+              {mode === "login" ? "אין לך חשבון? " : "כבר רשום? "}
+              <span
+                style={styles.link}
+                onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setSuccess(""); }}
+              >
+                {mode === "login" ? "הירשם עכשיו" : "התחבר"}
+              </span>
+            </p>
+          </>
+        )}
       </div>
     </div>
     </>
