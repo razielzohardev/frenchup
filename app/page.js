@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import App from "../components/FrenchUp";
 import AuthScreen from "../components/AuthScreen";
 import { supabase } from "../lib/supabase";
+import { LangProvider, useLang } from "../lib/lang";
 
 function WelcomeScreen({ user }) {
+  const { ui } = useLang();
   const name =
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
@@ -52,13 +54,21 @@ function WelcomeScreen({ user }) {
           </div>
         </>
       ) : (
-        <p style={{ color: "#4A4060", fontSize: "13px", fontWeight: 600, margin: 0 }}>טוען…</p>
+        <p style={{ color: "#4A4060", fontSize: "13px", fontWeight: 600, margin: 0 }}>{ui.loading}</p>
       )}
     </div>
   );
 }
 
-export default function Page() {
+function PageWithLang() {
+  return (
+    <LangProvider>
+      <PageInner />
+    </LangProvider>
+  );
+}
+
+function PageInner() {
   const [session, setSession] = useState(undefined);
   const [welcomeUser, setWelcomeUser] = useState(null);
   const prevSessionRef = useRef(undefined);
@@ -73,8 +83,6 @@ export default function Page() {
       if (event === "SIGNED_IN" && !prevSessionRef.current) {
         setWelcomeUser(s?.user);
         const elapsed = Date.now() - pageLoadRef.current;
-        // OAuth: elapsed includes loading time → show remaining of 2s window
-        // Email/password: user was on auth screen a while → elapsed > 5s → fresh 2s
         const remaining = elapsed < 10000 ? Math.max(0, 5000 - elapsed) : 5000;
         setTimeout(() => setWelcomeUser(null), remaining);
       }
@@ -89,3 +97,5 @@ export default function Page() {
   if (!session) return <AuthScreen />;
   return <App userId={session.user.id} />;
 }
+
+export default PageWithLang;

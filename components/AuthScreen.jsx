@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { useLang } from "../lib/lang";
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 48 48" style={{ verticalAlign: "middle", flexShrink: 0 }}>
@@ -12,6 +13,7 @@ const GoogleIcon = () => (
 );
 
 export default function AuthScreen() {
+  const { lang, setLang, ui } = useLang();
   const [mode, setMode] = useState("login"); // "login" | "signup" | "reset"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +28,7 @@ export default function AuthScreen() {
       if (mode === "signup") {
         const { error: err } = await supabase.auth.signUp({ email, password });
         if (err) throw err;
-        setSuccess("נשלח מייל אימות — בדוק את תיבת הדואר שלך ולחץ על הקישור.");
+        setSuccess(ui.auth_signup_success);
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password });
         if (err) throw err;
@@ -34,11 +36,11 @@ export default function AuthScreen() {
       }
     } catch (err) {
       const msg = err.message || "";
-      if (msg.includes("Invalid login credentials")) setError("אימייל או סיסמה שגויים.");
-      else if (msg.includes("Email not confirmed")) setError("יש לאמת את האימייל תחילה — בדוק את תיבת הדואר.");
-      else if (msg.includes("User already registered")) setError("כתובת אימייל זו כבר רשומה. נסה להתחבר.");
-      else if (msg.includes("Password should be at least")) setError("הסיסמה חייבת להכיל לפחות 6 תווים.");
-      else setError(msg || "אירעה שגיאה, נסה שוב.");
+      if (msg.includes("Invalid login credentials")) setError(ui.auth_err_invalid);
+      else if (msg.includes("Email not confirmed")) setError(ui.auth_err_unconfirmed);
+      else if (msg.includes("User already registered")) setError(ui.auth_err_registered);
+      else if (msg.includes("Password should be at least")) setError(ui.auth_err_weak_password);
+      else setError(msg || ui.auth_err_generic);
     } finally {
       setLoading(false);
     }
@@ -52,9 +54,9 @@ export default function AuthScreen() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (err) throw err;
-      setSuccess("נשלח מייל לאיפוס הסיסמה — בדוק את תיבת הדואר שלך.");
+      setSuccess(ui.auth_reset_success);
     } catch (err) {
-      setError(err.message || "אירעה שגיאה, נסה שוב.");
+      setError(err.message || ui.auth_err_generic);
     } finally {
       setLoading(false);
     }
@@ -70,17 +72,26 @@ export default function AuthScreen() {
     setLoading(false);
   };
 
+  const dir = lang === "he" ? "rtl" : "ltr";
+
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap');`}</style>
-    <div style={styles.bg}>
+    <div style={{ ...styles.bg, direction: dir }}>
       <div style={styles.card}>
+        {/* Language toggle */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <button onClick={() => setLang(lang === "he" ? "en" : "he")} style={styles.langBtn}>
+            {lang === "he" ? "EN" : "עב"}
+          </button>
+        </div>
+
         {/* Logo */}
         <div style={styles.logoWrap}>
           <h1 style={styles.logoTitle}>
             French<span style={{ color: "#E8503A", fontStyle: "normal" }}>Up</span>
           </h1>
-          <p style={styles.logoSub}>למד צרפתית כמו פריזאי אמיתי</p>
+          <p style={styles.logoSub}>{ui.auth_tagline}</p>
         </div>
 
         {/* Mode toggle — hidden in reset mode */}
@@ -90,13 +101,13 @@ export default function AuthScreen() {
               style={{ ...styles.toggleBtn, ...(mode === "login" ? styles.toggleActive : {}) }}
               onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
             >
-              התחברות
+              {ui.auth_login}
             </button>
             <button
               style={{ ...styles.toggleBtn, ...(mode === "signup" ? styles.toggleActive : {}) }}
               onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
             >
-              הרשמה
+              {ui.auth_signup}
             </button>
           </div>
         )}
@@ -105,9 +116,9 @@ export default function AuthScreen() {
         {mode === "reset" ? (
           <form onSubmit={handleReset} style={styles.form}>
             <p style={{ fontSize: "14px", color: "#666", margin: "0 0 16px", lineHeight: 1.5 }}>
-              הכנס את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה.
+              {ui.auth_reset_desc}
             </p>
-            <label style={styles.label}>אימייל</label>
+            <label style={styles.label}>{ui.auth_email}</label>
             <input
               type="email"
               value={email}
@@ -120,18 +131,18 @@ export default function AuthScreen() {
             {error && <p style={styles.error}>{error}</p>}
             {success && <p style={styles.successMsg}>{success}</p>}
             <button type="submit" disabled={loading} style={styles.btn}>
-              {loading ? "..." : "שלח קישור לאיפוס"}
+              {loading ? "..." : ui.auth_send_reset}
             </button>
             <p style={{ ...styles.hint, marginTop: 16 }}>
               <span style={styles.link} onClick={() => { setMode("login"); setError(""); setSuccess(""); }}>
-                חזרה להתחברות
+                {ui.auth_back_to_login}
               </span>
             </p>
           </form>
         ) : (
           /* Login / Signup form */
           <form onSubmit={handle} style={styles.form}>
-            <label style={styles.label}>אימייל</label>
+            <label style={styles.label}>{ui.auth_email}</label>
             <input
               type="email"
               value={email}
@@ -141,22 +152,22 @@ export default function AuthScreen() {
               style={styles.input}
               dir="ltr"
             />
-            <label style={styles.label}>סיסמה</label>
+            <label style={styles.label}>{ui.auth_password}</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="לפחות 6 תווים"
+              placeholder={ui.auth_password_placeholder}
               required
               style={styles.input}
               dir="ltr"
             />
             {mode === "login" && (
               <span
-                style={{ fontSize: "12px", color: GOLD, fontWeight: 700, cursor: "pointer", textAlign: "left", marginTop: -4 }}
+                style={{ fontSize: "12px", color: GOLD, fontWeight: 700, cursor: "pointer", textAlign: lang === "he" ? "left" : "right", marginTop: -4 }}
                 onClick={() => { setMode("reset"); setError(""); setSuccess(""); }}
               >
-                שכחתי סיסמה
+                {ui.auth_forgot_password}
               </span>
             )}
 
@@ -164,7 +175,7 @@ export default function AuthScreen() {
             {success && <p style={styles.successMsg}>{success}</p>}
 
             <button type="submit" disabled={loading} style={styles.btn}>
-              {loading ? "..." : mode === "login" ? "התחבר" : "צור חשבון"}
+              {loading ? "..." : mode === "login" ? ui.auth_login_btn : ui.auth_signup_btn}
             </button>
           </form>
         )}
@@ -173,20 +184,20 @@ export default function AuthScreen() {
           <>
             <div style={styles.divider}>
               <span style={styles.dividerLine} />
-              <span style={styles.dividerText}>או</span>
+              <span style={styles.dividerText}>{ui.auth_or}</span>
               <span style={styles.dividerLine} />
             </div>
             <button type="button" onClick={handleGoogle} disabled={loading} style={styles.googleBtn}>
-              <GoogleIcon /> המשך עם Google
+              <GoogleIcon /> {ui.auth_google}
             </button>
 
             <p style={styles.hint}>
-              {mode === "login" ? "אין לך חשבון? " : "כבר רשום? "}
+              {mode === "login" ? ui.auth_no_account : ui.auth_have_account}{" "}
               <span
                 style={styles.link}
                 onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setSuccess(""); }}
               >
-                {mode === "login" ? "הירשם עכשיו" : "התחבר"}
+                {mode === "login" ? ui.auth_signup_link : ui.auth_login_link}
               </span>
             </p>
           </>
@@ -209,7 +220,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     fontFamily: "'Assistant', sans-serif",
-    direction: "rtl",
     padding: "20px",
   },
   card: {
@@ -345,5 +355,16 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: "8px",
+  },
+  langBtn: {
+    background: "transparent",
+    border: "1px solid #DDD8CC",
+    borderRadius: "6px",
+    padding: "4px 10px",
+    fontSize: "12px",
+    fontWeight: "700",
+    color: "#888",
+    cursor: "pointer",
+    fontFamily: "'Assistant', sans-serif",
   },
 };

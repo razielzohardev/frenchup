@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { useLang } from "../lib/lang";
+import { BANKS_EN } from "../lib/banks-en";
 
 /* ============================================================
    FrenchUp — Daily Quest  (Next.js)
@@ -17,10 +19,10 @@ const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const LKEY = "frenchup_level_v1";
 
 const ROUNDS = [
-  { id: "gra", he: "דקדוק", fr: "Grammaire", color: "#2563EB", icon: "✍️" },
-  { id: "voc", he: "אוצר מילים", fr: "Vocabulaire", color: "#E8503A", icon: "🃏" },
-  { id: "com", he: "הבנה", fr: "Compréhension", color: "#0E9F6E", icon: "📖" },
-  { id: "exp", he: "דיבור", fr: "Expression", color: "#8B5CF6", icon: "💬" },
+  { id: "gra", he: "דקדוק", en: "Grammar", fr: "Grammaire", color: "#2563EB", icon: "✍️" },
+  { id: "voc", he: "אוצר מילים", en: "Vocabulary", fr: "Vocabulaire", color: "#E8503A", icon: "🃏" },
+  { id: "com", he: "הבנה", en: "Comprehension", fr: "Compréhension", color: "#0E9F6E", icon: "📖" },
+  { id: "exp", he: "דיבור", en: "Expression", fr: "Expression", color: "#8B5CF6", icon: "💬" },
 ];
 
 /* -------------------- EXERCISE BANKS (station-indexed 2D arrays) -------------------- */
@@ -1152,6 +1154,26 @@ const BANK = {
   C2: BANK_C2,
 };
 
+/* mergeBank: overlay English fields onto Hebrew exercise objects (2D station arrays) */
+const mergeBank = (heBank, enBank) =>
+  heBank.map((station, si) =>
+    station.map((ex, ei) => ({ ...ex, ...(enBank?.[si]?.[ei] || {}) }))
+  );
+
+/* mergeFlatBank: for BC flat arrays */
+const mergeFlatBank = (heBank, enBank) =>
+  heBank.map((ex, i) => ({ ...ex, ...(enBank?.[i] || {}) }));
+
+const MERGED_BANKS = {
+  A1: { gra: mergeBank(BANK_A1.gra, BANKS_EN.A1.gra), voc: mergeBank(BANK_A1.voc, BANKS_EN.A1.voc), com: mergeBank(BANK_A1.com, BANKS_EN.A1.com), exp: mergeBank(BANK_A1.exp, BANKS_EN.A1.exp) },
+  A2: { gra: mergeBank(BANK_A2.gra, BANKS_EN.A2.gra), voc: mergeBank(BANK_A2.voc, BANKS_EN.A2.voc), com: mergeBank(BANK_A2.com, BANKS_EN.A2.com), exp: mergeBank(BANK_A2.exp, BANKS_EN.A2.exp) },
+  B1: { gra: mergeBank(BANK_B1.gra, BANKS_EN.B1.gra), voc: mergeBank(BANK_B1.voc, BANKS_EN.B1.voc), com: mergeBank(BANK_B1.com, BANKS_EN.B1.com), exp: mergeBank(BANK_B1.exp, BANKS_EN.B1.exp) },
+  B2: { gra: mergeBank(BANK_B2.gra, BANKS_EN.B2.gra), voc: mergeBank(BANK_B2.voc, BANKS_EN.B2.voc), com: mergeBank(BANK_B2.com, BANKS_EN.B2.com), exp: mergeBank(BANK_B2.exp, BANKS_EN.B2.exp) },
+  C1: { gra: mergeBank(BANK_C1.gra, BANKS_EN.C1.gra), voc: mergeBank(BANK_C1.voc, BANKS_EN.C1.voc), com: mergeBank(BANK_C1.com, BANKS_EN.C1.com), exp: mergeBank(BANK_C1.exp, BANKS_EN.C1.exp) },
+  C2: { gra: mergeBank(BANK_C2.gra, BANKS_EN.C2.gra), voc: mergeBank(BANK_C2.voc, BANKS_EN.C2.voc), com: mergeBank(BANK_C2.com, BANKS_EN.C2.com), exp: mergeBank(BANK_C2.exp, BANKS_EN.C2.exp) },
+  BC: { gra: mergeFlatBank(BANK_BC.gra, BANKS_EN.BC.gra), voc: mergeFlatBank(BANK_BC.voc, BANKS_EN.BC.voc), com: mergeFlatBank(BANK_BC.com, BANKS_EN.BC.com), exp: mergeFlatBank(BANK_BC.exp, BANKS_EN.BC.exp) },
+};
+
 const pick = (arr, avoid, masteredSet = new Set()) => {
   let pool = arr.filter((_, i) => !masteredSet.has(i));
   if (pool.length === 0) pool = [...arr]; // all mastered — allow full rotation
@@ -1319,6 +1341,9 @@ const LEVEL_DOT_COLORS = {
 const LEVEL_HE_LABELS = {
   A1: "מתחיל", A2: "בסיסי", B1: "עצמאי", B2: "מתקדם", C1: "שוטף", C2: "מומחה",
 };
+const LEVEL_EN_LABELS = {
+  A1: "Beginner", A2: "Basic", B1: "Independent", B2: "Advanced", C1: "Fluent", C2: "Expert",
+};
 
 const METRO_STATIONS = {
   gra: [[120,155],[168,155],[210,188],[322,215],[372,225],[435,250]],
@@ -1336,11 +1361,12 @@ const LANDMARKS = [
   { emoji: "🎭", label: "Opéra Garnier",    x: 392, y: 262, unlock: (d) => d.exp >= 4 },
   { emoji: "🏰", label: "Versailles",       x: 362, y: 330, unlock: (d) => d.gra >= 5 && d.voc >= 5 && d.com >= 5 && d.exp >= 5 },
 ];
-function weeklyXp(p) {
-  const names = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
+function weeklyXp(p, lang) {
+  const namesHe = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
+  const namesEn = ["Su", "M", "T", "W", "Th", "F", "Sa"];
+  const names = lang === "en" ? namesEn : namesHe;
   const map = {};
   (p.history || []).forEach((h) => { const k = dayKey(new Date(h.date)); map[k] = (map[k] || 0) + (h.xp || 0); });
-  const out = [];
   const today = new Date();
   const sunday = new Date(today);
   sunday.setDate(today.getDate() - today.getDay());
@@ -1453,13 +1479,14 @@ function SpeakerBtn({ text, color = INK, size = 34 }) {
 }
 
 function FrBlock({ text, he, big }) {
+  const { ui } = useLang();
   const [open, setOpen] = useState(false);
   useEffect(() => { setOpen(false); }, [text]);
   return (
     <div className={`frblock ${big ? "big" : ""}`}>
       <div className="frblock-bar">
         <SpeakerBtn text={text} />
-        {he && <button className="translate-btn" onClick={() => setOpen((o) => !o)}>{open ? "הסתר תרגום" : "👆 תרגום"}</button>}
+        {he && <button className="translate-btn" onClick={() => setOpen((o) => !o)}>{open ? ui.hide_translation : `👆 ${ui.translation}`}</button>}
       </div>
       <div className="frblock-text" onClick={() => he && setOpen((o) => !o)} style={{ cursor: he ? "pointer" : "default" }}>{text}</div>
       {open && he && <div className="frblock-trans">{he}</div>}
@@ -1651,10 +1678,10 @@ const RIVE_GAUCHE_CHORDS = [
   { root: "E3", notes: ["E4", "G4", "B4"] },
 ];
 const MUSIC_THEMES = [
-  { id: "salon", name: "La Vie en Rose", mood: "פסנתר ואקורדיון קאמרי", melody: PARIS_MELODY, chords: PARIS_CHORDS, beat: 0.58, loopBeats: 48, master: 0.24, wet: 0.32, filter: 6200, piano: 0.095, accordion: 0.028 },
-  { id: "seine", name: "Sous le Ciel de Paris", mood: "נוקטורן רגוע על הנהר", melody: SEINE_MELODY, chords: SEINE_CHORDS, beat: 0.66, loopBeats: 36, master: 0.20, wet: 0.48, filter: 5000, piano: 0.11, accordion: 0.010 },
-  { id: "montmartre", name: "La Valse d'Amélie", mood: "ואלס אקורדיון חי יותר", melody: MONTMARTRE_MELODY, chords: MONTMARTRE_CHORDS, beat: 0.38, loopBeats: 24, master: 0.22, wet: 0.28, filter: 6800, piano: 0.085, accordion: 0.048 },
-  { id: "rive", name: "Gymnopédie No.1", mood: "לילה צרפתי איטי ועדין", melody: RIVE_GAUCHE_MELODY, chords: RIVE_GAUCHE_CHORDS, beat: 0.85, loopBeats: 27, master: 0.18, wet: 0.55, filter: 4800, piano: 0.11, accordion: 0.006 },
+  { id: "salon", name: "La Vie en Rose", mood: "פסנתר ואקורדיון קאמרי", mood_en: "Chamber piano & accordion", melody: PARIS_MELODY, chords: PARIS_CHORDS, beat: 0.58, loopBeats: 48, master: 0.24, wet: 0.32, filter: 6200, piano: 0.095, accordion: 0.028 },
+  { id: "seine", name: "Sous le Ciel de Paris", mood: "נוקטורן רגוע על הנהר", mood_en: "Calm river nocturne", melody: SEINE_MELODY, chords: SEINE_CHORDS, beat: 0.66, loopBeats: 36, master: 0.20, wet: 0.48, filter: 5000, piano: 0.11, accordion: 0.010 },
+  { id: "montmartre", name: "La Valse d'Amélie", mood: "ואלס אקורדיון חי יותר", mood_en: "Lively accordion waltz", melody: MONTMARTRE_MELODY, chords: MONTMARTRE_CHORDS, beat: 0.38, loopBeats: 24, master: 0.22, wet: 0.28, filter: 6800, piano: 0.085, accordion: 0.048 },
+  { id: "rive", name: "Gymnopédie No.1", mood: "לילה צרפתי איטי ועדין", mood_en: "Slow & gentle French night", melody: RIVE_GAUCHE_MELODY, chords: RIVE_GAUCHE_CHORDS, beat: 0.85, loopBeats: 27, master: 0.18, wet: 0.55, filter: 4800, piano: 0.11, accordion: 0.006 },
 ];
 
 function humanTime(i) {
@@ -1736,6 +1763,7 @@ function scheduleParisLoop(ctx, dest, startAt, theme) {
 }
 
 function ParisMusicButton() {
+  const { lang, ui } = useLang();
   const [playing, setPlaying] = useState(false);
   const [open, setOpen] = useState(false);
   const [themeId, setThemeId] = useState("salon");
@@ -1832,19 +1860,19 @@ function ParisMusicButton() {
   return (
     <div className="music-player">
       <button className={`music-btn ${playing ? "on" : ""}`} onClick={toggle}
-        aria-label={playing ? "כבה מוזיקת רקע" : "הפעל מוזיקת רקע"} title={playing ? "כבה מוזיקה" : "הפעל מוזיקה"}>
+        aria-label={playing ? ui.music_off : ui.music_on} title={playing ? ui.music_off : ui.music_on}>
         ♪
       </button>
-      <button className="music-name" onClick={() => setOpen((v) => !v)} aria-label="בחר מנגינה" title="בחר מנגינה">
+      <button className="music-name" onClick={() => setOpen((v) => !v)} aria-label={ui.choose_melody} title={ui.choose_melody}>
         <span>{theme.name}</span>
-        <small>{theme.mood}</small>
+        <small>{lang === "en" ? (theme.mood_en || theme.mood) : theme.mood}</small>
       </button>
       {open && (
         <div className="music-menu">
           {MUSIC_THEMES.map((t) => (
             <button key={t.id} className={`music-option ${t.id === theme.id ? "active" : ""}`} onClick={() => chooseTheme(t)}>
               <span>{t.name}</span>
-              <small>{t.mood}</small>
+              <small>{lang === "en" ? (t.mood_en || t.mood) : t.mood}</small>
             </button>
           ))}
         </div>
@@ -1861,16 +1889,21 @@ function gradeInput(ex, userAns) {
   const ok = ex.accepted.some((a) => { const na = norm(a); return nu === na || nu.includes(na); });
   return { correct: ok, xp: ok ? 50 : -15, correction_fr: ex.solution_fr,
     explanation_he: ok ? "כל הכבוד — בדיוק נכון. " + ex.explanation_he : "התשובה הנכונה היא « " + ex.solution_fr + " ». " + ex.explanation_he,
-    tip_he: ex.tip_he };
+    explanation_en: ok ? "Well done — exactly right. " + (ex.explanation_en || "") : "The correct answer is « " + ex.solution_fr + " ». " + (ex.explanation_en || ""),
+    tip_he: ex.tip_he, tip_en: ex.tip_en };
 }
 function gradeMC(ex, selIdx) {
   const ok = selIdx === ex.correct;
   return { correct: ok, xp: ok ? 50 : -15, correction_fr: "✔ " + ex.options[ex.correct],
-    explanation_he: (ok ? "" : "התשובה הנכונה: « " + ex.options[ex.correct] + " ». ") + ex.explanation_he, tip_he: null };
+    explanation_he: (ok ? "" : "התשובה הנכונה: « " + ex.options[ex.correct] + " ». ") + ex.explanation_he,
+    explanation_en: (ok ? "" : "The correct answer is: « " + ex.options[ex.correct] + " ». ") + (ex.explanation_en || ""),
+    tip_he: null, tip_en: null };
 }
 function gradeOpen(ex) {
   return { correct: true, xp: 40, selfCheck: true, correction_fr: ex.model_fr,
-    explanation_he: "תשובה חופשית — השווה לדוגמה למעלה. ביטויי מפתח שכדאי לשלב: " + ex.keys_fr.join(" · "), tip_he: ex.tip_he };
+    explanation_he: "תשובה חופשית — השווה לדוגמה למעלה. ביטויי מפתח שכדאי לשלב: " + ex.keys_fr.join(" · "),
+    explanation_en: "Free answer — compare with the model above. Key phrases to include: " + ex.keys_fr.join(" · "),
+    tip_he: ex.tip_he, tip_en: ex.tip_en };
 }
 
 // AI evaluation for free-text answers (server-side; throws if unavailable)
@@ -1907,11 +1940,11 @@ async function evaluateOpen(ex, answer, level = "B1") {
 
 /* ==================================================================== */
 function Quest({ onExit, level = "B1", userId }) {
+  const { lang, ui } = useLang();
   const [phase, setPhase] = useState("intro");
   const [round, setRound] = useState(0);
   const [ex, setEx] = useState(null);
   const [answer, setAnswer] = useState("");
-  const [showAllAccents, setShowAllAccents] = useState(false);
   const [selIdx, setSelIdx] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [checking, setChecking] = useState(false);
@@ -1942,7 +1975,7 @@ function Quest({ onExit, level = "B1", userId }) {
     const p = progressRef.current || loadProgress(userId);
     const correct = p.byLevel?.[level]?.[r.id]?.correct || 0;
     const stationIdx = Math.min(stationsDone(correct), STATIONS_PER - 1);
-    const rawBank = BANK[level]?.[r.id] || BANK.B2[r.id];
+    const rawBank = MERGED_BANKS[level]?.[r.id] || MERGED_BANKS.B2[r.id];
     const bank = Array.isArray(rawBank[0]) ? (rawBank[stationIdx] || rawBank[rawBank.length - 1]) : rawBank;
     const prefix = `${level}:${r.id}:${stationIdx}:`;
     const masteredSet = new Set(
@@ -1986,27 +2019,6 @@ function Quest({ onExit, level = "B1", userId }) {
     setResults((r) => [...r, { round: cur, correct: fb.correct, xp: fb.xp || 0, self: fb.selfCheck }]);
   };
 
-  const COMMON_ACCENTS = ["à","é","è","ê","ë","î","ï","ô","ù","û","ü","ç","œ"];
-  const ALL_ACCENTS = [
-    "à","â","ä","á","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç","œ","æ",
-    "À","Â","Ä","Á","É","È","Ê","Ë","Î","Ï","Ô","Ö","Ù","Û","Ü","Ç","Œ","Æ"
-  ];
-
-  const addAccent = (ch) => {
-    if (!inputRef.current) return;
-    const el = inputRef.current;
-    const start = typeof el.selectionStart === "number" ? el.selectionStart : answer.length;
-    const end = typeof el.selectionEnd === "number" ? el.selectionEnd : answer.length;
-    const nextAnswer = answer.slice(0, start) + ch + answer.slice(end);
-    setAnswer(nextAnswer);
-    setTimeout(() => {
-      el.focus();
-      if (typeof el.setSelectionRange === "function") {
-        el.setSelectionRange(start + 1, start + 1);
-      }
-    }, 0);
-  };
-
   const submit = async () => {
     if (checking) return;
     if (ex.type === "mc") { if (selIdx == null) return; applyFeedback(gradeMC(ex, selIdx)); return; }
@@ -2014,9 +2026,9 @@ function Quest({ onExit, level = "B1", userId }) {
     // open: AI evaluation when available, else fall back to model answer
     if (!answer.trim()) return;
     if (!/[a-zA-ZÀ-ÿ]/.test(answer))
-      return applyFeedback({ correct: false, xp: -15, correction_fr: ex.model_fr, tip_he: ex.tip_he, explanation_he: "התשובה חייבת להיות בצרפתית — לא זוהו אותיות לטיניות." });
+      return applyFeedback({ correct: false, xp: -15, correction_fr: ex.model_fr, tip_he: ex.tip_he, tip_en: ex.tip_en, explanation_he: "התשובה חייבת להיות בצרפתית — לא זוהו אותיות לטיניות.", explanation_en: "Your answer must be in French — no Latin characters detected." });
     if (answer.trim().split(/\s+/).length < 10)
-      return applyFeedback({ correct: false, xp: -15, correction_fr: ex.model_fr, tip_he: ex.tip_he, explanation_he: `התשובה קצרה מדי — נדרשות לפחות 10 מילים. נסה להרחיב.` });
+      return applyFeedback({ correct: false, xp: -15, correction_fr: ex.model_fr, tip_he: ex.tip_he, tip_en: ex.tip_en, explanation_he: "התשובה קצרה מדי — נדרשות לפחות 10 מילים. נסה להרחיב.", explanation_en: "Too short — at least 10 words required. Try to expand your answer." });
     if (!checkOn) { applyFeedback(gradeOpen(ex)); return; }
     setChecking(true);
     try {
@@ -2044,7 +2056,7 @@ function Quest({ onExit, level = "B1", userId }) {
   };
 
   return (
-    <div dir="rtl" className="quest">
+    <div dir={lang === "he" ? "rtl" : "ltr"} className="quest">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500;1,9..144,600&display=swap');
         * { box-sizing: border-box; }
@@ -2110,12 +2122,6 @@ function Quest({ onExit, level = "B1", userId }) {
         textarea, input.ans { width:100%; font-family:'Fraunces',serif; font-size:18px; direction:ltr; text-align:left;
           border:2px solid ${INK}; border-radius:12px; padding:14px 16px; resize:vertical; background:#fff; color:${INK}; outline:none; }
         textarea:focus, input.ans:focus { box-shadow:0 0 0 3px ${GOLD}55; }
-        .accent-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
-        .accent-row-full { margin-top:-4px; padding-bottom:8px; }
-        .accent-btn, .accent-toggle { border:1px solid #D8CDAF; border-radius:10px; background:#fff; color:${INK}; padding:8px 10px; font-size:15px; cursor:pointer; transition:transform .12s, background .12s, border-color .12s; }
-        .accent-btn:hover, .accent-toggle:hover { transform:translateY(-1px); border-color:${INK}; background:#FBF7EE; }
-        .accent-btn:active, .accent-toggle:active { transform:translateY(1px); }
-        .accent-toggle { margin-left:auto; font-weight:700; }
         .opts { display:flex; flex-direction:column; gap:10px; }
         .opt { display:flex; align-items:center; gap:10px; text-align:right; direction:ltr; font-family:'Fraunces',serif; font-size:16px;
           padding:13px 16px; border:2px solid ${INK}; border-radius:12px; background:#fff; cursor:pointer; transition:transform .1s; }
@@ -2166,7 +2172,7 @@ function Quest({ onExit, level = "B1", userId }) {
       `}</style>
 
       <div className="topline">
-        <button className="home-btn" onClick={onExit} aria-label="חזרה לדף הבית">⌂</button>
+        <button className="home-btn" onClick={onExit} aria-label={ui.home}>⌂</button>
         <span className="brand">French<b>Up</b></span>
         <div className="topline-right">
           <span className="lvl-badge">{level}</span>
@@ -2177,20 +2183,17 @@ function Quest({ onExit, level = "B1", userId }) {
 
       {phase === "intro" && (
         <div className="card">
-          <span className="ai-tag">🎯 אתגר יומי · 4 סבבים</span>
+          <span className="ai-tag">🎯 {ui.daily_challenge} · 4 {ui.rounds}</span>
           <h1 className="intro-h">Le défi du jour</h1>
-          <p className="intro-p">
-            ארבעה סבבים ברמת B2/C1. הקש על 🔊 כדי לשמוע צרפתית בקול נוירוני, ועל «תרגום» לראות עברית.
-            תשובה נכונה: +50 XP · תשובה שגויה: −15 XP עם הסבר מלא.
-          </p>
+          <p className="intro-p">{ui.intro_desc}</p>
           <ul className="intro-list">
             {ROUNDS.map((r) => (
               <li key={r.id}><span style={{ fontSize: 22 }}>{r.icon}</span>
-                <span>{r.he} <span className="fr" style={{ color: "#8A8270" }}>· {r.fr}</span></span></li>
+                <span>{lang === "en" ? r.en : r.he} <span className="fr" style={{ color: "#8A8270" }}>· {r.fr}</span></span></li>
             ))}
           </ul>
-          <button className="btn btn-primary" onClick={start}>התחל את האתגר ←</button>
-          {streak > 0 && <p className="streak-banner">🔥 רצף של {streak} ימים — אל תשבור אותו! השלם אתגר היום.</p>}
+          <button className="btn btn-primary" onClick={start}>{ui.start_challenge} ←</button>
+          {streak > 0 && <p className="streak-banner">🔥 {ui.streak_banner.replace("{streak}", streak)}</p>}
           <TtsStatus />
         </div>
       )}
@@ -2206,15 +2209,15 @@ function Quest({ onExit, level = "B1", userId }) {
             <div className="round-head">
               <div className="round-ic" style={{ background: cur.color + "22" }}>{cur.icon}</div>
               <div>
-                <div className="round-he">{cur.he}</div>
-                <div className="round-fr">{cur.fr} · סבב {round + 1}/{ROUNDS.length}</div>
+                <div className="round-he">{lang === "en" ? cur.en : cur.he}</div>
+                <div className="round-fr">{cur.fr} · {ui.round} {round + 1}/{ROUNDS.length}</div>
               </div>
             </div>
 
             {ex && (
               <>
-                <p className="instr">{ex.instruction_he}</p>
-                <FrBlock text={ex.prompt_fr} he={ex.trans_he} big />
+                <p className="instr">{lang === "en" ? (ex.instruction_en || ex.instruction_he) : ex.instruction_he}</p>
+                <FrBlock text={ex.prompt_fr} he={lang === "en" ? (ex.trans_en || ex.trans_he) : ex.trans_he} big />
 
                 {ex.type === "mc" && (
                   <>
@@ -2222,7 +2225,7 @@ function Quest({ onExit, level = "B1", userId }) {
                       <SpeakerBtn text={ex.question_fr} size={30} />
                       <p className="question-fr">{ex.question_fr}</p>
                     </div>
-                    {ex.q_he && <p className="q-trans">↳ {ex.q_he}</p>}
+                    {(lang === "en" ? (ex.q_en || ex.q_he) : ex.q_he) && <p className="q-trans">↳ {lang === "en" ? (ex.q_en || ex.q_he) : ex.q_he}</p>}
                     <div className="opts">
                       {ex.options.map((o, i) => {
                         let cls = "opt";
@@ -2239,34 +2242,16 @@ function Quest({ onExit, level = "B1", userId }) {
                 )}
 
                 {ex.type !== "mc" && !feedback && (
-                  <>
-                    <div className="accent-row" role="toolbar" aria-label="תוויה צרפתית">
-                      {COMMON_ACCENTS.map((ch) => (
-                        <button key={ch} type="button" className="accent-btn" onClick={() => addAccent(ch)}>{ch}</button>
-                      ))}
-                      <button type="button" className="accent-toggle" onClick={() => setShowAllAccents((v) => !v)}>
-                        {showAllAccents ? "פחות סימנים" : "עוד סימנים"}
-                      </button>
-                    </div>
-                    {showAllAccents && (
-                      <div className="accent-row accent-row-full" role="toolbar" aria-label="סימנים צרפתיים נוספים">
-                        {ALL_ACCENTS.map((ch) => (
-                          <button key={ch} type="button" className="accent-btn" onClick={() => addAccent(ch)}>{ch}</button>
-                        ))}
-                      </div>
-                    )}
-                    {ex.type === "open"
-                      ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="כתוב את תשובתך בצרפתית..." />
-                      : <input ref={inputRef} className="ans" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder="התשובה שלך בצרפתית..." />
-                    }
-                  </>
+                  ex.type === "open"
+                    ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={ui.placeholder_open} />
+                    : <input ref={inputRef} className="ans" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder={ui.placeholder_answer} />
                 )}
 
                 {!feedback && (
                   <div className="btn-row">
                     <button className="btn btn-dark" onClick={submit}
                       disabled={checking || (ex.type === "mc" ? selIdx == null : !answer.trim())}>
-                      {checking ? "Claude בודק…" : ex.type === "open" ? (checkOn ? "בדוק את התשובה שלי" : "הצג תשובת מודל") : "שלח תשובה"}
+                      {checking ? ui.checking : ex.type === "open" ? (checkOn ? ui.check_my_answer : ui.show_model) : ui.submit_answer}
                     </button>
                     {checking && <div className="spinner" />}
                   </div>
@@ -2278,8 +2263,8 @@ function Quest({ onExit, level = "B1", userId }) {
                       <div className="fb-head">
                         <span>
                           {feedback.open
-                            ? (feedback.score >= 85 ? "מצוין! 🎉" : feedback.score >= 60 ? "טוב — עם תיקונים" : "צריך עבודה")
-                            : feedback.selfCheck ? "תשובת מודל" : feedback.correct ? "✓ נכון!" : "✗ טעות"}
+                            ? (feedback.score >= 85 ? ui.fb_excellent : feedback.score >= 60 ? ui.fb_good : ui.fb_needs_work)
+                            : feedback.selfCheck ? ui.fb_model : feedback.correct ? ui.fb_correct : ui.fb_wrong}
                         </span>
                         {feedback.open && <span className="fb-score">{feedback.score}/100</span>}
                         <span className={`fb-xp ${feedback.xp < 0 ? "minus" : "plus"}`}>{fmtXp(feedback.xp)} XP</span>
@@ -2297,11 +2282,11 @@ function Quest({ onExit, level = "B1", userId }) {
                           <SpeakerBtn text={feedback.correction_fr} size={30} />
                         </div>
                       )}
-                      {feedback.explanation_he && <div className="fb-exp">{feedback.explanation_he}</div>}
-                      {feedback.tip_he && <div className="fb-tip"><b>טיפ:</b> {feedback.tip_he}</div>}
+                      {(lang === "en" ? (feedback.explanation_en || feedback.explanation_he) : feedback.explanation_he) && <div className="fb-exp">{lang === "en" ? (feedback.explanation_en || feedback.explanation_he) : feedback.explanation_he}</div>}
+                      {(lang === "en" ? (feedback.tip_en || feedback.tip_he) : feedback.tip_he) && <div className="fb-tip"><b>{ui.tip}:</b> {lang === "en" ? (feedback.tip_en || feedback.tip_he) : feedback.tip_he}</div>}
                     </div>
                     <div className="btn-row">
-                      <button ref={nextBtnRef} className="btn btn-primary" onClick={next}>{round + 1 >= ROUNDS.length ? "סיים אתגר 🎉" : "הסבב הבא ←"}</button>
+                      <button ref={nextBtnRef} className="btn btn-primary" onClick={next}>{round + 1 >= ROUNDS.length ? ui.finish_challenge : ui.next_round}</button>
                     </div>
                   </>
                 )}
@@ -2316,26 +2301,26 @@ function Quest({ onExit, level = "B1", userId }) {
           <div style={{ fontSize: 48 }}>🗼</div>
           <h1 className="done-h">Bravo !</h1>
           <p style={{ color: "#4A4636", fontWeight: 600, margin: "8px 0 18px" }}>
-            {streak > 1 ? `רצף של ${streak} ימים — כל הכבוד! 🔥` : "סיימת את האתגר היומי. הסטריק התחיל! 🔥"}
+            {streak > 1 ? ui.done_streak.replace("{streak}", streak) : ui.done_first_streak}
           </p>
           <div className="big-xp">{sessionXp >= 0 ? "+" + sessionXp : sessionXp}</div>
-          <div style={{ fontWeight: 700, color: "#8A8270", marginBottom: 14 }}>XP בסשן הזה</div>
+          <div style={{ fontWeight: 700, color: "#8A8270", marginBottom: 14 }}>{ui.session_xp}</div>
           <div className="totals-row">
-            <span>🔥 {streak} ימים רצוף</span>
-            <span>⭐ סה״כ {totalXp} XP</span>
+            <span>🔥 {streak} {ui.stat_streak}</span>
+            <span>⭐ {ui.total} {totalXp} XP</span>
           </div>
           <div className="summary">
             {results.map((r, i) => (
               <div className="sum-row" key={i}>
-                <span>{r.round.icon}</span><span>{r.round.he}</span>
+                <span>{r.round.icon}</span><span>{lang === "en" ? r.round.en : r.round.he}</span>
                 <span style={{ color: r.self ? "#8B5CF6" : r.correct ? "#0E9F6E" : "#E8503A" }}>{r.self ? "✎" : r.correct ? "✓" : "✗"}</span>
                 <span className="sum-xp" style={{ color: r.xp < 0 ? "#E8503A" : GOLD }}>{r.xp >= 0 ? "+" + r.xp : r.xp}</span>
               </div>
             ))}
           </div>
           <div className="btn-row" style={{ justifyContent: "center" }}>
-            <button className="btn btn-primary" onClick={start}>אתגר נוסף</button>
-            <button className="btn btn-dark" onClick={onExit}>דף הבית ←</button>
+            <button className="btn btn-primary" onClick={start}>{ui.another_challenge}</button>
+            <button className="btn btn-dark" onClick={onExit}>{ui.home} ←</button>
           </div>
         </div>
       )}
@@ -2583,21 +2568,23 @@ function MetroLine({ skill, correct, idx, sel, onSel, level }) {
 }
 
 function NameModal({ onSave }) {
+  const { lang, ui } = useLang();
   const [name, setName] = useState("");
+  const dir = lang === "he" ? "rtl" : "ltr";
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(26,26,46,0.72)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
-      <div style={{ background:"#F5F0E8", borderRadius:20, padding:"40px 36px", width:"100%", maxWidth:380, textAlign:"right", direction:"rtl", boxShadow:"0 20px 60px rgba(0,0,0,0.4)" }}>
-        <p style={{ fontSize:13, color:"#8A8270", marginBottom:6, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Bienvenue · ברוך הבא</p>
+      <div style={{ background:"#F5F0E8", borderRadius:20, padding:"40px 36px", width:"100%", maxWidth:380, textAlign: lang === "he" ? "right" : "left", direction: dir, boxShadow:"0 20px 60px rgba(0,0,0,0.4)" }}>
+        <p style={{ fontSize:13, color:"#8A8270", marginBottom:6, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Bienvenue · {ui.welcome}</p>
         <h2 style={{ fontFamily:"'Fraunces',Georgia,serif", fontStyle:"italic", fontWeight:600, fontSize:30, color:"#1A1A2E", margin:"0 0 20px", lineHeight:1.2 }}>
-          איך קוראים לך?
+          {ui.name_prompt}
         </h2>
         <input
           autoFocus
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === "Enter" && name.trim() && onSave(name.trim())}
-          placeholder="שמך..."
-          dir="rtl"
+          placeholder={ui.name_placeholder}
+          dir={dir}
           style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"2px solid #DDD8CC", fontSize:16, fontFamily:"'Assistant',sans-serif", marginBottom:14, background:"#fff", outline:"none" }}
         />
         <button
@@ -2605,7 +2592,7 @@ function NameModal({ onSave }) {
           disabled={!name.trim()}
           style={{ width:"100%", padding:14, borderRadius:12, border:"none", background:"#C8A23A", color:"#fff", fontSize:16, fontWeight:800, fontFamily:"'Assistant',sans-serif", cursor: name.trim() ? "pointer" : "default", opacity: name.trim() ? 1 : 0.5 }}
         >
-          בואו נתחיל ←
+          {ui.lets_start} ←
         </button>
       </div>
     </div>
@@ -2613,6 +2600,7 @@ function NameModal({ onSave }) {
 }
 
 function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
+  const { lang, setLang, ui } = useLang();
   const [p, setP] = useState(null);
   const [sel, setSel] = useState(null);
   const [mapMode, setMapMode] = useState("metro");
@@ -2634,7 +2622,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
   if (!p) return null;
   const sStat = streakStatus(p);
   const practicedToday = p.lastPracticed?.[selectedLevel] === dayKey();
-  const week = weeklyXp(p);
+  const week = weeklyXp(p, lang);
   const maxXp = Math.max(10, ...week.map((w) => w.xp));
   const totalCorrect = SKILLS.reduce((a, s) => a + (p.byLevel?.[selectedLevel]?.[s]?.correct || 0), 0);
   const selInfoLines = sel ? (() => { const [sid, i] = sel.split("-"); const sk = ROUNDS.find((r) => r.id === sid); return { sk, name: STATION_NAMES[selectedLevel]?.[sid]?.[+i], idx: +i + 1 }; })() : null;
@@ -2642,7 +2630,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
   return (
     <>
     {showNameModal && <NameModal onSave={handleNameSave} />}
-    <div dir="rtl" className="dash">
+    <div dir={lang === "he" ? "rtl" : "ltr"} className="dash">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500;1,9..144,600&display=swap');
         * { box-sizing: border-box; }
@@ -2748,7 +2736,10 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
             <button className="menu-btn" onClick={() => setShowMenu((m) => !m)}>⋮</button>
             {showMenu && (
               <div className="menu-drop">
-                <button className="menu-item danger" onClick={handleLogout}>🚪 התנתק</button>
+                <button className="menu-item" onClick={() => { setLang(lang === "he" ? "en" : "he"); setShowMenu(false); }}>
+                  🌐 {lang === "he" ? "English" : "עברית"}
+                </button>
+                <button className="menu-item danger" onClick={handleLogout}>🚪 {ui.logout}</button>
               </div>
             )}
           </div>
@@ -2756,7 +2747,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
       </div>
 
       <div className="tl-wrap">
-          <p className="level-label"><b>NIVEAU</b> · רמת לימוד</p>
+          <p className="level-label"><b>NIVEAU</b> · {ui.level_label}</p>
           <div className="tl-track">
             <div className="tl-rail" />
             <div className="tl-fill" style={{ width: `${(LEVELS.indexOf(selectedLevel) / (LEVELS.length - 1)) * 100}%`, background: LEVEL_DOT_COLORS[selectedLevel] }} />
@@ -2776,7 +2767,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
                     ...(isCurrent ? { boxShadow: `0 0 0 5px ${color}44` } : {}),
                   }} />
                   <span className="tl-lbl" style={{ color: (isPast || isCurrent) ? color : "#AAA" }}>{l}</span>
-                  <span className="tl-sub" style={{ color: (isPast || isCurrent) ? color : "#BBB" }}>{LEVEL_HE_LABELS[l]}</span>
+                  <span className="tl-sub" style={{ color: (isPast || isCurrent) ? color : "#BBB" }}>{lang === "en" ? LEVEL_EN_LABELS[l] : LEVEL_HE_LABELS[l]}</span>
                 </button>
               );
             })}
@@ -2784,26 +2775,26 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         </div>
 
       <div className="hero">
-        <div className="hero-eye">בונז'ור{p.displayName ? `, ${p.displayName}` : ""} 👋 · רמה {selectedLevel}</div>
-        <h1>{practicedToday ? `כבר התאמנת היום ברמה ${selectedLevel} — עוד סבב?` : `מוכן לאתגר ${selectedLevel}?`}</h1>
-        <button className="hero-cta" onClick={onStart}>התחל אתגר ←</button>
+        <div className="hero-eye">{ui.hero_greeting}{p.displayName ? `, ${p.displayName}` : ""} 👋 · {ui.level_short} {selectedLevel}</div>
+        <h1>{practicedToday ? ui.hero_practiced_today.replace("{level}", selectedLevel) : ui.hero_ready.replace("{level}", selectedLevel)}</h1>
+        <button className="hero-cta" onClick={onStart}>{ui.start_challenge} ←</button>
       </div>
 
       <div className="stat-line">
-        <div className="stat-box"><div className="stat-num" style={{ color: "#E8503A" }}>{sStat.count}</div><div className="stat-lbl">ימים רצוף 🔥</div></div>
-        <div className="stat-box"><div className="stat-num" style={{ color: GOLD }}>{p.xp}</div><div className="stat-lbl">XP כולל ⭐</div></div>
-        <div className="stat-box"><div className="stat-num" style={{ color: "#0E9F6E" }}>{totalCorrect}</div><div className="stat-lbl">תשובות נכונות ✓</div></div>
+        <div className="stat-box"><div className="stat-num" style={{ color: "#E8503A" }}>{sStat.count}</div><div className="stat-lbl">{ui.stat_streak} 🔥</div></div>
+        <div className="stat-box"><div className="stat-num" style={{ color: GOLD }}>{p.xp}</div><div className="stat-lbl">{ui.stat_xp} ⭐</div></div>
+        <div className="stat-box"><div className="stat-num" style={{ color: "#0E9F6E" }}>{totalCorrect}</div><div className="stat-lbl">{ui.stat_correct} ✓</div></div>
       </div>
 
       <div className="card">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-          <div className="card-eyebrow" style={{ margin: 0 }}>Plan du progrès · ההתקדמות שלך</div>
+          <div className="card-eyebrow" style={{ margin: 0 }}>Plan du progrès · {ui.progress_eyebrow}</div>
           <div style={{ display: "flex", gap: 6 }}>
-            <button className={`view-btn ${mapMode === "metro" ? "active" : ""}`} onClick={() => { setMapMode("metro"); setSel(null); }}>🗺️ פריז</button>
-            <button className={`view-btn ${mapMode === "lines" ? "active" : ""}`} onClick={() => { setMapMode("lines"); setSel(null); }}>≡ קווים</button>
+            <button className={`view-btn ${mapMode === "metro" ? "active" : ""}`} onClick={() => { setMapMode("metro"); setSel(null); }}>🗺️ {ui.map_paris}</button>
+            <button className={`view-btn ${mapMode === "lines" ? "active" : ""}`} onClick={() => { setMapMode("lines"); setSel(null); }}>≡ {ui.map_lines}</button>
           </div>
         </div>
-        <h2 className="card-title">המסע שלך ברמה {selectedLevel} — תחנה לכל 3 תשובות נכונות</h2>
+        <h2 className="card-title">{ui.progress_title.replace("{level}", selectedLevel)}</h2>
         {mapMode === "metro" ? (
           <ParisMetroMap p={p} selectedLevel={selectedLevel} sel={sel} onSel={setSel} />
         ) : (
@@ -2814,15 +2805,15 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
                 sel={sel} onSel={setSel} level={selectedLevel} />
             ))}
             {selInfoLines && (
-              <div className="sel-info">תחנה {selInfoLines.idx} בקו <b style={{ color: selInfoLines.sk.color }}>{selInfoLines.sk.fr}</b> · {selInfoLines.sk.he}: <b>{selInfoLines.name}</b></div>
+              <div className="sel-info">{ui.station} {selInfoLines.idx} · <b style={{ color: selInfoLines.sk.color }}>{selInfoLines.sk.fr}</b> · {lang === "en" ? selInfoLines.sk.en : selInfoLines.sk.he}: <b>{selInfoLines.name}</b></div>
             )}
           </>
         )}
       </div>
 
       <div className="card">
-        <div className="card-eyebrow">Cette semaine · השבוע</div>
-        <h2 className="card-title">XP ב-7 הימים האחרונים</h2>
+        <div className="card-eyebrow">Cette semaine · {ui.this_week}</div>
+        <h2 className="card-title">{ui.weekly_xp_title}</h2>
         <div className="week">
           {week.map((w, i) => {
             const isTop = w.xp === maxXp && w.xp > 0;
