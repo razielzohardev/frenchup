@@ -20,7 +20,7 @@ function WelcomeScreen({ user }) {
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       fontFamily: "'Assistant',sans-serif", overflow: "hidden",
     }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,600&display=swap');
         @keyframes pulse   { 0%,100%{opacity:.35} 50%{opacity:1} }
         @keyframes fadeUp  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
@@ -30,7 +30,7 @@ function WelcomeScreen({ user }) {
         .ws-sub        { animation: fadeUp .5s .12s cubic-bezier(.3,.8,.3,1) both; }
         .ws-name       { animation: fadeUp .5s .25s cubic-bezier(.3,.8,.3,1) both; }
         .ws-bar        { animation: fillBar 5s linear both; }
-      `}</style>
+      `}} />
 
       <h1 className={user ? "ws-logo-in" : "ws-logo-pulse"} style={{
         fontFamily: "'Fraunces',Georgia,serif", fontStyle: "italic", fontWeight: 600,
