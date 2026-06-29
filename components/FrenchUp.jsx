@@ -2185,7 +2185,7 @@ function Quest({ onExit, level = "B1", userId }) {
         .fb-tip b{ color:${INK}; }
         .btn-trans{ font-size:12.5px; font-weight:700; padding:5px 13px; border-radius:20px; border:1.5px solid #C8A23A; background:#fff; color:#C8A23A; cursor:pointer; font-family:'Assistant',sans-serif; }
         .btn-trans:hover{ background:#FBF3DD; }
-        .accent-row{ display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+        .accent-row{ display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; justify-content:center; }
         .accent-ch{ font-size:13px; font-weight:700; padding:3px 9px; border-radius:20px; border:1px solid #DDD8CC; background:#fff; color:#5A4A2A; cursor:pointer; font-family:'Assistant',sans-serif; line-height:1.5; transition:border-color 0.12s,background 0.12s; }
         .accent-ch:hover{ border-color:#C8A23A; background:#FBF3DD; color:#7A5A10; }
         .accent-ch:active{ transform:scale(0.93); }
