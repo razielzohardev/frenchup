@@ -3031,7 +3031,14 @@ function LessonCard({ lesson, index, ttsPlay }) {
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#C8A23A", letterSpacing: ".08em", marginBottom: 8 }}>{ui.lessons_vocab.toUpperCase()}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
-                {lesson.vocab.map((v, i) => <Flashcard key={i} fr={v.fr} he={v.he} en={v.en} />)}
+                {lesson.vocab.map((v, i) => {
+                  const alone = lesson.vocab.length % 2 === 1 && i === lesson.vocab.length - 1;
+                  return (
+                    <div key={i} style={alone ? { gridColumn: "1 / -1", justifySelf: "center", width: "calc(50% - 4px)" } : {}}>
+                      <Flashcard fr={v.fr} he={v.he} en={v.en} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
