@@ -2622,7 +2622,7 @@ function NameModal({ onSave }) {
   );
 }
 
-function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
+function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId }) {
   const { lang, setLang, ui } = useLang();
   const [p, setP] = useState(null);
   const [sel, setSel] = useState(null);
@@ -2659,7 +2659,7 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
         * { box-sizing: border-box; }
         .dash { font-family:'Assistant',system-ui,sans-serif; color:${INK};
           background: radial-gradient(circle at 12% 0%, #FBF7EE, ${PAPER} 45%), ${PAPER};
-          min-height:100vh; padding: clamp(16px,3vw,40px); padding-bottom: calc(clamp(16px,3vw,40px) + 72px); max-width:820px; margin:0 auto; }
+          min-height:100vh; padding: clamp(16px,3vw,40px); max-width:820px; margin:0 auto; }
         .music-player { position:fixed; left:18px; bottom:18px; z-index:30; display:flex; align-items:center; gap:8px; direction:ltr; }
         .music-btn { width:46px; height:46px; border-radius:50%; flex:none;
           border:2px solid ${INK}; background:#fff; color:${INK}; font-family:'Fraunces',serif; font-size:25px; cursor:pointer;
@@ -2800,7 +2800,15 @@ function Dashboard({ onStart, selectedLevel, onLevelChange, userId }) {
       <div className="hero">
         <div className="hero-eye">{ui.hero_greeting}{p.displayName ? `, ${p.displayName}` : ""} 👋 · {ui.level_short} {selectedLevel}</div>
         <h1>{practicedToday ? ui.hero_practiced_today.replace("{level}", selectedLevel) : ui.hero_ready.replace("{level}", selectedLevel)}</h1>
-        <button className="hero-cta" onClick={onStart}>{ui.start_challenge} {lang === "he" ? "←" : "→"}</button>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", position: "relative" }}>
+          <button className="hero-cta" onClick={onStart}>{ui.start_challenge} {lang === "he" ? "←" : "→"}</button>
+          <button onClick={onLessons} style={{ background: "transparent", border: "2px solid rgba(200,162,58,0.55)", borderRadius: 14, padding: "11px 20px", color: "#C8A23A", fontFamily: "'Assistant',sans-serif", fontWeight: 800, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "border-color .2s, background .2s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(200,162,58,0.12)"; e.currentTarget.style.borderColor = "#C8A23A"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(200,162,58,0.55)"; }}
+          >
+            📖 {ui.lessons_tab}
+          </button>
+        </div>
       </div>
 
       <div className="stat-line">
@@ -2945,10 +2953,35 @@ function LessonCard({ lesson, index, ttsPlay }) {
 
       {open && !lesson.comingSoon && (
         <div style={{ padding: "0 16px 16px", direction: dir, borderTop: "1px solid #F0EBE0" }}>
+          {/* YouTube video */}
+          {lesson.video && (
+            <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 12, overflow: "hidden", margin: "14px 0" }}>
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${lesson.video}?rel=0&modestbranding=1`}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+                title={lang === "en" ? lesson.title_en : lesson.title_he}
+              />
+            </div>
+          )}
+
           {/* Theory */}
           {theory && (
             <p style={{ fontSize: 14, lineHeight: 1.65, color: "#333", marginTop: 14, marginBottom: 14 }}>{theory}</p>
           )}
+
+          {/* Illustration images */}
+          {lesson.images && lesson.images.filter(img => img.type === "illustration").map((img, i) => (
+            <div key={i} style={{ marginBottom: 14 }}>
+              <img src={img.url} alt={lang === "en" ? img.caption_en : img.caption_he} loading="lazy"
+                style={{ width: "100%", borderRadius: 10, objectFit: "cover", maxHeight: 200, display: "block" }} />
+              <p style={{ fontSize: 12, color: "#999", textAlign: "center", margin: "5px 0 0", fontStyle: "italic" }}>
+                {lang === "en" ? img.caption_en : img.caption_he}
+              </p>
+            </div>
+          ))}
 
           {/* Grammar table */}
           {lesson.grammar && (
@@ -2974,6 +3007,17 @@ function LessonCard({ lesson, index, ttsPlay }) {
               </div>
             </div>
           )}
+
+          {/* Diagram images */}
+          {lesson.images && lesson.images.filter(img => img.type === "diagram").map((img, i) => (
+            <div key={i} style={{ marginBottom: 14 }}>
+              <img src={img.url} alt={lang === "en" ? img.caption_en : img.caption_he} loading="lazy"
+                style={{ width: "100%", borderRadius: 10, objectFit: "cover", maxHeight: 200, display: "block" }} />
+              <p style={{ fontSize: 12, color: "#999", textAlign: "center", margin: "5px 0 0", fontStyle: "italic" }}>
+                {lang === "en" ? img.caption_en : img.caption_he}
+              </p>
+            </div>
+          ))}
 
           {/* Vocabulary flashcards */}
           {lesson.vocab && lesson.vocab.length > 0 && (
@@ -3018,7 +3062,7 @@ function LessonCard({ lesson, index, ttsPlay }) {
 /* ==================================================================== */
 /*  LESSONS VIEW                                                         */
 /* ==================================================================== */
-function Lessons({ level }) {
+function Lessons({ level, onBack }) {
   const { lang, ui } = useLang();
   const dir = lang === "he" ? "rtl" : "ltr";
   const lessons = LESSONS[level] || [];
@@ -3039,12 +3083,15 @@ function Lessons({ level }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F5F0E8", fontFamily: "'Assistant',sans-serif", direction: dir, paddingBottom: 80 }}>
+    <div style={{ minHeight: "100vh", background: "#F5F0E8", fontFamily: "'Assistant',sans-serif", direction: dir }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,600&display=swap');`}</style>
 
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg,#1A1A2E 0%,#2D2B55 100%)", padding: "28px 20px 22px", color: "#F5F0E8" }}>
+      <div style={{ background: "linear-gradient(135deg,#1A1A2E 0%,#2D2B55 100%)", padding: "20px 20px 22px", color: "#F5F0E8" }}>
         <div style={{ maxWidth: 480, margin: "0 auto" }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "#9B8FC0", cursor: "pointer", fontFamily: "'Assistant',sans-serif", fontWeight: 700, fontSize: 13, padding: "0 0 10px", display: "flex", alignItems: "center", gap: 4 }}>
+            {lang === "he" ? "→ חזרה" : "← Back"}
+          </button>
           <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".12em", color: "#9B8FC0", textTransform: "uppercase", marginBottom: 4 }}>
             {ui.lessons_tab}
           </div>
@@ -3077,15 +3124,14 @@ export default function App({ userId }) {
     <>
       <ParisMusicButton />
       {view === "dashboard" && (
-        <Dashboard key={tick} selectedLevel={selectedLevel} onLevelChange={handleLevelChange} onStart={() => setView("quest")} userId={userId} />
+        <Dashboard key={tick} selectedLevel={selectedLevel} onLevelChange={handleLevelChange} onStart={() => setView("quest")} onLessons={() => setView("lessons")} userId={userId} />
       )}
       {view === "lessons" && (
-        <Lessons level={selectedLevel} />
+        <Lessons level={selectedLevel} onBack={() => setView("dashboard")} />
       )}
       {view === "quest" && (
         <Quest level={selectedLevel} userId={userId} onExit={() => { setTick((t) => t + 1); setView("dashboard"); }} />
       )}
-      {view !== "quest" && <BottomNav view={view} setView={setView} />}
     </>
   );
 }
