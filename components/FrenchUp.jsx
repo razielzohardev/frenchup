@@ -2185,11 +2185,10 @@ function Quest({ onExit, level = "B1", userId }) {
         .fb-tip b{ color:${INK}; }
         .btn-trans{ font-size:12.5px; font-weight:700; padding:5px 13px; border-radius:20px; border:1.5px solid #C8A23A; background:#fff; color:#C8A23A; cursor:pointer; font-family:'Assistant',sans-serif; }
         .btn-trans:hover{ background:#FBF3DD; }
-        .accent-row{ display:flex; overflow-x:auto; gap:0; margin-bottom:8px; padding:2px 0; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-        .accent-row::-webkit-scrollbar{ display:none; }
-        .accent-ch{ font-size:18px; font-weight:500; padding:5px 11px; border:none; background:transparent; color:#3A3560; cursor:pointer; border-radius:7px; flex-shrink:0; line-height:1.3; transition:background 0.1s,transform 0.1s; }
-        .accent-ch:hover{ background:#F0EBE0; }
-        .accent-ch:active{ color:#C8A23A; transform:scale(0.9); }
+        .accent-row{ display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+        .accent-ch{ font-size:13px; font-weight:700; padding:3px 9px; border-radius:20px; border:1px solid #DDD8CC; background:#fff; color:#5A4A2A; cursor:pointer; font-family:'Assistant',sans-serif; line-height:1.5; transition:border-color 0.12s,background 0.12s; }
+        .accent-ch:hover{ border-color:#C8A23A; background:#FBF3DD; color:#7A5A10; }
+        .accent-ch:active{ transform:scale(0.93); }
         .fb-trans{ margin-top:8px; font-size:14px; line-height:1.55; padding:9px 13px; background:#FBF3DD; border-radius:8px; border:1px solid #E7D49A; color:#5A4A1A; }
         .vq { font-size:12.5px; line-height:1.65; font-weight:600; border-radius:10px; padding:10px 13px; margin-top:14px; color:#6B6452; }
         .vq.ok { color:#0B6B4F; background:#EAF7F0; border:1px solid #A9DEC8; }
