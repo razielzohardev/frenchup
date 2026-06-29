@@ -2976,6 +2976,7 @@ function LessonCard({ lesson, index, ttsPlay }) {
           {lesson.images && lesson.images.filter(img => img.type === "illustration").map((img, i) => (
             <div key={i} style={{ marginBottom: 14 }}>
               <img src={img.url} alt={lang === "en" ? img.caption_en : img.caption_he} loading="lazy"
+                onError={e => { e.currentTarget.parentElement.style.display = "none"; }}
                 style={{ width: "100%", borderRadius: 10, objectFit: "cover", maxHeight: 200, display: "block" }} />
               <p style={{ fontSize: 12, color: "#999", textAlign: "center", margin: "5px 0 0", fontStyle: "italic" }}>
                 {lang === "en" ? img.caption_en : img.caption_he}
@@ -3012,6 +3013,7 @@ function LessonCard({ lesson, index, ttsPlay }) {
           {lesson.images && lesson.images.filter(img => img.type === "diagram").map((img, i) => (
             <div key={i} style={{ marginBottom: 14 }}>
               <img src={img.url} alt={lang === "en" ? img.caption_en : img.caption_he} loading="lazy"
+                onError={e => { e.currentTarget.parentElement.style.display = "none"; }}
                 style={{ width: "100%", borderRadius: 10, objectFit: "cover", maxHeight: 200, display: "block" }} />
               <p style={{ fontSize: 12, color: "#999", textAlign: "center", margin: "5px 0 0", fontStyle: "italic" }}>
                 {lang === "en" ? img.caption_en : img.caption_he}
