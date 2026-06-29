@@ -78,14 +78,12 @@ export default function AuthScreen() {
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap');`}</style>
     <div style={{ ...styles.bg, direction: dir }}>
-      <div style={styles.card}>
-        {/* Language toggle */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-          <button onClick={() => setLang(lang === "he" ? "en" : "he")} style={styles.langBtn}>
-            {ui.switch_lang}
-          </button>
-        </div>
+      {/* Language toggle — fixed top-right, outside card */}
+      <button onClick={() => setLang(lang === "he" ? "en" : "he")} style={styles.langBtn}>
+        {ui.switch_lang}
+      </button>
 
+      <div style={styles.card}>
         {/* Logo */}
         <div style={styles.logoWrap}>
           <h1 style={styles.logoTitle}>
@@ -357,15 +355,21 @@ const styles = {
     gap: "8px",
   },
   langBtn: {
-    background: "#EDE8DE",
-    border: "none",
+    position: "fixed",
+    top: 16,
+    right: 16,
+    background: "rgba(255,255,255,0.1)",
+    border: "1px solid rgba(255,255,255,0.2)",
     borderRadius: "20px",
-    padding: "6px 14px",
+    padding: "7px 16px",
     fontSize: "13px",
     fontWeight: "700",
-    color: "#5A5040",
+    color: "rgba(255,255,255,0.85)",
     cursor: "pointer",
     fontFamily: "'Assistant', sans-serif",
     letterSpacing: "0.02em",
+    backdropFilter: "blur(8px)",
+    zIndex: 10,
+    direction: "ltr",
   },
 };
