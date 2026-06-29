@@ -26,6 +26,33 @@ const ROUNDS = [
   { id: "exp", he: "דיבור", en: "Expression", fr: "Expression", color: "#8B5CF6", icon: "💬" },
 ];
 
+const _totalCorrect = (p) => ["gra","voc","com","exp"].reduce((a,s) => a + (p.bySkill?.[s]?.correct||0), 0);
+const _levelDone = (p, lvl) => ["gra","voc","com","exp"].every(s => (p.byLevel?.[lvl]?.[s]?.correct||0) >= 18);
+
+const BADGE_DEFS = [
+  { id:"xp_50",    emoji:"🌱", name_he:"צעדים ראשונים", name_en:"First Steps",   check: p => p.xp >= 50 },
+  { id:"xp_500",   emoji:"⭐", name_he:"סטודנט",         name_en:"Student",        check: p => p.xp >= 500 },
+  { id:"xp_1000",  emoji:"🌟", name_he:"נלהב",           name_en:"Enthusiast",     check: p => p.xp >= 1000 },
+  { id:"xp_5000",  emoji:"💫", name_he:"מתקדם",          name_en:"Advanced",       check: p => p.xp >= 5000 },
+  { id:"xp_10000", emoji:"🏆", name_he:"מצטיין",         name_en:"Excellence",     check: p => p.xp >= 10000 },
+  { id:"str_3",    emoji:"🔥", name_he:"3 ימים ברצף",   name_en:"3-Day Streak",  check: p => (p.streak?.count||0) >= 3 },
+  { id:"str_7",    emoji:"🔥🔥",name_he:"שבוע שלם",      name_en:"Full Week",      check: p => (p.streak?.count||0) >= 7 },
+  { id:"str_30",   emoji:"🌋", name_he:"חודש של לימוד", name_en:"Month Learner",  check: p => (p.streak?.count||0) >= 30 },
+  { id:"cor_10",   emoji:"✅", name_he:"10 נכונות",      name_en:"10 Correct",    check: p => _totalCorrect(p) >= 10 },
+  { id:"cor_50",   emoji:"💪", name_he:"50 נכונות",      name_en:"50 Correct",    check: p => _totalCorrect(p) >= 50 },
+  { id:"cor_100",  emoji:"🎯", name_he:"100 נכונות",     name_en:"100 Correct",   check: p => _totalCorrect(p) >= 100 },
+  { id:"cor_500",  emoji:"🧠", name_he:"500 נכונות",     name_en:"500 Correct",   check: p => _totalCorrect(p) >= 500 },
+  { id:"ses_1",    emoji:"🎬", name_he:"התחלה טובה",     name_en:"First Session",  check: p => (p.history||[]).length >= 1 },
+  { id:"ses_10",   emoji:"📅", name_he:"10 אתגרים",      name_en:"10 Challenges",  check: p => (p.history||[]).length >= 10 },
+  { id:"ses_50",   emoji:"🎖️", name_he:"50 אתגרים",      name_en:"50 Challenges",  check: p => (p.history||[]).length >= 50 },
+  { id:"lvl_A1",   emoji:"🚉", name_he:"סיום A1",        name_en:"A1 Complete",   check: p => _levelDone(p,"A1") },
+  { id:"lvl_A2",   emoji:"🚇", name_he:"סיום A2",        name_en:"A2 Complete",   check: p => _levelDone(p,"A2") },
+  { id:"lvl_B1",   emoji:"🏙️", name_he:"סיום B1",        name_en:"B1 Complete",   check: p => _levelDone(p,"B1") },
+  { id:"lvl_B2",   emoji:"🗼", name_he:"סיום B2",        name_en:"B2 Complete",   check: p => _levelDone(p,"B2") },
+  { id:"lvl_C1",   emoji:"🎭", name_he:"סיום C1",        name_en:"C1 Complete",   check: p => _levelDone(p,"C1") },
+  { id:"lvl_C2",   emoji:"👑", name_he:"שליטה מלאה",     name_en:"Full Mastery",   check: p => _levelDone(p,"C2") },
+];
+
 /* -------------------- EXERCISE BANKS (station-indexed 2D arrays) -------------------- */
 /* Structure: BANK_XX.skill[stationIndex] = array of question objects               */
 
@@ -1278,6 +1305,18 @@ function recordSession(p, { sessionXp, correct, total, level }) {
   return p;
 }
 
+function checkAndAwardBadges(p) {
+  const existing = new Set((p.badges || []).map(b => b.id));
+  const newIds = [];
+  for (const def of BADGE_DEFS) {
+    if (!existing.has(def.id) && def.check(p)) {
+      p.badges = [...(p.badges || []), { id: def.id, unlockedAt: new Date().toISOString() }];
+      newIds.push(def.id);
+    }
+  }
+  return newIds;
+}
+
 /* -------------------- metro lines (progress by correct answers) -------------------- */
 const STATIONS_PER = 6;       // stations per skill line
 const PER_STATION = 3;        // correct answers needed to advance one station
@@ -1962,6 +2001,7 @@ function Quest({ onExit, level = "B1", userId }) {
   const [showModelTrans, setShowModelTrans] = useState(false);
   const [dynTrans, setDynTrans] = useState(null);
   const [accentOpen, setAccentOpen] = useState(false);
+  const [newBadges, setNewBadges] = useState([]);
   const lastIdx = useRef({});
   const progressRef = useRef(null);
   const inputRef = useRef(null);
@@ -1979,7 +2019,7 @@ function Quest({ onExit, level = "B1", userId }) {
   }, [userId]);
 
   const loadExercise = (idx) => {
-    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false); setDynTrans(null); setAccentOpen(false);
+    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false); setDynTrans(null); setAccentOpen(false); setNewBadges([]);
     const r = ROUNDS[idx];
     const p = progressRef.current || loadProgress(userId);
     const correct = p.byLevel?.[level]?.[r.id]?.correct || 0;
@@ -2021,6 +2061,8 @@ function Quest({ onExit, level = "B1", userId }) {
     setFeedback(fb);
     const p = progressRef.current || loadProgress(userId);
     recordAnswer(p, { skill: cur.id, correct: fb.correct, xp: fb.xp || 0, solution: ex.solution_fr, level, masteryKey: ex.masteryKey });
+    const earnedNow = checkAndAwardBadges(p);
+    if (earnedNow.length) setNewBadges(prev => [...prev, ...earnedNow]);
     saveProgress(p, userId);
     progressRef.current = p;
     setTotalXp(p.xp);
@@ -2077,6 +2119,8 @@ function Quest({ onExit, level = "B1", userId }) {
       const p = progressRef.current || loadProgress(userId);
       const correctCount = results.filter((r) => r.correct).length;
       recordSession(p, { sessionXp, correct: correctCount, total: results.length, level });
+      const earnedNow = checkAndAwardBadges(p);
+      if (earnedNow.length) setNewBadges(prev => [...prev, ...earnedNow]);
       saveProgress(p, userId);
       progressRef.current = p;
       setStreak(streakStatus(p).count);
@@ -2186,6 +2230,9 @@ function Quest({ onExit, level = "B1", userId }) {
         .fb-tip b{ color:${INK}; }
         .btn-trans{ font-size:12.5px; font-weight:700; padding:5px 13px; border-radius:20px; border:1.5px solid #C8A23A; background:#fff; color:#C8A23A; cursor:pointer; font-family:'Assistant',sans-serif; }
         .btn-trans:hover{ background:#FBF3DD; }
+        .badge-toast{ background:#FBF3DD; border:1.5px solid #E7D49A; border-radius:14px; padding:14px 18px; margin-bottom:16px; text-align:start; }
+        .badge-toast-title{ font-weight:800; font-size:15px; color:#7A5A10; margin-bottom:8px; }
+        .badge-toast-row{ display:flex; align-items:center; gap:8px; font-size:14px; color:#5A4A1A; padding:3px 0; }
         .accent-row{ display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; justify-content:center; direction:ltr; }
         .accent-ch{ font-size:13px; font-weight:700; padding:3px 9px; border-radius:20px; border:1px solid #DDD8CC; background:#fff; color:#5A4A2A; cursor:pointer; font-family:'Assistant',sans-serif; line-height:1.5; transition:border-color 0.12s,background 0.12s; }
         .accent-ch:hover{ border-color:#C8A23A; background:#FBF3DD; color:#7A5A10; }
@@ -2397,6 +2444,20 @@ function Quest({ onExit, level = "B1", userId }) {
               </div>
             ))}
           </div>
+          {newBadges.length > 0 && (
+            <div className="badge-toast">
+              <div className="badge-toast-title">{lang === "he" ? "🏅 הישגים חדשים!" : "🏅 New Badges!"}</div>
+              {newBadges.map(id => {
+                const def = BADGE_DEFS.find(d => d.id === id);
+                return def ? (
+                  <div key={id} className="badge-toast-row">
+                    <span>{def.emoji}</span>
+                    <span>{lang === "he" ? def.name_he : def.name_en}</span>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          )}
           <div className="btn-row" style={{ justifyContent: "center" }}>
             <button className="btn btn-primary" onClick={start}>{ui.another_challenge}</button>
             <button className="btn btn-dark" onClick={onExit}>{ui.home} ←</button>
@@ -2877,6 +2938,35 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
         <div className="stat-box"><div className="stat-num" style={{ color: "#E8503A" }}>{sStat.count}</div><div className="stat-lbl">{ui.stat_streak} 🔥</div></div>
         <div className="stat-box"><div className="stat-num" style={{ color: GOLD }}>{p.xp}</div><div className="stat-lbl">{ui.stat_xp} ⭐</div></div>
         <div className="stat-box"><div className="stat-num" style={{ color: "#0E9F6E" }}>{totalCorrect}</div><div className="stat-lbl">{ui.stat_correct} ✓</div></div>
+      </div>
+
+      {/* Achievements */}
+      <div style={{ margin: "20px 0" }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: GOLD, letterSpacing: "0.06em", marginBottom: 10, textTransform: "uppercase" }}>
+          {lang === "he" ? "הישגים" : "Achievements"}
+          <span style={{ color: "#AAA", fontWeight: 600, marginInlineStart: 8, textTransform: "none", fontSize: 12 }}>
+            {(p.badges||[]).length}/{BADGE_DEFS.length}
+          </span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))", gap: 8 }}>
+          {BADGE_DEFS.map(def => {
+            const earned = (p.badges||[]).some(b => b.id === def.id);
+            return (
+              <div key={def.id} title={lang === "he" ? def.name_he : def.name_en}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                  opacity: earned ? 1 : 0.28, filter: earned ? "none" : "grayscale(1)",
+                  padding: "8px 4px", borderRadius: 10,
+                  background: earned ? "#FBF3DD" : "#F0EBE0",
+                  border: earned ? "1.5px solid #E7D49A" : "1.5px solid #DDD8CC" }}>
+                <span style={{ fontSize: 26 }}>{earned ? def.emoji : "🔒"}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: earned ? "#7A5A10" : "#AAA",
+                  textAlign: "center", lineHeight: 1.3 }}>
+                  {lang === "he" ? def.name_he : def.name_en}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="card">
