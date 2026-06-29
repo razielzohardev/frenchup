@@ -80,7 +80,9 @@ export default function AuthScreen() {
     <div style={{ ...styles.bg, direction: dir }}>
       {/* Language toggle — fixed top-right, outside card */}
       <button onClick={() => setLang(lang === "he" ? "en" : "he")} style={styles.langBtn}>
-        {ui.switch_lang}
+        <span style={{ opacity: lang === "he" ? 1 : 0.45, fontWeight: lang === "he" ? 800 : 600 }}>HE</span>
+        <span style={{ margin: "0 7px", opacity: 0.25, fontWeight: 400 }}>|</span>
+        <span style={{ opacity: lang === "en" ? 1 : 0.45, fontWeight: lang === "en" ? 800 : 600 }}>EN</span>
       </button>
 
       <div style={styles.card}>
@@ -360,16 +362,17 @@ const styles = {
     right: 20,
     background: "#F5F0E8",
     border: "none",
-    borderRadius: "10px",
-    padding: "8px 16px",
-    fontSize: "13px",
-    fontWeight: "700",
+    borderRadius: "8px",
+    padding: "7px 14px",
+    fontSize: "12px",
     color: "#1A1A2E",
     cursor: "pointer",
     fontFamily: "'Assistant', sans-serif",
-    letterSpacing: "0.02em",
-    boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
+    letterSpacing: "0.08em",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.22)",
     zIndex: 10,
     direction: "ltr",
+    display: "flex",
+    alignItems: "center",
   },
 };
