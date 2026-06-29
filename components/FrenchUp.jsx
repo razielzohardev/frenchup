@@ -2910,9 +2910,20 @@ function BottomNav({ view, setView }) {
 function Flashcard({ fr, he, en }) {
   const { lang } = useLang();
   const [flipped, setFlipped] = useState(false);
+  const timerRef = useRef(null);
   const back = lang === "en" ? (en || he) : he;
+  const handleClick = () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (!flipped) {
+      speak(fr, () => {});
+      setFlipped(true);
+      timerRef.current = setTimeout(() => { setFlipped(false); timerRef.current = null; }, 2000);
+    } else {
+      setFlipped(false);
+    }
+  };
   return (
-    <div onClick={() => { if (!flipped) speak(fr, () => {}); setFlipped(f => !f); }} style={{ cursor: "pointer", perspective: 600 }}>
+    <div onClick={handleClick} style={{ cursor: "pointer", perspective: 600 }}>
       <style>{`
         .fc-inner { position:relative; width:100%; height:62px; transition:transform .35s; transform-style:preserve-3d; }
         .fc-inner.flipped { transform:rotateY(180deg); }
