@@ -2185,8 +2185,10 @@ function Quest({ onExit, level = "B1", userId }) {
         .fb-tip b{ color:${INK}; }
         .btn-trans{ font-size:12.5px; font-weight:700; padding:5px 13px; border-radius:20px; border:1.5px solid #C8A23A; background:#fff; color:#C8A23A; cursor:pointer; font-family:'Assistant',sans-serif; }
         .btn-trans:hover{ background:#FBF3DD; }
-        .accent-btn{ font-size:14px; padding:3px 7px; border-radius:6px; border:1.5px solid #DDD8CC; background:#fff; color:#1A1A2E; cursor:pointer; font-family:'Assistant',sans-serif; line-height:1.4; }
-        .accent-btn:hover{ background:#F5F0E8; }
+        .accent-tray{ display:flex; flex-wrap:wrap; gap:5px; background:#EDE8DE; border-radius:10px; padding:7px 9px; margin-bottom:8px; direction:ltr; }
+        .accent-btn{ font-size:15px; font-weight:600; padding:4px 9px; border-radius:6px; border:none; background:#FDFAF5; color:#1A1A2E; cursor:pointer; font-family:'Assistant',sans-serif; line-height:1.5; box-shadow:0 1px 2px rgba(0,0,0,0.14); transition:background 0.12s,box-shadow 0.12s; }
+        .accent-btn:hover{ background:#FBF3DD; box-shadow:0 1px 4px rgba(200,162,58,0.35); }
+        .accent-btn:active{ transform:translateY(1px); box-shadow:none; }
         .fb-trans{ margin-top:8px; font-size:14px; line-height:1.55; padding:9px 13px; background:#FBF3DD; border-radius:8px; border:1px solid #E7D49A; color:#5A4A1A; }
         .vq { font-size:12.5px; line-height:1.65; font-weight:600; border-radius:10px; padding:10px 13px; margin-top:14px; color:#6B6452; }
         .vq.ok { color:#0B6B4F; background:#EAF7F0; border:1px solid #A9DEC8; }
@@ -2278,7 +2280,7 @@ function Quest({ onExit, level = "B1", userId }) {
 
                 {ex.type !== "mc" && !feedback && (
                   <>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6, direction: "ltr" }}>
+                    <div className="accent-tray">
                       {ACCENTS.map(ch => (
                         <button key={ch} className="accent-btn" onMouseDown={(e) => { e.preventDefault(); insertAccent(ch); }}>{ch}</button>
                       ))}
