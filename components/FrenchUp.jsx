@@ -2912,11 +2912,11 @@ function Flashcard({ fr, he, en }) {
   const [flipped, setFlipped] = useState(false);
   const back = lang === "en" ? (en || he) : he;
   return (
-    <div onClick={() => setFlipped(f => !f)} style={{ cursor: "pointer", perspective: 600, flexShrink: 0 }}>
+    <div onClick={() => setFlipped(f => !f)} style={{ cursor: "pointer", perspective: 600 }}>
       <style>{`
-        .fc-inner { position:relative; width:108px; height:62px; transition:transform .35s; transform-style:preserve-3d; }
+        .fc-inner { position:relative; width:100%; height:62px; transition:transform .35s; transform-style:preserve-3d; }
         .fc-inner.flipped { transform:rotateY(180deg); }
-        .fc-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:6px 8px; text-align:center; font-family:'Assistant',sans-serif; }
+        .fc-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:6px 10px; text-align:center; font-family:'Assistant',sans-serif; }
         .fc-front { background:#fff; border:1.5px solid #DDD8CC; color:#1A1A2E; font-size:13px; font-weight:700; }
         .fc-back  { background:#FBF3DD; border:1.5px solid #E7D49A; color:#5A4A1A; font-size:12px; font-weight:600; transform:rotateY(180deg); }
       `}</style>
@@ -3030,7 +3030,7 @@ function LessonCard({ lesson, index, ttsPlay }) {
           {lesson.vocab && lesson.vocab.length > 0 && (
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#C8A23A", letterSpacing: ".08em", marginBottom: 8 }}>{ui.lessons_vocab.toUpperCase()}</div>
-              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 6 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
                 {lesson.vocab.map((v, i) => <Flashcard key={i} fr={v.fr} he={v.he} en={v.en} />)}
               </div>
             </div>
