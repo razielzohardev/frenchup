@@ -2907,6 +2907,46 @@ function BottomNav({ view, setView }) {
 /* ==================================================================== */
 /*  FLASHCARD                                                            */
 /* ==================================================================== */
+function GrammarCell({ text, style }) {
+  const { lang } = useLang();
+  const isHebrew = /[א-ת]/.test(text);
+  const [phase, setPhase] = useState("idle"); // idle | spoken | loading | translated
+  const [translation, setTranslation] = useState(null);
+
+  const handleClick = async () => {
+    if (isHebrew) return;
+    if (phase === "idle" || phase === "translated") {
+      if (phase === "translated") { setTranslation(null); setPhase("idle"); return; }
+      speak(text, () => {});
+      setPhase("spoken");
+    } else if (phase === "spoken") {
+      setPhase("loading");
+      try {
+        const res = await fetch("/api/translate", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, lang }),
+        });
+        const data = await res.json();
+        setTranslation(data.translation || "");
+        setPhase("translated");
+      } catch { setPhase("spoken"); }
+    }
+  };
+
+  return (
+    <div onClick={handleClick} style={{ ...style, cursor: isHebrew ? "default" : "pointer", userSelect: "none" }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        {text}
+        {phase === "spoken" && <span style={{ fontSize: 10, color: "#C8A23A", flexShrink: 0 }}>↩ תרגום</span>}
+        {phase === "loading" && <span style={{ fontSize: 10, color: "#9B8FC0", flexShrink: 0 }}>…</span>}
+      </span>
+      {phase === "translated" && translation && (
+        <span style={{ display: "block", fontSize: 11, color: "#9B8FC0", marginTop: 3, fontStyle: "italic" }}>{translation}</span>
+      )}
+    </div>
+  );
+}
+
 function Flashcard({ fr, he, en }) {
   const { lang } = useLang();
   const [flipped, setFlipped] = useState(false);
@@ -3015,7 +3055,9 @@ function LessonCard({ lesson, index, ttsPlay }) {
                     {lesson.grammar.rows.map((row, ri) => (
                       <tr key={ri} style={{ background: ri % 2 === 0 ? "#fff" : "#FDFAF4" }}>
                         {row.map((cell, ci) => (
-                          <td key={ci} style={{ padding: "6px 10px", borderBottom: "1px solid #F0EBE0", color: "#1A1A2E", fontSize: 13 }}>{cell}</td>
+                          <td key={ci} style={{ borderBottom: "1px solid #F0EBE0", color: "#1A1A2E", fontSize: 13 }}>
+                            <GrammarCell text={cell} style={{ padding: "6px 10px" }} />
+                          </td>
                         ))}
                       </tr>
                     ))}
