@@ -2930,7 +2930,8 @@ function GrammarCell({ text, style }) {
         setTranslation(data.translation);
         setPhase("translated");
       } else {
-        setTranslation(data.error || "שגיאה");
+        const msg = [data.error, data.status, data.detail].filter(Boolean).join(" · ");
+        setTranslation(msg || "שגיאה");
         setPhase("error");
       }
     } catch (e) {

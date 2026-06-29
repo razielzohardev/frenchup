@@ -28,9 +28,12 @@ export async function POST(req) {
     return Response.json({ error: "network" }, { status: 502 });
   }
 
-  if (!r.ok) return Response.json({ error: "api" }, { status: 502 });
-
   const data = await r.json();
+  if (!r.ok) {
+    console.error("[translate] anthropic error", r.status, JSON.stringify(data).slice(0, 300));
+    return Response.json({ error: "api", status: r.status, detail: data?.error?.message || data?.type || "" }, { status: 502 });
+  }
+
   const translation = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
   return Response.json({ translation });
 }
