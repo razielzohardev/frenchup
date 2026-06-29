@@ -2747,6 +2747,7 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
   const [mapMode, setMapMode] = useState("metro");
   const [showNameModal, setShowNameModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [badgesOpen, setBadgesOpen] = useState(false);
   const handleLogout = async () => { await supabase.auth.signOut(); };
   useEffect(() => {
     loadProgressCloud(userId).then((loaded) => {
@@ -2941,33 +2942,73 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
       </div>
 
       {/* Achievements */}
-      <div style={{ margin: "20px 0" }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: GOLD, letterSpacing: "0.06em", marginBottom: 10, textTransform: "uppercase" }}>
-          {lang === "he" ? "הישגים" : "Achievements"}
-          <span style={{ color: "#AAA", fontWeight: 600, marginInlineStart: 8, textTransform: "none", fontSize: 12 }}>
-            {(p.badges||[]).length}/{BADGE_DEFS.length}
-          </span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))", gap: 8 }}>
-          {BADGE_DEFS.map(def => {
-            const earned = (p.badges||[]).some(b => b.id === def.id);
-            return (
-              <div key={def.id} title={lang === "he" ? def.name_he : def.name_en}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                  opacity: earned ? 1 : 0.28, filter: earned ? "none" : "grayscale(1)",
-                  padding: "8px 4px", borderRadius: 10,
-                  background: earned ? "#FBF3DD" : "#F0EBE0",
-                  border: earned ? "1.5px solid #E7D49A" : "1.5px solid #DDD8CC" }}>
-                <span style={{ fontSize: 26 }}>{earned ? def.emoji : "🔒"}</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: earned ? "#7A5A10" : "#AAA",
-                  textAlign: "center", lineHeight: 1.3 }}>
-                  {lang === "he" ? def.name_he : def.name_en}
+      {(() => {
+        const BADGE_CATS = [
+          { key:"xp",  label_he:"נקודות XP",      label_en:"XP",         ids:["xp_50","xp_500","xp_1000","xp_5000","xp_10000"] },
+          { key:"str", label_he:"רצף ימים",        label_en:"Streak",     ids:["str_3","str_7","str_30"] },
+          { key:"cor", label_he:"תשובות נכונות",   label_en:"Correct",    ids:["cor_10","cor_50","cor_100","cor_500"] },
+          { key:"ses", label_he:"אתגרים",          label_en:"Challenges", ids:["ses_1","ses_10","ses_50"] },
+          { key:"lvl", label_he:"השלמת רמה",       label_en:"Levels",     ids:["lvl_A1","lvl_A2","lvl_B1","lvl_B2","lvl_C1","lvl_C2"] },
+        ];
+        return (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <button
+              onClick={() => setBadgesOpen(o => !o)}
+              style={{ width:"100%", background:"none", border:"none", padding:0, cursor:"pointer",
+                display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ fontSize:13, fontWeight:800, color:GOLD, letterSpacing:"0.06em", textTransform:"uppercase" }}>
+                {lang === "he" ? "הישגים" : "Achievements"}
+                <span style={{ color:"#AAA", fontWeight:600, marginInlineStart:8, textTransform:"none", fontSize:12 }}>
+                  {(p.badges||[]).length}/{BADGE_DEFS.length}
                 </span>
               </div>
-            );
-          })}
-        </div>
-      </div>
+              <span style={{ color:"#AAA", fontSize:14 }}>{badgesOpen ? "▴" : "▾"}</span>
+            </button>
+
+            {badgesOpen && (
+              <div style={{ marginTop: 16 }}>
+                {BADGE_CATS.map(cat => (
+                  <div key={cat.key} style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize:11, fontWeight:800, color:"#AAA", letterSpacing:"0.08em",
+                      textTransform:"uppercase", marginBottom:8 }}>
+                      {lang === "he" ? cat.label_he : cat.label_en}
+                    </div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                      {cat.ids.map(id => {
+                        const def = BADGE_DEFS.find(d => d.id === id);
+                        if (!def) return null;
+                        const earned = (p.badges||[]).some(b => b.id === id);
+                        return (
+                          <div key={id} title={lang === "he" ? def.name_he : def.name_en}
+                            style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4,
+                              padding:"8px 6px", borderRadius:10, width:68,
+                              background: earned ? "#FBF3DD" : "transparent",
+                              border: earned ? "1.5px solid #E7D49A" : "1.5px solid #DDD8CC" }}>
+                            <div style={{ position:"relative", display:"inline-block" }}>
+                              <span style={{ fontSize:26,
+                                filter: earned ? "none" : "grayscale(1)",
+                                opacity: earned ? 1 : 0.18 }}>{def.emoji}</span>
+                              {!earned && (
+                                <span style={{ position:"absolute", bottom:-2, insetInlineEnd:-4,
+                                  fontSize:12, lineHeight:1 }}>🔒</span>
+                              )}
+                            </div>
+                            <span style={{ fontSize:10, fontWeight:700,
+                              color: earned ? "#7A5A10" : "#BBB",
+                              textAlign:"center", lineHeight:1.3 }}>
+                              {lang === "he" ? def.name_he : def.name_en}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="card">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
