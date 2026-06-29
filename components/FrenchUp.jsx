@@ -2912,7 +2912,7 @@ function Flashcard({ fr, he, en }) {
   const [flipped, setFlipped] = useState(false);
   const back = lang === "en" ? (en || he) : he;
   return (
-    <div onClick={() => { setFlipped(f => !f); speak(fr, () => {}); }} style={{ cursor: "pointer", perspective: 600 }}>
+    <div onClick={() => { if (!flipped) speak(fr, () => {}); setFlipped(f => !f); }} style={{ cursor: "pointer", perspective: 600 }}>
       <style>{`
         .fc-inner { position:relative; width:100%; height:62px; transition:transform .35s; transform-style:preserve-3d; }
         .fc-inner.flipped { transform:rotateY(180deg); }
