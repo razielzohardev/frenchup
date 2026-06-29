@@ -2910,13 +2910,12 @@ function BottomNav({ view, setView }) {
 function GrammarCell({ text, style }) {
   const { lang } = useLang();
   const isHebrew = /[א-ת]/.test(text);
-  const [phase, setPhase] = useState("idle"); // idle | spoken | loading | translated
+  const [phase, setPhase] = useState("idle"); // idle | spoken | loading | translated | error
   const [translation, setTranslation] = useState(null);
 
   const handleClick = async () => {
-    if (isHebrew) return;
-    if (phase === "translated") { setTranslation(null); setPhase("idle"); return; }
-    if (phase === "loading") return;
+    if (isHebrew || phase === "loading") return;
+    if (phase === "translated" || phase === "error") { setTranslation(null); setPhase("idle"); return; }
     if (phase === "idle") { speak(text, () => {}); setPhase("spoken"); return; }
     // phase === "spoken" → fetch translation
     setPhase("loading");
@@ -2926,10 +2925,19 @@ function GrammarCell({ text, style }) {
         body: JSON.stringify({ text, lang }),
       });
       const data = await res.json();
-      const tr = res.ok && data.translation ? data.translation : null;
-      if (tr) { setTranslation(tr); setPhase("translated"); }
-      else setPhase("spoken");
-    } catch { setPhase("spoken"); }
+      console.log("[translate]", res.status, data);
+      if (res.ok && data.translation) {
+        setTranslation(data.translation);
+        setPhase("translated");
+      } else {
+        setTranslation(data.error || "שגיאה");
+        setPhase("error");
+      }
+    } catch (e) {
+      console.error("[translate] fetch failed", e);
+      setTranslation("שגיאת רשת");
+      setPhase("error");
+    }
   };
 
   return (
@@ -2939,8 +2947,11 @@ function GrammarCell({ text, style }) {
         {phase === "spoken" && <span style={{ fontSize: 10, color: "#C8A23A", flexShrink: 0 }}>↩ תרגום</span>}
         {phase === "loading" && <span style={{ fontSize: 10, color: "#9B8FC0", flexShrink: 0 }}>טוען…</span>}
       </span>
-      {phase === "translated" && translation && (
+      {phase === "translated" && (
         <span style={{ display: "block", fontSize: 11, color: "#7B6FA0", marginTop: 4, fontStyle: "italic", lineHeight: 1.4 }}>{translation}</span>
+      )}
+      {phase === "error" && (
+        <span style={{ display: "block", fontSize: 10, color: "#E53E3E", marginTop: 3 }}>{translation}</span>
       )}
     </div>
   );
