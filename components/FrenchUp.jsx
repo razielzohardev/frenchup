@@ -1961,6 +1961,7 @@ function Quest({ onExit, level = "B1", userId }) {
   const [results, setResults] = useState([]);
   const [showModelTrans, setShowModelTrans] = useState(false);
   const [dynTrans, setDynTrans] = useState(null);
+  const [accentOpen, setAccentOpen] = useState(false);
   const lastIdx = useRef({});
   const progressRef = useRef(null);
   const inputRef = useRef(null);
@@ -1978,7 +1979,7 @@ function Quest({ onExit, level = "B1", userId }) {
   }, [userId]);
 
   const loadExercise = (idx) => {
-    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false); setDynTrans(null);
+    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false); setDynTrans(null); setAccentOpen(false);
     const r = ROUNDS[idx];
     const p = progressRef.current || loadProgress(userId);
     const correct = p.byLevel?.[level]?.[r.id]?.correct || 0;
@@ -2280,10 +2281,17 @@ function Quest({ onExit, level = "B1", userId }) {
 
                 {ex.type !== "mc" && !feedback && (
                   <>
-                    <div className="accent-row">
-                      {ACCENTS.map(ch => (
-                        <button key={ch} className="accent-ch" onMouseDown={(e) => { e.preventDefault(); insertAccent(ch); }}>{ch}</button>
-                      ))}
+                    <div style={{ marginBottom: 8 }}>
+                      <button className="btn-trans" onClick={() => setAccentOpen(o => !o)}>
+                        Accents {accentOpen ? "▴" : "▾"}
+                      </button>
+                      {accentOpen && (
+                        <div className="accent-row" style={{ marginTop: 8, marginBottom: 0 }}>
+                          {ACCENTS.map(ch => (
+                            <button key={ch} className="accent-ch" onMouseDown={(e) => { e.preventDefault(); insertAccent(ch); }}>{ch}</button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     {ex.type === "open"
                       ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={ui.placeholder_open} />
