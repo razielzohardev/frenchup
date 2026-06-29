@@ -2915,33 +2915,32 @@ function GrammarCell({ text, style }) {
 
   const handleClick = async () => {
     if (isHebrew) return;
-    if (phase === "idle" || phase === "translated") {
-      if (phase === "translated") { setTranslation(null); setPhase("idle"); return; }
-      speak(text, () => {});
-      setPhase("spoken");
-    } else if (phase === "spoken") {
-      setPhase("loading");
-      try {
-        const res = await fetch("/api/translate", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, lang }),
-        });
-        const data = await res.json();
-        setTranslation(data.translation || "");
-        setPhase("translated");
-      } catch { setPhase("spoken"); }
-    }
+    if (phase === "translated") { setTranslation(null); setPhase("idle"); return; }
+    if (phase === "loading") return;
+    if (phase === "idle") { speak(text, () => {}); setPhase("spoken"); return; }
+    // phase === "spoken" → fetch translation
+    setPhase("loading");
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, lang }),
+      });
+      const data = await res.json();
+      const tr = res.ok && data.translation ? data.translation : null;
+      if (tr) { setTranslation(tr); setPhase("translated"); }
+      else setPhase("spoken");
+    } catch { setPhase("spoken"); }
   };
 
   return (
     <div onClick={handleClick} style={{ ...style, cursor: isHebrew ? "default" : "pointer", userSelect: "none" }}>
-      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
         {text}
         {phase === "spoken" && <span style={{ fontSize: 10, color: "#C8A23A", flexShrink: 0 }}>↩ תרגום</span>}
-        {phase === "loading" && <span style={{ fontSize: 10, color: "#9B8FC0", flexShrink: 0 }}>…</span>}
+        {phase === "loading" && <span style={{ fontSize: 10, color: "#9B8FC0", flexShrink: 0 }}>טוען…</span>}
       </span>
       {phase === "translated" && translation && (
-        <span style={{ display: "block", fontSize: 11, color: "#9B8FC0", marginTop: 3, fontStyle: "italic" }}>{translation}</span>
+        <span style={{ display: "block", fontSize: 11, color: "#7B6FA0", marginTop: 4, fontStyle: "italic", lineHeight: 1.4 }}>{translation}</span>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-const MODEL = "claude-haiku-4-5-20251001";
+const MODEL = process.env.CHECK_MODEL || "claude-sonnet-4-6";
 
 export async function POST(req) {
   const key = process.env.ANTHROPIC_API_KEY;
