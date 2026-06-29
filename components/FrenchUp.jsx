@@ -1961,11 +1961,20 @@ function Quest({ onExit, level = "B1", userId }) {
   const [results, setResults] = useState([]);
   const [showModelTrans, setShowModelTrans] = useState(false);
   const [dynTrans, setDynTrans] = useState(null);
+  const [accentOpen, setAccentOpen] = useState(false);
   const lastIdx = useRef({});
   const progressRef = useRef(null);
   const inputRef = useRef(null);
   const nextBtnRef = useRef(null);
+  const accentRef = useRef(null);
   const cur = ROUNDS[round];
+
+  useEffect(() => {
+    if (!accentOpen) return;
+    const handler = (e) => { if (accentRef.current && !accentRef.current.contains(e.target)) setAccentOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [accentOpen]);
 
   // load saved progress on mount
   useEffect(() => {
@@ -1978,7 +1987,7 @@ function Quest({ onExit, level = "B1", userId }) {
   }, [userId]);
 
   const loadExercise = (idx) => {
-    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false); setDynTrans(null);
+    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false); setDynTrans(null); setAccentOpen(false);
     const r = ROUNDS[idx];
     const p = progressRef.current || loadProgress(userId);
     const correct = p.byLevel?.[level]?.[r.id]?.correct || 0;
@@ -2185,10 +2194,12 @@ function Quest({ onExit, level = "B1", userId }) {
         .fb-tip b{ color:${INK}; }
         .btn-trans{ font-size:12.5px; font-weight:700; padding:5px 13px; border-radius:20px; border:1.5px solid #C8A23A; background:#fff; color:#C8A23A; cursor:pointer; font-family:'Assistant',sans-serif; }
         .btn-trans:hover{ background:#FBF3DD; }
-        .accent-tray{ display:flex; flex-wrap:wrap; gap:5px; background:#EDE8DE; border-radius:10px; padding:7px 9px; margin-bottom:8px; direction:ltr; }
-        .accent-btn{ font-size:15px; font-weight:600; padding:4px 9px; border-radius:6px; border:none; background:#FDFAF5; color:#1A1A2E; cursor:pointer; font-family:'Assistant',sans-serif; line-height:1.5; box-shadow:0 1px 2px rgba(0,0,0,0.14); transition:background 0.12s,box-shadow 0.12s; }
-        .accent-btn:hover{ background:#FBF3DD; box-shadow:0 1px 4px rgba(200,162,58,0.35); }
-        .accent-btn:active{ transform:translateY(1px); box-shadow:none; }
+        .accent-trigger{ font-size:15px; font-weight:700; padding:5px 12px; border-radius:20px; border:1.5px solid #C8A23A; background:#fff; color:#C8A23A; cursor:pointer; font-family:'Assistant',sans-serif; letter-spacing:0.02em; transition:background 0.12s; }
+        .accent-trigger:hover{ background:#FBF3DD; }
+        .accent-popover{ position:absolute; top:calc(100% + 7px); left:0; z-index:50; background:#fff; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.16); padding:10px; display:grid; grid-template-columns:repeat(7,1fr); gap:5px; min-width:220px; border:1px solid #EDE8DE; }
+        .accent-grid-btn{ font-size:15px; font-weight:600; padding:5px 0; border-radius:7px; border:none; background:#F5F0E8; color:#1A1A2E; cursor:pointer; font-family:'Assistant',sans-serif; text-align:center; transition:background 0.1s,transform 0.1s; }
+        .accent-grid-btn:hover{ background:#FBF3DD; box-shadow:0 1px 4px rgba(200,162,58,0.35); }
+        .accent-grid-btn:active{ transform:scale(0.92); }
         .fb-trans{ margin-top:8px; font-size:14px; line-height:1.55; padding:9px 13px; background:#FBF3DD; border-radius:8px; border:1px solid #E7D49A; color:#5A4A1A; }
         .vq { font-size:12.5px; line-height:1.65; font-weight:600; border-radius:10px; padding:10px 13px; margin-top:14px; color:#6B6452; }
         .vq.ok { color:#0B6B4F; background:#EAF7F0; border:1px solid #A9DEC8; }
@@ -2280,10 +2291,17 @@ function Quest({ onExit, level = "B1", userId }) {
 
                 {ex.type !== "mc" && !feedback && (
                   <>
-                    <div className="accent-tray">
-                      {ACCENTS.map(ch => (
-                        <button key={ch} className="accent-btn" onMouseDown={(e) => { e.preventDefault(); insertAccent(ch); }}>{ch}</button>
-                      ))}
+                    <div style={{ position: "relative", display: "inline-block", marginBottom: 6 }} ref={accentRef}>
+                      <button className="accent-trigger" onMouseDown={(e) => { e.preventDefault(); setAccentOpen(o => !o); }}>
+                        é<span style={{ fontSize: 10, marginLeft: 3, opacity: 0.7 }}>+</span>
+                      </button>
+                      {accentOpen && (
+                        <div className="accent-popover">
+                          {ACCENTS.map(ch => (
+                            <button key={ch} className="accent-grid-btn" onMouseDown={(e) => { e.preventDefault(); insertAccent(ch); }}>{ch}</button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     {ex.type === "open"
                       ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={ui.placeholder_open} />
