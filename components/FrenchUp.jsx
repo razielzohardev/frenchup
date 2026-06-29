@@ -2917,25 +2917,17 @@ function GrammarCell({ text, style }) {
     if (isHebrew || phase === "loading") return;
     if (phase === "translated" || phase === "error") { setTranslation(null); setPhase("idle"); return; }
     if (phase === "idle") { speak(text, () => {}); setPhase("spoken"); return; }
-    // phase === "spoken" → fetch translation
+    // phase === "spoken" → fetch translation via MyMemory (free, no key)
     setPhase("loading");
     try {
-      const res = await fetch("/api/translate", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, lang }),
-      });
+      const target = lang === "he" ? "he" : "en";
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=fr|${target}`;
+      const res = await fetch(url);
       const data = await res.json();
-      console.log("[translate]", res.status, data);
-      if (res.ok && data.translation) {
-        setTranslation(data.translation);
-        setPhase("translated");
-      } else {
-        const msg = [data.error, data.status, data.detail].filter(Boolean).join(" · ");
-        setTranslation(msg || "שגיאה");
-        setPhase("error");
-      }
+      const tr = data.responseStatus === 200 ? data.responseData?.translatedText : null;
+      if (tr) { setTranslation(tr); setPhase("translated"); }
+      else { setTranslation("שגיאה"); setPhase("error"); }
     } catch (e) {
-      console.error("[translate] fetch failed", e);
       setTranslation("שגיאת רשת");
       setPhase("error");
     }
