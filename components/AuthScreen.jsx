@@ -80,9 +80,9 @@ export default function AuthScreen() {
     <div style={{ ...styles.bg, direction: dir }}>
       {/* Language toggle — fixed top-right, outside card */}
       <button onClick={() => setLang(lang === "he" ? "en" : "he")} style={styles.langBtn}>
-        <span style={{ opacity: lang === "he" ? 1 : 0.4, fontSize: 20 }}>🇮🇱</span>
+        <span style={{ opacity: lang === "he" ? 1 : 0.4, fontSize: 15 }}>🇮🇱</span>
         <span style={{ margin: "0 6px", opacity: 0.25, fontWeight: 400 }}>|</span>
-        <span style={{ opacity: lang === "en" ? 1 : 0.4, fontSize: 20 }}>🇬🇧</span>
+        <span style={{ opacity: lang === "en" ? 1 : 0.4, fontSize: 15 }}>🇬🇧</span>
       </button>
 
       <div style={styles.card}>
@@ -358,21 +358,21 @@ const styles = {
   },
   langBtn: {
     position: "fixed",
-    top: 20,
-    right: 20,
-    background: "#F5F0E8",
+    top: 14,
+    right: 14,
+    background: "rgba(245,240,232,0.75)",
     border: "none",
-    borderRadius: "8px",
-    padding: "7px 14px",
-    fontSize: "12px",
+    borderRadius: "6px",
+    padding: "4px 8px",
+    fontSize: "11px",
     color: "#1A1A2E",
     cursor: "pointer",
     fontFamily: "'Assistant', sans-serif",
-    letterSpacing: "0.08em",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.22)",
+    boxShadow: "0 1px 5px rgba(0,0,0,0.14)",
     zIndex: 10,
     direction: "ltr",
     display: "flex",
     alignItems: "center",
+    backdropFilter: "blur(4px)",
   },
 };
