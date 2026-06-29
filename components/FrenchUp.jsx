@@ -1200,7 +1200,7 @@ const freshProgress = () => ({
   xp: 0, streak: { count: 0, lastDay: null },
   bySkill: freshSkillMap(),
   byLevel: Object.fromEntries(LEVELS.map((l) => [l, freshSkillMap()])),
-  history: [], mistakes: {}, badges: [], mastered: {}, displayName: "", lastPracticed: {},
+  history: [], mistakes: {}, badges: [], mastered: {}, displayName: "", displayNameEn: "", lastPracticed: {},
 });
 function mergeProgress(p) {
   if (!p) return freshProgress();
@@ -1212,7 +1212,7 @@ function mergeProgress(p) {
   return { ...base, ...p, streak: { ...base.streak, ...(p.streak || {}) },
     bySkill: { ...base.bySkill, ...(p.bySkill || {}) }, byLevel,
     mistakes: p.mistakes || {}, history: p.history || [], badges: p.badges || [],
-    mastered: p.mastered || {}, displayName: p.displayName || "",
+    mastered: p.mastered || {}, displayName: p.displayName || "", displayNameEn: p.displayNameEn || "",
     lastPracticed: p.lastPracticed || {} };
 }
 async function loadProgressCloud(userId) {
@@ -2633,11 +2633,13 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
   useEffect(() => {
     loadProgressCloud(userId).then((loaded) => {
       setP(loaded);
-      if (!loaded.displayName) setShowNameModal(true);
+      if (!loaded.displayName && !loaded.displayNameEn) setShowNameModal(true);
     });
   }, [userId]);
   const handleNameSave = async (name) => {
-    const updated = { ...p, displayName: name };
+    const updated = lang === "he"
+      ? { ...p, displayName: name }
+      : { ...p, displayNameEn: name };
     setP(updated);
     setShowNameModal(false);
     await saveProgress(updated, userId);
@@ -2762,6 +2764,9 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
                 <button className="menu-item" onClick={() => { setLang(lang === "he" ? "en" : "he"); setShowMenu(false); }}>
                   🌐 {lang === "he" ? "English" : "עברית"}
                 </button>
+                <button className="menu-item" onClick={() => { setShowNameModal(true); setShowMenu(false); }}>
+                  ✏️ {ui.change_name}
+                </button>
                 <button className="menu-item danger" onClick={handleLogout}>🚪 {ui.logout}</button>
               </div>
             )}
@@ -2798,7 +2803,7 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
         </div>
 
       <div className="hero">
-        <div className="hero-eye">{ui.hero_greeting}{p.displayName ? `, ${p.displayName}` : ""} 👋 · {ui.level_short} {selectedLevel}</div>
+        <div className="hero-eye">{ui.hero_greeting}{(() => { const name = lang === "he" ? (p.displayName || p.displayNameEn) : (p.displayNameEn || p.displayName); return name ? `, ${name}` : ""; })()} 👋 · {ui.level_short} {selectedLevel}</div>
         <h1>{practicedToday ? ui.hero_practiced_today.replace("{level}", selectedLevel) : ui.hero_ready.replace("{level}", selectedLevel)}</h1>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", position: "relative" }}>
           <button className="hero-cta" onClick={onStart}>{ui.start_challenge} {lang === "he" ? "←" : "→"}</button>
