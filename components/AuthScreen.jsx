@@ -80,9 +80,9 @@ export default function AuthScreen() {
     <div style={{ ...styles.bg, direction: dir }}>
       <div style={styles.card}>
         {/* Language toggle */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
           <button onClick={() => setLang(lang === "he" ? "en" : "he")} style={styles.langBtn}>
-            🌍
+            {ui.switch_lang}
           </button>
         </div>
 
@@ -357,14 +357,15 @@ const styles = {
     gap: "8px",
   },
   langBtn: {
-    background: "transparent",
-    border: "1px solid #DDD8CC",
-    borderRadius: "6px",
-    padding: "4px 10px",
-    fontSize: "12px",
+    background: "#EDE8DE",
+    border: "none",
+    borderRadius: "20px",
+    padding: "6px 14px",
+    fontSize: "13px",
     fontWeight: "700",
-    color: "#888",
+    color: "#5A5040",
     cursor: "pointer",
     fontFamily: "'Assistant', sans-serif",
+    letterSpacing: "0.02em",
   },
 };
