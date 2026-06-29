@@ -1960,6 +1960,7 @@ function Quest({ onExit, level = "B1", userId }) {
   const [sessionXp, setSessionXp] = useState(0);
   const [results, setResults] = useState([]);
   const [showModelTrans, setShowModelTrans] = useState(false);
+  const [dynTrans, setDynTrans] = useState(null);
   const lastIdx = useRef({});
   const progressRef = useRef(null);
   const inputRef = useRef(null);
@@ -1977,7 +1978,7 @@ function Quest({ onExit, level = "B1", userId }) {
   }, [userId]);
 
   const loadExercise = (idx) => {
-    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false);
+    setEx(null); setFeedback(null); setAnswer(""); setSelIdx(null); setShowModelTrans(false); setDynTrans(null);
     const r = ROUNDS[idx];
     const p = progressRef.current || loadProgress(userId);
     const correct = p.byLevel?.[level]?.[r.id]?.correct || 0;
@@ -2046,6 +2047,28 @@ function Quest({ onExit, level = "B1", userId }) {
     } finally {
       setChecking(false);
     }
+  };
+
+  const ACCENTS = ["é","è","ê","ë","à","â","ù","û","ô","ö","ç","œ","î","ï"];
+
+  const insertAccent = (char) => {
+    const el = inputRef.current;
+    if (!el) return;
+    const start = el.selectionStart ?? answer.length;
+    const end = el.selectionEnd ?? answer.length;
+    setAnswer(answer.slice(0, start) + char + answer.slice(end));
+    setTimeout(() => { el.focus(); el.setSelectionRange(start + 1, start + 1); }, 0);
+  };
+
+  const fetchDynTrans = async (text) => {
+    setDynTrans("loading");
+    try {
+      const target = lang === "he" ? "he" : "en";
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=fr|${target}`);
+      const data = await res.json();
+      const tr = data.responseStatus === 200 ? data.responseData?.translatedText : null;
+      setDynTrans(tr || "error");
+    } catch { setDynTrans("error"); }
   };
 
   const next = () => {
@@ -2162,6 +2185,8 @@ function Quest({ onExit, level = "B1", userId }) {
         .fb-tip b{ color:${INK}; }
         .btn-trans{ font-size:12.5px; font-weight:700; padding:5px 13px; border-radius:20px; border:1.5px solid #C8A23A; background:#fff; color:#C8A23A; cursor:pointer; font-family:'Assistant',sans-serif; }
         .btn-trans:hover{ background:#FBF3DD; }
+        .accent-btn{ font-size:14px; padding:3px 7px; border-radius:6px; border:1.5px solid #DDD8CC; background:#fff; color:#1A1A2E; cursor:pointer; font-family:'Assistant',sans-serif; line-height:1.4; }
+        .accent-btn:hover{ background:#F5F0E8; }
         .fb-trans{ margin-top:8px; font-size:14px; line-height:1.55; padding:9px 13px; background:#FBF3DD; border-radius:8px; border:1px solid #E7D49A; color:#5A4A1A; }
         .vq { font-size:12.5px; line-height:1.65; font-weight:600; border-radius:10px; padding:10px 13px; margin-top:14px; color:#6B6452; }
         .vq.ok { color:#0B6B4F; background:#EAF7F0; border:1px solid #A9DEC8; }
@@ -2252,9 +2277,17 @@ function Quest({ onExit, level = "B1", userId }) {
                 )}
 
                 {ex.type !== "mc" && !feedback && (
-                  ex.type === "open"
-                    ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={ui.placeholder_open} />
-                    : <input ref={inputRef} className="ans" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder={ui.placeholder_answer} />
+                  <>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6, direction: "ltr" }}>
+                      {ACCENTS.map(ch => (
+                        <button key={ch} className="accent-btn" onMouseDown={(e) => { e.preventDefault(); insertAccent(ch); }}>{ch}</button>
+                      ))}
+                    </div>
+                    {ex.type === "open"
+                      ? <textarea ref={inputRef} rows={3} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={ui.placeholder_open} />
+                      : <input ref={inputRef} className="ans" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder={ui.placeholder_answer} />
+                    }
+                  </>
                 )}
 
                 {!feedback && (
@@ -2292,15 +2325,29 @@ function Quest({ onExit, level = "B1", userId }) {
                           <SpeakerBtn text={feedback.correction_fr} size={30} />
                         </div>
                       )}
-                      {(feedback.correction_he || feedback.correction_en) && (
+                      {feedback.correction_fr && (
                         <div style={{ marginTop: 6 }}>
-                          <button className="btn-trans" onClick={() => setShowModelTrans(s => !s)}>
-                            {showModelTrans ? ui.hide_translation : ui.translation}
-                          </button>
-                          {showModelTrans && (
-                            <div className="fb-trans">
-                              {lang === "en" ? (feedback.correction_en || feedback.correction_he) : feedback.correction_he}
-                            </div>
+                          {(feedback.correction_he || feedback.correction_en) ? (
+                            <>
+                              <button className="btn-trans" onClick={() => setShowModelTrans(s => !s)}>
+                                {showModelTrans ? ui.hide_translation : ui.translation}
+                              </button>
+                              {showModelTrans && (
+                                <div className="fb-trans">
+                                  {lang === "en" ? (feedback.correction_en || feedback.correction_he) : feedback.correction_he}
+                                </div>
+                              )}
+                            </>
+                          ) : dynTrans === null ? (
+                            <button className="btn-trans" onClick={() => fetchDynTrans(feedback.correction_fr)}>
+                              {ui.translation}
+                            </button>
+                          ) : dynTrans === "loading" ? (
+                            <span style={{ fontSize: 12, color: "#9B8FC0" }}>{lang === "he" ? "טוען..." : "Loading..."}</span>
+                          ) : dynTrans === "error" ? (
+                            <span style={{ fontSize: 12, color: "#E53E3E" }}>{lang === "he" ? "שגיאת תרגום" : "Translation failed"}</span>
+                          ) : (
+                            <div className="fb-trans">{dynTrans}</div>
                           )}
                         </div>
                       )}
