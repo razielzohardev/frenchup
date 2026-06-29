@@ -3078,16 +3078,7 @@ function Lessons({ level, onBack }) {
   const LEVEL_EN = { A1: "Beginner", A2: "Basic", B1: "Independent", B2: "Advanced", C1: "Fluent", C2: "Expert" };
   const levelLabel = lang === "en" ? `${level} · ${LEVEL_EN[level]}` : `${level} · ${LEVEL_HE[level]}`;
 
-  const ttsPlay = async (text) => {
-    try {
-      const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
-      if (!res.ok) return;
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play();
-    } catch {}
-  };
+  const ttsPlay = (text) => speak(text, () => {});
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0E8", fontFamily: "'Assistant',sans-serif", direction: dir }}>
