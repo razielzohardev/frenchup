@@ -2917,8 +2917,23 @@ function GrammarCell({ text, style }) {
     if (isHebrew || phase === "loading") return;
     if (phase === "translated" || phase === "error") { setTranslation(null); setPhase("idle"); return; }
     if (phase === "idle") { speak(text, () => {}); setPhase("spoken"); return; }
-    // phase === "spoken" → fetch translation via MyMemory (free, no key)
+    // phase === "spoken" → translate (override dict first, then MyMemory)
     setPhase("loading");
+    const OVERRIDES = {
+      he: {
+        "je": "אני", "tu": "אתה / את", "il": "הוא", "elle": "היא",
+        "il/elle": "הוא / היא", "nous": "אנחנו", "vous": "אתם / אתה (פורמלי)",
+        "ils": "הם", "elles": "הן", "ils/elles": "הם / הן", "on": "אנחנו (לא פורמלי)",
+        "ne … pas": "שלילה (לא)", "ne...pas": "שלילה (לא)",
+      },
+      en: {
+        "je": "I", "tu": "you (informal)", "il": "he", "elle": "she",
+        "il/elle": "he / she", "nous": "we", "vous": "you (pl. / formal)",
+        "ils": "they (m.)", "elles": "they (f.)", "ils/elles": "they", "on": "one / we (informal)",
+      },
+    };
+    const override = OVERRIDES[lang]?.[text.trim().toLowerCase()];
+    if (override) { setTranslation(override); setPhase("translated"); return; }
     try {
       const target = lang === "he" ? "he" : "en";
       const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=fr|${target}`;
@@ -2927,7 +2942,7 @@ function GrammarCell({ text, style }) {
       const tr = data.responseStatus === 200 ? data.responseData?.translatedText : null;
       if (tr) { setTranslation(tr); setPhase("translated"); }
       else { setTranslation("שגיאה"); setPhase("error"); }
-    } catch (e) {
+    } catch {
       setTranslation("שגיאת רשת");
       setPhase("error");
     }
