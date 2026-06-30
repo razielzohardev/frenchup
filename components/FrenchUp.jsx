@@ -2708,13 +2708,13 @@ function MetroLine({ skill, correct, idx, sel, onSel, level }) {
   );
 }
 
-function NameModal({ onSave }) {
+function NameModal({ onSave, onClose }) {
   const { lang, ui } = useLang();
   const [name, setName] = useState("");
   const dir = lang === "he" ? "rtl" : "ltr";
   return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(26,26,46,0.72)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
-      <div style={{ background:"#F5F0E8", borderRadius:20, padding:"40px 36px", width:"100%", maxWidth:380, textAlign: lang === "he" ? "right" : "left", direction: dir, boxShadow:"0 20px 60px rgba(0,0,0,0.4)" }}>
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(26,26,46,0.72)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:"#F5F0E8", borderRadius:20, padding:"40px 36px", width:"100%", maxWidth:380, textAlign: lang === "he" ? "right" : "left", direction: dir, boxShadow:"0 20px 60px rgba(0,0,0,0.4)" }}>
         <p style={{ fontSize:13, color:"#8A8270", marginBottom:6, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Bienvenue · {ui.welcome}</p>
         <h2 style={{ fontFamily:"'Fraunces',Georgia,serif", fontStyle:"italic", fontWeight:600, fontSize:30, color:"#1A1A2E", margin:"0 0 20px", lineHeight:1.2 }}>
           {ui.name_prompt}
@@ -2773,7 +2773,7 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
 
   return (
     <>
-    {showNameModal && <NameModal onSave={handleNameSave} />}
+    {showNameModal && <NameModal onSave={handleNameSave} onClose={() => setShowNameModal(false)} />}
     <div dir={lang === "he" ? "rtl" : "ltr"} className="dash">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500;1,9..144,600&display=swap');
