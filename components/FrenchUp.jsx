@@ -36,7 +36,7 @@ const BADGE_DEFS = [
   { id:"xp_5000",  emoji:"💫", name_he:"מתקדם",          name_en:"Advanced",       check: p => p.xp >= 5000 },
   { id:"xp_10000", emoji:"🏆", name_he:"מצטיין",         name_en:"Excellence",     check: p => p.xp >= 10000 },
   { id:"str_3",    emoji:"🔥", name_he:"3 ימים ברצף",   name_en:"3-Day Streak",  check: p => (p.streak?.count||0) >= 3 },
-  { id:"str_7",    emoji:"🔥🔥",name_he:"שבוע שלם",      name_en:"Full Week",      check: p => (p.streak?.count||0) >= 7 },
+  { id:"str_7",    emoji:"⚡",  name_he:"שבוע שלם",      name_en:"Full Week",      check: p => (p.streak?.count||0) >= 7 },
   { id:"str_30",   emoji:"🌋", name_he:"חודש של לימוד", name_en:"Month Learner",  check: p => (p.streak?.count||0) >= 30 },
   { id:"cor_10",   emoji:"✅", name_he:"10 נכונות",      name_en:"10 Correct",    check: p => _totalCorrect(p) >= 10 },
   { id:"cor_50",   emoji:"💪", name_he:"50 נכונות",      name_en:"50 Correct",    check: p => _totalCorrect(p) >= 50 },
