@@ -2941,6 +2941,31 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
         <div className="stat-box"><div className="stat-num" style={{ color: "#0E9F6E" }}>{totalCorrect}</div><div className="stat-lbl">{ui.stat_correct} ✓</div></div>
       </div>
 
+      <div className="card">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div className="card-eyebrow" style={{ margin: 0 }}>Plan du progrès · {ui.progress_eyebrow}</div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button className={`view-btn ${mapMode === "metro" ? "active" : ""}`} onClick={() => { setMapMode("metro"); setSel(null); }}>🗺️ {ui.map_paris}</button>
+            <button className={`view-btn ${mapMode === "lines" ? "active" : ""}`} onClick={() => { setMapMode("lines"); setSel(null); }}>≡ {ui.map_lines}</button>
+          </div>
+        </div>
+        <h2 className="card-title">{ui.progress_title.replace("{level}", selectedLevel)}</h2>
+        {mapMode === "metro" ? (
+          <ParisMetroMap p={p} selectedLevel={selectedLevel} sel={sel} onSel={setSel} />
+        ) : (
+          <>
+            {ROUNDS.map((skill, i) => (
+              <MetroLine key={skill.id + selectedLevel} skill={skill} idx={i}
+                correct={p.byLevel?.[selectedLevel]?.[skill.id]?.correct || 0}
+                sel={sel} onSel={setSel} level={selectedLevel} />
+            ))}
+            {selInfoLines && (
+              <div className="sel-info">{ui.station} {selInfoLines.idx} · <b style={{ color: selInfoLines.sk.color }}>{selInfoLines.sk.fr}</b> · {lang === "en" ? selInfoLines.sk.en : selInfoLines.sk.he}: <b>{selInfoLines.name}</b></div>
+            )}
+          </>
+        )}
+      </div>
+
       {/* Achievements */}
       {(() => {
         const BADGE_CATS = [
@@ -3009,31 +3034,6 @@ function Dashboard({ onStart, onLessons, selectedLevel, onLevelChange, userId })
           </div>
         );
       })()}
-
-      <div className="card">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-          <div className="card-eyebrow" style={{ margin: 0 }}>Plan du progrès · {ui.progress_eyebrow}</div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button className={`view-btn ${mapMode === "metro" ? "active" : ""}`} onClick={() => { setMapMode("metro"); setSel(null); }}>🗺️ {ui.map_paris}</button>
-            <button className={`view-btn ${mapMode === "lines" ? "active" : ""}`} onClick={() => { setMapMode("lines"); setSel(null); }}>≡ {ui.map_lines}</button>
-          </div>
-        </div>
-        <h2 className="card-title">{ui.progress_title.replace("{level}", selectedLevel)}</h2>
-        {mapMode === "metro" ? (
-          <ParisMetroMap p={p} selectedLevel={selectedLevel} sel={sel} onSel={setSel} />
-        ) : (
-          <>
-            {ROUNDS.map((skill, i) => (
-              <MetroLine key={skill.id + selectedLevel} skill={skill} idx={i}
-                correct={p.byLevel?.[selectedLevel]?.[skill.id]?.correct || 0}
-                sel={sel} onSel={setSel} level={selectedLevel} />
-            ))}
-            {selInfoLines && (
-              <div className="sel-info">{ui.station} {selInfoLines.idx} · <b style={{ color: selInfoLines.sk.color }}>{selInfoLines.sk.fr}</b> · {lang === "en" ? selInfoLines.sk.en : selInfoLines.sk.he}: <b>{selInfoLines.name}</b></div>
-            )}
-          </>
-        )}
-      </div>
 
       <div className="card">
         <div className="card-eyebrow">Cette semaine · {ui.this_week}</div>
